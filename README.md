@@ -31,7 +31,7 @@ This will create files: `trader.pb.h` and `trader.pb.cc` which also need to be i
 
 ## Trader Interface
 
-We assume that the trader being backtested works as follows: The trader wakes up regularly (e.g. every few seconds) and is given the actual account balances and the most recent security (or crypto-currency) price. The trader then might emit new limit, stop, or market order(s). We currently do not support arbitrage trading between multiple exchanges. For simplicity, we assume that at the beginning of every tick there are no active orders on the exchange (thus there is no need to update the existing orders). When the trader emits new orders (after processing a tick), the emitted orders are either executed, or canceled by the exchange at the very next tick. We assume that all emitted orders can be executed  independently of each other.
+We assume that the trader being backtested works as follows: The trader wakes up regularly (e.g. every few seconds) and is given the actual account balances and the most recent security (or crypto-currency) price. The trader then might emit new limit, stop, or market order(s). We currently do not support arbitrage trading between multiple exchanges. For simplicity, we assume that at the beginning of every tick there are no active orders on the exchange (thus there is no need to update the existing orders). When the trader emits new orders (after processing a tick), the emitted orders are either executed, or canceled by the exchange at the very next tick. We assume that all emitted orders can be executed independently of each other. The trader may assume that the provided data (currency balances and prices) are correct (within some small margin of error). On the other hand, it cannot assume anything about how often and when exactly it is called. One reason is that the exchange API might become unresponsive for long periods of time (so there might be gaps in the historical data).
 
 ## Trader Evaluation
 
@@ -172,10 +172,10 @@ limit-trader [0.020 0.010]: 1.0702
 
 Keep in mind that there are many risks associated with live trading, and backtesting itself does not guarantee the expected gains.
 
-- The input price history might be damaged (it might contain gaps or wrong quotations). (To some degree it is possible to detect gaps and potentially wrong quotations.)
+- The input price history might be damaged (it might contain gaps or wrong quotations). (The trader must be resistant against gaps).
 - There might be bugs in the backtesting algorithm / implementation.
 
-In addition, it is not possible to perfectly simulate the trader over the past historical data, since the trader's actions might impact the market (price movements). We will discuss some caveats with different order types below.
+In addition, it is not possible to perfectly simulate the trader over the past historical data, since the trader's actions might impact the market (price movements). We will discuss some caveats corresponding to different order types below.
 
 ### Limit Order Caveats
 
@@ -187,6 +187,6 @@ Stop order is not exactly a real order, as it is not present in the exchange ord
 
 **Note**: Different transaction fees might apply to different types of orders. Fees can be configured directly in the source code.
 
-## Implementation Guidlines
+## Implementation Guidelines
 
 We follow the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html). All code must be [clang-formatted](https://clang.llvm.org/docs/ClangFormat.html) (with Google predefined style),  unit-tested and peer-reviewed (if possible).
