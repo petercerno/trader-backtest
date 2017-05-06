@@ -130,16 +130,18 @@ ExchangeAccountStates ExchangeAccount::Execute(const OhlcHistory& ohlc_history,
         const float price = GetTradedPrice(order, ohlc_tick);
         const float max_security_amount =
             GetMaxSecurityAmount(order, ohlc_tick);
-        switch (order.side()) {
-          case Order::BUY:
-            ExecuteBuyOrder(order, price, max_security_amount, &state);
-            break;
-          case Order::SELL:
-            ExecuteSellOrder(order, price, max_security_amount, &state);
-            break;
-          default:
-            assert(false);  // Invalid order side.
-            break;
+        if (max_security_amount > 0) {
+          switch (order.side()) {
+            case Order::BUY:
+              ExecuteBuyOrder(order, price, max_security_amount, &state);
+              break;
+            case Order::SELL:
+              ExecuteSellOrder(order, price, max_security_amount, &state);
+              break;
+            default:
+              assert(false);  // Invalid order side.
+              break;
+          }
         }
       }
     }
