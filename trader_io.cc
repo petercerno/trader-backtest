@@ -26,21 +26,6 @@ std::string OrderTypeToStr(const Order& order) {
   return "NaN";
 }
 
-// Converts the side of the order to string.
-std::string OrderSideToStr(const Order& order) {
-  if (order.has_side()) {
-    switch (order.side()) {
-      case Order::BUY:
-        return "BUY";
-      case Order::SELL:
-        return "SELL";
-      default:
-        assert(false);  // Invalid order side.
-    }
-  }
-  return "NaN";
-}
-
 // Converts the price of the order to string.
 std::string OrderPriceToStr(const Order& order) {
   if (order.has_price()) {
@@ -137,37 +122,37 @@ bool WriteExchangeAccountStatesToCsvFile(
           << "high" << kSeparator
           << "low" << kSeparator
           << "close" << kSeparator
-          << "order1_type" << kSeparator
-          << "order1_side" << kSeparator
-          << "order1_price" << kSeparator
-          << "order2_type" << kSeparator
-          << "order2_side" << kSeparator
-          << "order2_price" << kSeparator
+          << "buy_order_type" << kSeparator
+          << "buy_order_price" << kSeparator
+          << "sell_order_type" << kSeparator
+          << "sell_order_price" << kSeparator
           << "transaction_fee" << kSeparator
           << "accumulated_fee" << kSeparator
           << "security_balance" << kSeparator
           << "cash_balance" << kSeparator
           << "value" << std::endl;
   for (const ExchangeAccountState& state : exchange_account_states) {
-    Order order1;
-    Order order2;
-    if (state.order_size() > 0) {
-      order1 = state.order(0);
-    }
-    if (state.order_size() > 1) {
-      order2 = state.order(1);
+    Order buy_order;
+    Order sell_order;
+    for (const Order& order : state.order()) {
+      if (order.side() == Order_Side_BUY) {
+        assert(!buy_order.has_side());  // Multiple buy orders not supported.
+        buy_order = order;
+      } else {
+        assert(order.side() == Order_Side_SELL);  // Invalid order side.
+        assert(!sell_order.has_side());  // Multiple sell orders not supported.
+        sell_order = order;
+      }
     }
     outfile << state.ohlc_tick().timestamp_sec() << kSeparator
             << state.ohlc_tick().open() << kSeparator
             << state.ohlc_tick().high() << kSeparator
             << state.ohlc_tick().low() << kSeparator
             << state.ohlc_tick().close() << kSeparator
-            << OrderTypeToStr(order1) << kSeparator
-            << OrderSideToStr(order1) << kSeparator
-            << OrderPriceToStr(order1) << kSeparator
-            << OrderTypeToStr(order2) << kSeparator
-            << OrderSideToStr(order2) << kSeparator
-            << OrderPriceToStr(order2) << kSeparator
+            << OrderTypeToStr(buy_order) << kSeparator
+            << OrderPriceToStr(buy_order) << kSeparator
+            << OrderTypeToStr(sell_order) << kSeparator
+            << OrderPriceToStr(sell_order) << kSeparator
             << state.transaction_fee() << kSeparator
             << state.accumulated_fee() << kSeparator
             << state.security_balance() << kSeparator
