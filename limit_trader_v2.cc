@@ -81,8 +81,8 @@ void LimitTraderV2::EmitLimitOrders(float price, float security_balance,
   if (timestamp_sec_ < init_timestamp_sec_ + min_age_sec_) {
     return;
   }
-  // Limit sell order.
   if (security_balance > 0) {
+    // Limit sell order.
     orders->emplace_back();
     Order* sell_order = &orders->back();
     sell_order->set_type(Order_Type_LIMIT);
