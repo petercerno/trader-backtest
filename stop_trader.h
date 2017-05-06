@@ -61,7 +61,7 @@ class StopTrader : public TraderInterface {
   // Updates the trader stop order price.
   void UpdateStopOrderPrice(Mode mode, int timestamp_sec, float price);
   // Emits the stop order based on the (updated) internal trader state.
-  void EmitStopOrder(std::vector<Order>* orders) const;
+  void EmitStopOrder(float price, std::vector<Order>* orders) const;
 };
 
 }  // namespace trader

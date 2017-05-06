@@ -3,6 +3,7 @@
 #include "limit_trader.h"
 
 #include <iomanip>
+#include <ostream>
 #include <sstream>
 
 namespace trader {
@@ -79,6 +80,24 @@ void LimitTrader::EmitLimitOrder(float price,
                                  std::vector<Order>* orders) const {
   if (timestamp_sec_ < init_timestamp_sec_ + min_age_sec_) {
     return;
+  }
+  if (LogStream() != nullptr) {
+    constexpr char kSeparator = ',';
+    std::ostream& os = *LogStream();
+    std::string mode;
+    if (mode_ == Mode::IN_LONG) {
+      mode = "IN_LONG";
+    } else {
+      assert(mode_ == Mode::IN_CASH);  // Invalid mode.
+      mode = "IN_CASH";
+    }
+    os << std::fixed << std::setprecision(2)
+       << timestamp_sec_ << kSeparator
+       << price << kSeparator
+       << security_balance_ << kSeparator
+       << cash_balance_ << kSeparator
+       << mode << kSeparator
+       << smoothed_price_ << std::endl;
   }
   float target_price = 0;
   orders->emplace_back();

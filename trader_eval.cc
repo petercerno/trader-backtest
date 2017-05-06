@@ -56,6 +56,7 @@ EvalResult TraderEval::Evaluate(const TraderInterface* trader,
     }
     ExchangeAccount exchange_account(exchange_account_config_);
     TraderInstance trader_copy = trader->NewInstance();
+    trader_copy->SetLogStream(trader->LogStream());
     ExchangeAccountStates states = exchange_account.Execute(
         ohlc_history_, start_eval_timestamp_sec, end_eval_timestamp_sec,
         keep_intermediate_states, trader_copy.get());

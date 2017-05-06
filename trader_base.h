@@ -7,6 +7,7 @@
 #include <cmath>
 #include <iterator>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -61,11 +62,26 @@ class TraderInterface {
   virtual void Update(const OhlcTick& ohlc_tick, float security_balance,
                       float cash_balance, std::vector<Order>* orders) = 0;
 
+  // Sets the trader's logging stream. Nullptr disables the logging.
+  // Does not take the ownership of the stream.
+  // Traders can use the stream to log their internal trader-dependent info.
+  // WARNING: The logging stream must NOT be destroyed before the trader.
+  // WARNING: Logging is slow and should be disabled for batch optimization.
+  virtual void SetLogStream(std::ostream* os);
+
+  // Returns the trader's logging stream.
+  virtual std::ostream* LogStream() const;
+
   // Returns the string representation of the trader (and its configuration).
   virtual std::string ToString() const = 0;
 
   // Returns a new (freshly initialized) instance of the same trader.
+  // By default, the new instance does not inherit the logging stream.
   virtual TraderInstance NewInstance() const = 0;
+
+ protected:
+  // Trader's logging stream.
+  std::ostream* os_ = nullptr;
 };
 
 // Returns a pair of iterators covering the time interval [start_timestamp_sec,

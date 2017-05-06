@@ -3,6 +3,7 @@
 #include "limit_trader_v2.h"
 
 #include <iomanip>
+#include <ostream>
 #include <sstream>
 
 namespace trader {
@@ -80,6 +81,16 @@ void LimitTraderV2::EmitLimitOrders(float price, float security_balance,
                                     std::vector<Order>* orders) const {
   if (timestamp_sec_ < init_timestamp_sec_ + min_age_sec_) {
     return;
+  }
+  if (LogStream() != nullptr) {
+    constexpr char kSeparator = ',';
+    std::ostream& os = *LogStream();
+    os << std::fixed << std::setprecision(2)
+       << timestamp_sec_ << kSeparator
+       << price << kSeparator
+       << security_balance << kSeparator
+       << cash_balance << kSeparator
+       << smoothed_price_ << std::endl;
   }
   if (security_balance > 0) {
     // Limit sell order.

@@ -71,6 +71,7 @@ bazel run :trader_main -- \
   --input_price_history_delimited_proto_file="/tmp/bitstampUSD.dpb" \
   --output_exchange_states_csv_file="/tmp/bitstampUSD.out.csv" \
   --trader="limit-v2" \
+  --output_trader_log_file="/tmp/limit_trader_v2_log.csv" \
   --start_date_utc="2016-01-01" \
   --end_date_utc="2017-01-01" \
   --sampling_rate_sec=300 \
@@ -91,9 +92,9 @@ Loaded 11181252 records in 5.007 seconds
 431.06 -> 966.3 base
 ```
 
-As you can see, the limit trader was able to convert 431.06 USD to 1174.24 USD over the year 2016, which beats the baseline *buy and hold* strategy by 21%.
+As you can see, the limit trader v2 was able to convert 431.06 USD to 1174.24 USD over the year 2016, which beats the baseline *buy and hold* strategy by 21%.
 
-You can also analyze the detailed output of the trader: `/tmp/bitstampUSD.out.csv`. Install [Jupyter](http://jupyter.org/index.html) and the following powerful data analysis tools: [matplotlib](https://matplotlib.org/), [NumPy](http://www.numpy.org/), and [Pandas](http://pandas.pydata.org/):
+You can analyze the detailed output of the exchange: `/tmp/bitstampUSD.out.csv` and also the trader-dependent log: `/tmp/limit_trader_v2_log.csv`. Install [Jupyter](http://jupyter.org/index.html) and the following powerful data analysis tools: [matplotlib](https://matplotlib.org/), [NumPy](http://www.numpy.org/), and [Pandas](http://pandas.pydata.org/):
 
 ```
 pip3 install --upgrade pip
@@ -123,7 +124,7 @@ bazel run :trader_main -- \
   --evaluate_batch=false
 ```
 
-The backtester now does not output any exchange states, as there are multiple time periods over which the trader is evaluated. You should get a similar output as follows:
+The backtester now does not output any exchange states (nor any trader-dependent logs), as there are multiple time periods over which the trader is evaluated. You should get a similar output as follows:
 
 ```
 Loaded 11181252 records in 5.027 seconds

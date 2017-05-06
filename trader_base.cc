@@ -12,6 +12,12 @@ int Downsample(int timestamp_sec, int sampling_rate_sec) {
 }
 }  // namespace
 
+void TraderInterface::SetLogStream(std::ostream* os) { os_ = os; }
+
+std::ostream* TraderInterface::LogStream() const {
+  return os_;
+}
+
 OhlcHistory Resample(const PriceHistory& price_history,
                      long start_timestamp_sec, long end_timestamp_sec,
                      int sampling_rate_sec) {

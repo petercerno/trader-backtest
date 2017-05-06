@@ -1,6 +1,7 @@
 // Copyright © 2017 Peter Cerno. All rights reserved.
 
 #include <chrono>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <utility>
@@ -28,6 +29,8 @@ DEFINE_string(output_exchange_states_csv_file, "",
 // Trader.
 DEFINE_string(trader, "limit-v2",
               "Trader to be executed. [limit, limit-v2, stop].");
+DEFINE_string(output_trader_log_file, "",
+              "Ouptut file containing the trader-dependent log.");
 
 // Time period and sampling.
 DEFINE_string(start_date_utc, "2016-01-01",
@@ -232,6 +235,22 @@ int main(int argc, char* argv[]) {
     PrintEvalResults(eval_results, 20);
   } else {
     TraderInstance trader_instance = GetTraderInstance();
+    std::ofstream trader_log_stream;
+    if (!FLAGS_output_trader_log_file.empty()) {
+      if (FLAGS_evaluation_period_months > 0) {
+        std::cerr << "Logging disabled when evaluating multiple periods"
+                  << std::endl;
+      } else {
+        trader_log_stream.open(FLAGS_output_trader_log_file,
+                               std::ios::out | std::ios::trunc);
+        if (!trader_log_stream.is_open()) {
+          std::cerr << "Cannot open file: " << FLAGS_output_trader_log_file
+                    << std::endl;
+          return 1;
+        }
+        trader_instance->SetLogStream(&trader_log_stream);
+      }
+    }
     EvalResult eval_result = trader_eval.Evaluate(
         trader_instance.get(), /* keep_intermediate_states = */ true);
     for (const EvalResult::Period& period : eval_result.period()) {

@@ -3,6 +3,7 @@
 #include "stop_trader.h"
 
 #include <iomanip>
+#include <ostream>
 #include <sstream>
 
 namespace trader {
@@ -34,7 +35,7 @@ void StopTrader::Update(const OhlcTick& ohlc_tick, float security_balance,
   security_balance_ = security_balance;
   cash_balance_ = cash_balance;
   mode_ = mode;
-  EmitStopOrder(orders);
+  EmitStopOrder(price, orders);
 }
 
 std::string StopTrader::ToString() const {
@@ -113,7 +114,25 @@ void StopTrader::UpdateStopOrderPrice(Mode mode, int timestamp_sec,
   }
 }
 
-void StopTrader::EmitStopOrder(std::vector<Order>* orders) const {
+void StopTrader::EmitStopOrder(float price, std::vector<Order>* orders) const {
+  if (LogStream() != nullptr) {
+    constexpr char kSeparator = ',';
+    std::ostream& os = *LogStream();
+    std::string mode;
+    if (mode_ == Mode::IN_LONG) {
+      mode = "IN_LONG";
+    } else {
+      assert(mode_ == Mode::IN_CASH);  // Invalid mode.
+      mode = "IN_CASH";
+    }
+    os << std::fixed << std::setprecision(2)
+       << timestamp_sec_ << kSeparator
+       << price << kSeparator
+       << security_balance_ << kSeparator
+       << cash_balance_ << kSeparator
+       << mode << kSeparator
+       << stop_order_price_ << std::endl;
+  }
   orders->emplace_back();
   Order* order = &orders->back();
   order->set_type(Order_Type_STOP);
