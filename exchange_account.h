@@ -7,13 +7,16 @@
 
 namespace trader {
 
-// Exchange account.
-// For simplicity, we implement the following exchange algorithm: At the
-// beginning of every OHLC tick, there is at most one active order (either
-// market, stop, or limit order). The exchange either executes this active
-// order, or cancels it. Thus, there are no active orders when the exchange
-// passes this OHLC tick (and all available account balances) to the trader.
-// The trader can then decide whether to place a new order or not.
+// Exchange account. For simplicity, we implement the following exchange:
+// At the beginning of every OHLC tick, there might be zero or more active
+// orders submitted by the trader (in the previous step). For every order,
+// the exchange either executes this order, or cancels it. Thus, there are no
+// orders after the exchange processes this OHLC tick. The exchange then sends
+// this (processed) OHLC tick and all available account balances to the trader.
+// The trader then decides whether to place new order(s) or not, and the whole
+// process repeats with the next OHLC tick. Note that the trader (when placing
+// new orders) has no information about the next OHLC tick against which its
+// order(s) will be executed by the exchange.
 class ExchangeAccount {
  public:
   explicit ExchangeAccount(
