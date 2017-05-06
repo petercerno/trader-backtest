@@ -9,6 +9,7 @@
 #include <gflags/gflags.h>
 
 #include "limit_trader.h"
+#include "limit_trader_v2.h"
 #include "stop_trader.h"
 #include "trader_base.h"
 #include "trader_eval.h"
@@ -25,12 +26,13 @@ DEFINE_string(output_exchange_states_csv_file, "",
               "Ouptut CSV file containing the exchange account states.");
 
 // Trader.
-DEFINE_string(trader, "limit", "Trader to be executed. [limit, stop].");
+DEFINE_string(trader, "limit-v2",
+              "Trader to be executed. [limit, limit-v2, stop].");
 
 // Time period and sampling.
 DEFINE_string(start_date_utc, "2016-01-01",
               "Start date YYYY-MM-DD in UTC (included).");
-DEFINE_string(end_date_utc, "2017-02-01",
+DEFINE_string(end_date_utc, "2017-01-01",
               "End date YYYY-MM-DD in UTC (excluded).");
 DEFINE_int32(sampling_rate_sec, 300, "Sampling rate in seconds.");
 DEFINE_int32(evaluation_period_months, 6, "Evaluation period in months.");
@@ -40,9 +42,9 @@ DEFINE_double(start_security_balance, 1.0, "Starting security amount.");
 DEFINE_double(start_cash_balance, 0.0, "Starting cash amount.");
 
 // Parameters of the exchange account.
-DEFINE_double(order_execution_accuracy, 1.0,
+DEFINE_double(order_execution_accuracy, 0.5,
               "Accuracy of executing market / stop orders at their price.");
-DEFINE_double(limit_order_fill_volume_ratio, 0.0,
+DEFINE_double(limit_order_fill_volume_ratio, 0.5,
               "Ratio of (tick) volume used to fill the limit order. "
               "Not used if zero.");
 
@@ -54,6 +56,7 @@ using namespace trader;
 namespace {
 const char kStopTraderName[] = "stop";
 const char kLimitTraderName[] = "limit";
+const char kLimitTraderV2Name[] = "limit-v2";
 
 // Returns the ExchangeAccountConfig based on the flags (and default values).
 ExchangeAccountConfig GetExchangeAccountConfig() {
@@ -111,13 +114,32 @@ TraderBatch GetLimitTraderBatch() {
       /* limit_order_margins = */ {0.005f, 0.01f, 0.015f});
 }
 
+// Returns the default limit trader instance.
+TraderInstance GetLimitTraderV2Instance() {
+  LimitTraderV2Config config;
+  config.set_alpha_per_hour(0.03f);
+  config.set_limit_buy_margin(0.01f);
+  config.set_limit_sell_margin(0.01f);
+  return TraderInstance(new LimitTraderV2(config));
+}
+
+// Returns the default batch of limit traders.
+TraderBatch GetLimitTraderV2Batch() {
+  return LimitTraderV2::GetBatch(
+      /* alphas_per_hour = */ {0.01f, 0.02f, 0.03f},
+      /* limit_buy_margins = */ {0.005f, 0.01f, 0.015f},
+      /* limit_sell_margins = */ {0.005f, 0.01f, 0.015f});
+}
+
 // Returns the default trader instance.
 TraderInstance GetTraderInstance() {
   if (FLAGS_trader == kStopTraderName) {
     return GetStopTraderInstance();
-  } else {
-    assert(FLAGS_trader == kLimitTraderName);  // Invalid trader.
+  } else if (FLAGS_trader == kLimitTraderName) {
     return GetLimitTraderInstance();
+  } else {
+    assert(FLAGS_trader == kLimitTraderV2Name);  // Invalid trader.
+    return GetLimitTraderV2Instance();
   }
 }
 
@@ -125,9 +147,11 @@ TraderInstance GetTraderInstance() {
 TraderBatch GetTraderBatch() {
   if (FLAGS_trader == kStopTraderName) {
     return GetStopTraderBatch();
-  } else {
-    assert(FLAGS_trader == kLimitTraderName);  // Invalid trader.
+  } else if (FLAGS_trader == kLimitTraderName) {
     return GetLimitTraderBatch();
+  } else {
+    assert(FLAGS_trader == kLimitTraderV2Name);  // Invalid trader.
+    return GetLimitTraderV2Batch();
   }
 }
 

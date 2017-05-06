@@ -68,10 +68,12 @@ cc_library(
     name = "trader_impls",
     srcs = [
         "limit_trader.cc",
+        "limit_trader_v2.cc",
         "stop_trader.cc",
     ],
     hdrs = [
         "limit_trader.h",
+        "limit_trader_v2.h",
         "stop_trader.h",
     ],
     deps = [":trader_base"],
