@@ -22,6 +22,11 @@ using PriceHistory = std::vector<PriceRecord>;
 // Historical OHLC ticks over time.
 using OhlcHistory = std::vector<OhlcTick>;
 
+// Returns price history with removed outliers.
+// max_price_deviation_per_min is maximum allowed price deviation per minute.
+PriceHistory RemoveOutliers(const PriceHistory& price_history,
+                            float max_price_deviation_per_min);
+
 // Returns the resampled ohlc_history within the interval [start_timestamp_sec,
 // end_timestamp_sec) according to the given sampling rate (in seconds).
 OhlcHistory Resample(const PriceHistory& price_history,

@@ -37,6 +37,8 @@ DEFINE_string(start_date_utc, "2016-01-01",
               "Start date YYYY-MM-DD in UTC (included).");
 DEFINE_string(end_date_utc, "2017-01-01",
               "End date YYYY-MM-DD in UTC (excluded).");
+DEFINE_double(max_price_deviation_per_min, 0.02,
+              "Maximum allowed price deviation per minute.");
 DEFINE_int32(sampling_rate_sec, 300, "Sampling rate in seconds.");
 DEFINE_int32(evaluation_period_months, 6, "Evaluation period in months.");
 
@@ -180,7 +182,11 @@ OhlcHistory GetOhlcHistoryFromFlags(long start_timestamp_sec,
       FLAGS_sampling_rate_sec > 0) {
     PriceHistory price_history = ReadHistory<PriceRecord>(
         FLAGS_input_price_history_delimited_proto_file);
-    return Resample(price_history, start_timestamp_sec, end_timestamp_sec,
+    PriceHistory price_history_clean =
+        RemoveOutliers(price_history, FLAGS_max_price_deviation_per_min);
+    std::cout << "Removed " << price_history.size() - price_history_clean.size()
+              << " outliers" << std::endl;
+    return Resample(price_history_clean, start_timestamp_sec, end_timestamp_sec,
                     FLAGS_sampling_rate_sec);
   } else if (!FLAGS_input_ohlc_history_delimited_proto_file.empty()) {
     OhlcHistory ohlc_history =

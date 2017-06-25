@@ -96,6 +96,26 @@ TEST(HistorySubsetTest, Basic) {
   EXPECT_EQ(price_history.begin() + 4, history_subset.second);
 }
 
+TEST(RemoveOutliersTest, Empty) {
+  PriceHistory price_history;
+  PriceHistory price_history_clean = RemoveOutliers(price_history, 0.01);
+  ASSERT_TRUE(price_history_clean.empty());
+}
+
+TEST(RemoveOutliersTest, Basic) {
+  PriceHistory price_history;
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228860, 705.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228920, 750.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228980, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229040, 695.0f, 1.0e3f, &price_history);
+  PriceHistory price_history_clean = RemoveOutliers(price_history, 0.02);
+  ASSERT_EQ(3, price_history_clean.size());
+  ExpectNearPriceRecord(price_history[0], price_history_clean[0]);
+  ExpectNearPriceRecord(price_history[1], price_history_clean[1]);
+  ExpectNearPriceRecord(price_history[4], price_history_clean[2]);
+}
+
 TEST(HistorySubsetCopyTest, Basic) {
   PriceHistory price_history;
   AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);

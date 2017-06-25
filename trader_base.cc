@@ -18,6 +18,32 @@ std::ostream* TraderInterface::LogStream() const {
   return os_;
 }
 
+PriceHistory RemoveOutliers(const PriceHistory& price_history,
+                            float max_price_deviation_per_min) {
+  PriceHistory price_history_clean;
+  if (price_history.empty()) {
+    return price_history_clean;
+  }
+  price_history_clean.push_back(price_history[0]);
+  for (size_t i = 1; i < price_history.size(); ++i) {
+    const PriceRecord& price_record_prev = price_history[i - 1];
+    const PriceRecord& price_record = price_history[i];
+    if (price_record.price() > 0 && price_record_prev.price() > 0 &&
+        price_record.timestamp_sec() >= price_record_prev.timestamp_sec()) {
+      const float duration_min =
+          std::max(1.0f, static_cast<float>(price_record.timestamp_sec() -
+                                            price_record_prev.timestamp_sec()) /
+                             60.0f);
+      const float deviation =
+          std::abs(price_record.price() / price_record_prev.price() - 1.0f);
+      if (deviation < max_price_deviation_per_min * std::sqrt(duration_min)) {
+        price_history_clean.push_back(price_record);
+      }
+    }
+  }
+  return price_history_clean;
+}
+
 OhlcHistory Resample(const PriceHistory& price_history,
                      long start_timestamp_sec, long end_timestamp_sec,
                      int sampling_rate_sec) {
