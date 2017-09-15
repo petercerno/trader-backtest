@@ -74,15 +74,37 @@ std::tm AddMonthsToTm(const struct std::tm& tm, int months) {
 }
 }  // namespace
 
-bool ConvertDateUTCToTimestampSec(const std::string& date_utc,
+bool ConvertDateUTCToTimestampSec(const std::string& datetime_utc,
                                   long* timestamp_sec) {
   assert(timestamp_sec != nullptr);  // Undefined timestamp_sec
   struct std::tm tm = {0};
-  std::string date_parse{date_utc};
-  std::replace(date_parse.begin(), date_parse.end(), '-', ' ');
-  std::istringstream iss(date_parse);
-  if (!(iss >> tm.tm_year >> tm.tm_mon >> tm.tm_mday)) {
-    // Cannot parse date_utc.
+  std::string date_parse{datetime_utc};
+  if (datetime_utc.length() == 10) {
+    std::replace(date_parse.begin(), date_parse.end(), '-', ' ');
+    std::istringstream iss(date_parse);
+    if (!(iss >> tm.tm_year >> tm.tm_mon >> tm.tm_mday)) {
+      // Cannot parse datetime_utc.
+      return false;
+    }
+  } else if (datetime_utc.length() == 19) {
+    std::replace(date_parse.begin(), date_parse.end(), '-', ' ');
+    std::replace(date_parse.begin(), date_parse.end(), ':', ' ');
+    std::istringstream iss(date_parse);
+    if (!(iss >> tm.tm_year >> tm.tm_mon >> tm.tm_mday >> tm.tm_hour >>
+          tm.tm_min >> tm.tm_sec)) {
+      // Cannot parse datetime_utc.
+      return false;
+    }
+  } else {
+    return false;
+  }
+  if (tm.tm_year < 1900 ||                  // nowrap
+      tm.tm_mon < 1 || tm.tm_mon > 12 ||    // nowrap
+      tm.tm_mday < 1 || tm.tm_mday > 31 ||  // nowrap
+      tm.tm_hour < 0 || tm.tm_hour > 23 ||  // nowrap
+      tm.tm_min < 0 || tm.tm_min > 59 ||    // nowrap
+      tm.tm_sec < 0 || tm.tm_sec > 59) {
+    // Invalid format.
     return false;
   }
   tm.tm_mon -= 1;
@@ -95,6 +117,13 @@ std::string ConvertTimestampSecToDateUTC(long timestamp_sec) {
   struct std::tm tm(ConvertTimestampSecToTm(timestamp_sec));
   std::stringstream ss;
   ss << std::put_time(&tm, "%Y-%m-%d");
+  return ss.str();
+}
+
+std::string ConvertTimestampSecToDateTimeUTC(long timestamp_sec) {
+  struct std::tm tm(ConvertTimestampSecToTm(timestamp_sec));
+  std::stringstream ss;
+  ss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
   return ss.str();
 }
 

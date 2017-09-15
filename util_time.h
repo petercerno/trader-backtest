@@ -8,11 +8,15 @@
 namespace trader {
 
 // Converts date YYYY-MM-DD in UTC to UNIX timestamp (in seconds).
-bool ConvertDateUTCToTimestampSec(const std::string& date_utc,
+// Also supports YYYY-MM-DD hh:mm:ss format.
+bool ConvertDateUTCToTimestampSec(const std::string& datetime_utc,
                                   long* timestamp_sec);
 
 // Converts UNIX timestamp (in seconds) to date YYYY-MM-DD in UTC.
 std::string ConvertTimestampSecToDateUTC(long timestamp_sec);
+
+// Converts UNIX timestamp (in seconds) to datetime YYYY-MM-DD hh:mm:ss in UTC.
+std::string ConvertTimestampSecToDateTimeUTC(long timestamp_sec);
 
 // Adds months to UNIX timestamp (in seconds).
 long AddMonthsToTimestampSec(long timestamp_sec, int months);
