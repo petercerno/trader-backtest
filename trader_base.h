@@ -22,6 +22,18 @@ using PriceHistory = std::vector<PriceRecord>;
 // Historical OHLC ticks over time.
 using OhlcHistory = std::vector<OhlcTick>;
 
+// Gap in the price history, represented as a pair of timestamps (in seconds).
+using HistoryGap = std::pair<long, long>;
+
+// Gaps in the price history.
+using HistoryGaps = std::vector<HistoryGap>;
+
+// Returns the top n largest (chronologically sorted) price history gaps within
+// the interval [start_timestamp_sec, end_timestamp_sec).
+HistoryGaps GetPriceHistoryGaps(const PriceHistory& price_history,
+                                long start_timestamp_sec,
+                                long end_timestamp_sec, int top_n);
+
 // Returns price history with removed outliers.
 // max_price_deviation_per_min is maximum allowed price deviation per minute.
 PriceHistory RemoveOutliers(const PriceHistory& price_history,

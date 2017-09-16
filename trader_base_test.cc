@@ -96,6 +96,49 @@ TEST(HistorySubsetTest, Basic) {
   EXPECT_EQ(price_history.begin() + 4, history_subset.second);
 }
 
+TEST(GetPriceHistoryGapsTest, Basic) {
+  PriceHistory price_history;
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483230000, 750.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483230600, 850.0f, 2.0e3f, &price_history);
+  AddPriceRecord(1483230900, 800.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483231500, 820.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483231800, 840.0f, 1.0e3f, &price_history);
+  HistoryGaps history_gaps = GetPriceHistoryGaps(price_history,
+                                                 /* start_timestamp_sec = */ 0,
+                                                 /* end_timestamp_sec = */ 0,
+                                                 /* top_n = */ 2);
+  ASSERT_EQ(2, history_gaps.size());
+  EXPECT_EQ(1483228800, history_gaps[0].first);
+  EXPECT_EQ(1483230000, history_gaps[0].second);
+  EXPECT_EQ(1483230000, history_gaps[1].first);
+  EXPECT_EQ(1483230600, history_gaps[1].second);
+  history_gaps = GetPriceHistoryGaps(price_history,
+                                     /* start_timestamp_sec = */ 0,
+                                     /* end_timestamp_sec = */ 0,
+                                     /* top_n = */ 3);
+  ASSERT_EQ(3, history_gaps.size());
+  EXPECT_EQ(1483228800, history_gaps[0].first);
+  EXPECT_EQ(1483230000, history_gaps[0].second);
+  EXPECT_EQ(1483230000, history_gaps[1].first);
+  EXPECT_EQ(1483230600, history_gaps[1].second);
+  EXPECT_EQ(1483230900, history_gaps[2].first);
+  EXPECT_EQ(1483231500, history_gaps[2].second);
+  history_gaps = GetPriceHistoryGaps(price_history,
+                                     /* start_timestamp_sec = */ 1483228800,
+                                     /* end_timestamp_sec = */ 1483231800,
+                                     /* top_n = */ 4);
+  ASSERT_EQ(4, history_gaps.size());
+  EXPECT_EQ(1483228800, history_gaps[0].first);
+  EXPECT_EQ(1483230000, history_gaps[0].second);
+  EXPECT_EQ(1483230000, history_gaps[1].first);
+  EXPECT_EQ(1483230600, history_gaps[1].second);
+  EXPECT_EQ(1483230600, history_gaps[2].first);
+  EXPECT_EQ(1483230900, history_gaps[2].second);
+  EXPECT_EQ(1483230900, history_gaps[3].first);
+  EXPECT_EQ(1483231500, history_gaps[3].second);
+}
+
 TEST(RemoveOutliersTest, Empty) {
   PriceHistory price_history;
   PriceHistory price_history_clean = RemoveOutliers(price_history, 0.01);

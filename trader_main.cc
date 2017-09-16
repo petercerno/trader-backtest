@@ -182,6 +182,19 @@ OhlcHistory GetOhlcHistoryFromFlags(long start_timestamp_sec,
       FLAGS_sampling_rate_sec > 0) {
     PriceHistory price_history = ReadHistory<PriceRecord>(
         FLAGS_input_price_history_delimited_proto_file);
+    HistoryGaps history_gaps = GetPriceHistoryGaps(
+        price_history, start_timestamp_sec, end_timestamp_sec,
+        /* top_n = */ 10);
+    std::cout << "Top 10 gaps:" << std::endl;
+    for (const HistoryGap& history_gap : history_gaps) {
+      const long gap_duration_sec = history_gap.second - history_gap.first;
+      const long gap_duration_hours = gap_duration_sec / 3600;
+      const long gap_duration_minutes = (gap_duration_sec / 60) % 60;
+      std::cout << "[" << ConvertTimestampSecToDateTimeUTC(history_gap.first)
+                << " - " << ConvertTimestampSecToDateTimeUTC(history_gap.second)
+                << "] Duration: " << gap_duration_hours << " hour(s) and "
+                << gap_duration_minutes << " minute(s)" << std::endl;
+    }
     PriceHistory price_history_clean =
         RemoveOutliers(price_history, FLAGS_max_price_deviation_per_min);
     std::cout << "Removed " << price_history.size() - price_history_clean.size()
@@ -260,10 +273,10 @@ int main(int argc, char* argv[]) {
     EvalResult eval_result = trader_eval.Evaluate(
         trader_instance.get(), /* keep_intermediate_states = */ true);
     for (const EvalResult::Period& period : eval_result.period()) {
-      std::cout << "["
-                << ConvertTimestampSecToDateUTC(period.start_timestamp_sec())
+      std::cout << "[" << ConvertTimestampSecToDateTimeUTC(
+                              period.start_timestamp_sec())
                 << " - "
-                << ConvertTimestampSecToDateUTC(period.end_timestamp_sec())
+                << ConvertTimestampSecToDateTimeUTC(period.end_timestamp_sec())
                 << "): "
                 << period.trader_final_gain() / period.base_final_gain()
                 << std::endl;

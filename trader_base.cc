@@ -2,6 +2,8 @@
 
 #include "trader_base.h"
 
+#include <queue>
+
 namespace trader {
 
 namespace {
@@ -14,8 +16,43 @@ int Downsample(int timestamp_sec, int sampling_rate_sec) {
 
 void TraderInterface::SetLogStream(std::ostream* os) { os_ = os; }
 
-std::ostream* TraderInterface::LogStream() const {
-  return os_;
+std::ostream* TraderInterface::LogStream() const { return os_; }
+
+HistoryGaps GetPriceHistoryGaps(const PriceHistory& price_history,
+                                long start_timestamp_sec,
+                                long end_timestamp_sec, int top_n) {
+  if (price_history.empty()) {
+    return {};
+  }
+  auto gap_cmp = [](HistoryGap lhs, HistoryGap rhs) {
+    const long length_delta = lhs.second - lhs.first - rhs.second + rhs.first;
+    return length_delta > 0 || (length_delta == 0 && lhs.first < rhs.first);
+  };
+  std::priority_queue<HistoryGap, std::vector<HistoryGap>, decltype(gap_cmp)>
+      gap_queue(gap_cmp);
+  HistoryGaps history_gaps;
+  const auto price_history_subset =
+      HistorySubset(price_history, start_timestamp_sec, end_timestamp_sec);
+  auto price_record_it_prev = price_history_subset.second;
+  for (auto price_record_it = price_history_subset.first;
+       price_record_it != price_history_subset.second; ++price_record_it) {
+    if (price_record_it_prev != price_history_subset.second) {
+      const PriceRecord& price_record_prev = *price_record_it_prev;
+      const PriceRecord& price_record = *price_record_it;
+      gap_queue.push(HistoryGap{price_record_prev.timestamp_sec(),
+                                price_record.timestamp_sec()});
+      if (gap_queue.size() > top_n) {
+        gap_queue.pop();
+      }
+    }
+    price_record_it_prev = price_record_it;
+  }
+  while (!gap_queue.empty()) {
+    history_gaps.push_back(gap_queue.top());
+    gap_queue.pop();
+  }
+  std::sort(history_gaps.begin(), history_gaps.end());
+  return history_gaps;
 }
 
 PriceHistory RemoveOutliers(const PriceHistory& price_history,
