@@ -3,6 +3,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -175,6 +176,15 @@ std::vector<T> ReadHistory(const std::string& file_name) {
   return history;
 }
 
+// Converts the duration (in seconds) to a string.
+std::string DurationToString(long duration_sec) {
+  const long duration_hours = duration_sec / 3600;
+  const long duration_minutes = (duration_sec / 60) % 60;
+  std::stringstream ss;
+  ss << duration_hours << " hour(s) and " << duration_minutes << " minute(s)";
+  return ss.str();
+}
+
 // Gets the OHLC history based on flags.
 OhlcHistory GetOhlcHistoryFromFlags(long start_timestamp_sec,
                                     long end_timestamp_sec) {
@@ -188,12 +198,10 @@ OhlcHistory GetOhlcHistoryFromFlags(long start_timestamp_sec,
     std::cout << "Top 10 gaps:" << std::endl;
     for (const HistoryGap& history_gap : history_gaps) {
       const long gap_duration_sec = history_gap.second - history_gap.first;
-      const long gap_duration_hours = gap_duration_sec / 3600;
-      const long gap_duration_minutes = (gap_duration_sec / 60) % 60;
       std::cout << "[" << ConvertTimestampSecToDateTimeUTC(history_gap.first)
                 << " - " << ConvertTimestampSecToDateTimeUTC(history_gap.second)
-                << "] Duration: " << gap_duration_hours << " hour(s) and "
-                << gap_duration_minutes << " minute(s)" << std::endl;
+                << "] Duration: " << DurationToString(gap_duration_sec)
+                << std::endl;
     }
     PriceHistory price_history_clean =
         RemoveOutliers(price_history, FLAGS_max_price_deviation_per_min);

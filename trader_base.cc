@@ -24,6 +24,11 @@ HistoryGaps GetPriceHistoryGaps(const PriceHistory& price_history,
   if (price_history.empty()) {
     return {};
   }
+  const auto price_history_subset =
+      HistorySubset(price_history, start_timestamp_sec, end_timestamp_sec);
+  if (price_history_subset.first == price_history_subset.second) {
+    return {};
+  }
   auto gap_cmp = [](HistoryGap lhs, HistoryGap rhs) {
     const long length_delta = lhs.second - lhs.first - rhs.second + rhs.first;
     return length_delta > 0 || (length_delta == 0 && lhs.first < rhs.first);
@@ -31,8 +36,10 @@ HistoryGaps GetPriceHistoryGaps(const PriceHistory& price_history,
   std::priority_queue<HistoryGap, std::vector<HistoryGap>, decltype(gap_cmp)>
       gap_queue(gap_cmp);
   HistoryGaps history_gaps;
-  const auto price_history_subset =
-      HistorySubset(price_history, start_timestamp_sec, end_timestamp_sec);
+  if (start_timestamp_sec > 0) {
+    gap_queue.push(HistoryGap{start_timestamp_sec,
+                              price_history_subset.first->timestamp_sec()});
+  }
   auto price_record_it_prev = price_history_subset.second;
   for (auto price_record_it = price_history_subset.first;
        price_record_it != price_history_subset.second; ++price_record_it) {
@@ -46,6 +53,13 @@ HistoryGaps GetPriceHistoryGaps(const PriceHistory& price_history,
       }
     }
     price_record_it_prev = price_record_it;
+  }
+  if (end_timestamp_sec > 0) {
+    gap_queue.push(
+        HistoryGap{price_record_it_prev->timestamp_sec(), end_timestamp_sec});
+    if (gap_queue.size() > top_n) {
+      gap_queue.pop();
+    }
   }
   while (!gap_queue.empty()) {
     history_gaps.push_back(gap_queue.top());
@@ -137,3 +151,4 @@ OhlcHistory Resample(const PriceHistory& price_history,
 }
 
 }  // namespace trader
+

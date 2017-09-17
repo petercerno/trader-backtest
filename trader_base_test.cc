@@ -114,6 +114,51 @@ TEST(GetPriceHistoryGapsTest, Basic) {
   EXPECT_EQ(1483230000, history_gaps[1].first);
   EXPECT_EQ(1483230600, history_gaps[1].second);
   history_gaps = GetPriceHistoryGaps(price_history,
+                                     /* start_timestamp_sec = */ 1483228000,
+                                     /* end_timestamp_sec = */ 0,
+                                     /* top_n = */ 2);
+  ASSERT_EQ(2, history_gaps.size());
+  EXPECT_EQ(1483228000, history_gaps[0].first);
+  EXPECT_EQ(1483228800, history_gaps[0].second);
+  EXPECT_EQ(1483228800, history_gaps[1].first);
+  EXPECT_EQ(1483230000, history_gaps[1].second);
+  history_gaps = GetPriceHistoryGaps(price_history,
+                                     /* start_timestamp_sec = */ 0,
+                                     /* end_timestamp_sec = */ 1483233000,
+                                     /* top_n = */ 2);
+  ASSERT_EQ(2, history_gaps.size());
+  EXPECT_EQ(1483228800, history_gaps[0].first);
+  EXPECT_EQ(1483230000, history_gaps[0].second);
+  EXPECT_EQ(1483231800, history_gaps[1].first);
+  EXPECT_EQ(1483233000, history_gaps[1].second);
+  history_gaps = GetPriceHistoryGaps(price_history,
+                                     /* start_timestamp_sec = */ 1483228000,
+                                     /* end_timestamp_sec = */ 1483233000,
+                                     /* top_n = */ 2);
+  ASSERT_EQ(2, history_gaps.size());
+  EXPECT_EQ(1483228800, history_gaps[0].first);
+  EXPECT_EQ(1483230000, history_gaps[0].second);
+  EXPECT_EQ(1483231800, history_gaps[1].first);
+  EXPECT_EQ(1483233000, history_gaps[1].second);
+  history_gaps = GetPriceHistoryGaps(price_history,
+                                     /* start_timestamp_sec = */ 1483227000,
+                                     /* end_timestamp_sec = */ 1483233000,
+                                     /* top_n = */ 2);
+  ASSERT_EQ(2, history_gaps.size());
+  EXPECT_EQ(1483227000, history_gaps[0].first);
+  EXPECT_EQ(1483228800, history_gaps[0].second);
+  EXPECT_EQ(1483228800, history_gaps[1].first);
+  EXPECT_EQ(1483230000, history_gaps[1].second);
+  history_gaps = GetPriceHistoryGaps(price_history,
+                                     /* start_timestamp_sec = */ 1483227000,
+                                     /* end_timestamp_sec = */ 1483234000,
+                                     /* top_n = */ 2);
+  ASSERT_EQ(2, history_gaps.size());
+  EXPECT_EQ(1483227000, history_gaps[0].first);
+  EXPECT_EQ(1483228800, history_gaps[0].second);
+  EXPECT_EQ(1483231800, history_gaps[1].first);
+  EXPECT_EQ(1483234000, history_gaps[1].second);
+  history_gaps = GetPriceHistoryGaps(price_history,
                                      /* start_timestamp_sec = */ 0,
                                      /* end_timestamp_sec = */ 0,
                                      /* top_n = */ 3);
@@ -125,8 +170,8 @@ TEST(GetPriceHistoryGapsTest, Basic) {
   EXPECT_EQ(1483230900, history_gaps[2].first);
   EXPECT_EQ(1483231500, history_gaps[2].second);
   history_gaps = GetPriceHistoryGaps(price_history,
-                                     /* start_timestamp_sec = */ 1483228800,
-                                     /* end_timestamp_sec = */ 1483231800,
+                                     /* start_timestamp_sec = */ 0,
+                                     /* end_timestamp_sec = */ 0,
                                      /* top_n = */ 4);
   ASSERT_EQ(4, history_gaps.size());
   EXPECT_EQ(1483228800, history_gaps[0].first);
