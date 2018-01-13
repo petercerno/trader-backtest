@@ -117,19 +117,19 @@ bool WriteExchangeAccountStatesToCsvFile(
     std::cerr << "Cannot open file: " << file_name << std::endl;
     return false;
   }
-  outfile << "timestamp_sec" << kSeparator
-          << "open" << kSeparator
-          << "high" << kSeparator
-          << "low" << kSeparator
-          << "close" << kSeparator
-          << "buy_order_type" << kSeparator
-          << "buy_order_price" << kSeparator
-          << "sell_order_type" << kSeparator
-          << "sell_order_price" << kSeparator
-          << "transaction_fee" << kSeparator
-          << "accumulated_fee" << kSeparator
-          << "security_balance" << kSeparator
-          << "cash_balance" << kSeparator
+  outfile << "timestamp_sec" << kSeparator     // nowrap
+          << "open" << kSeparator              // nowrap
+          << "high" << kSeparator              // nowrap
+          << "low" << kSeparator               // nowrap
+          << "close" << kSeparator             // nowrap
+          << "buy_order_type" << kSeparator    // nowrap
+          << "buy_order_price" << kSeparator   // nowrap
+          << "sell_order_type" << kSeparator   // nowrap
+          << "sell_order_price" << kSeparator  // nowrap
+          << "transaction_fee" << kSeparator   // nowrap
+          << "accumulated_fee" << kSeparator   // nowrap
+          << "security_balance" << kSeparator  // nowrap
+          << "cash_balance" << kSeparator      // nowrap
           << "value" << std::endl;
   for (const ExchangeAccountState& state : exchange_account_states) {
     Order buy_order;
@@ -144,19 +144,19 @@ bool WriteExchangeAccountStatesToCsvFile(
         sell_order = order;
       }
     }
-    outfile << state.ohlc_tick().timestamp_sec() << kSeparator
-            << state.ohlc_tick().open() << kSeparator
-            << state.ohlc_tick().high() << kSeparator
-            << state.ohlc_tick().low() << kSeparator
-            << state.ohlc_tick().close() << kSeparator
-            << OrderTypeToStr(buy_order) << kSeparator
-            << OrderPriceToStr(buy_order) << kSeparator
-            << OrderTypeToStr(sell_order) << kSeparator
-            << OrderPriceToStr(sell_order) << kSeparator
-            << state.transaction_fee() << kSeparator
-            << state.accumulated_fee() << kSeparator
-            << state.security_balance() << kSeparator
-            << state.cash_balance() << kSeparator
+    outfile << state.ohlc_tick().timestamp_sec() << kSeparator  // nowrap
+            << state.ohlc_tick().open() << kSeparator           // nowrap
+            << state.ohlc_tick().high() << kSeparator           // nowrap
+            << state.ohlc_tick().low() << kSeparator            // nowrap
+            << state.ohlc_tick().close() << kSeparator          // nowrap
+            << OrderTypeToStr(buy_order) << kSeparator          // nowrap
+            << OrderPriceToStr(buy_order) << kSeparator         // nowrap
+            << OrderTypeToStr(sell_order) << kSeparator         // nowrap
+            << OrderPriceToStr(sell_order) << kSeparator        // nowrap
+            << state.transaction_fee() << kSeparator            // nowrap
+            << state.accumulated_fee() << kSeparator            // nowrap
+            << state.security_balance() << kSeparator           // nowrap
+            << state.cash_balance() << kSeparator               // nowrap
             << state.value() << std::endl;
   }
   return true;
