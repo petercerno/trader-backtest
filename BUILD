@@ -129,6 +129,7 @@ cc_binary(
     name = "csv_convert_main",
     srcs = ["csv_convert_main.cc"],
     deps = [
+        ":trader_base",
         ":trader_io",
         ":util_proto",
         ":util_time",

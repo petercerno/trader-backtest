@@ -1,4 +1,4 @@
-// Copyright © 2017 Peter Cerno. All rights reserved.
+// Copyright © 2019 Peter Cerno. All rights reserved.
 
 #ifndef UTIL_PROTO_H
 #define UTIL_PROTO_H
@@ -52,9 +52,9 @@ bool ReadDelimitedMessagesFromFile(const std::string& file_name,
 }
 
 // Writes (and compresses) delimited messages to the output file.
-template <typename T>
-bool WriteDelimitedMessagesToFile(const std::vector<T>& messages,
-                                  const std::string& file_name) {
+template <class InputIterator>
+bool WriteDelimitedMessagesToFile(InputIterator first, InputIterator last,
+                                  const std::string& file_name, bool compress) {
   int fd = open(file_name.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
   if (fd == -1) {
     std::cerr << "Cannot open file: " << file_name << std::endl;
@@ -65,15 +65,16 @@ bool WriteDelimitedMessagesToFile(const std::vector<T>& messages,
     google::protobuf::io::FileOutputStream file_stream(fd);
     google::protobuf::io::GzipOutputStream::Options options;
     options.format = google::protobuf::io::GzipOutputStream::GZIP;
-    // options.compression_level = Z_DEFAULT_COMPRESSION;
+    options.compression_level = compress ? Z_DEFAULT_COMPRESSION : 0;
     google::protobuf::io::GzipOutputStream gzip_stream(&file_stream, options);
-    for (const T& message : messages) {
-      if (!WriteDelimitedTo(message, &gzip_stream)) {
-        std::cerr << "Cannot write message: " << message.DebugString()
+    while (first != last) {
+      if (!WriteDelimitedTo(*first, &gzip_stream)) {
+        std::cerr << "Cannot write message: " << first->DebugString()
                   << std::endl;
         success = false;
         break;
       }
+      ++first;
     }
   }
   close(fd);

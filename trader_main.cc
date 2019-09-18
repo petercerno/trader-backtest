@@ -1,4 +1,4 @@
-// Copyright © 2017 Peter Cerno. All rights reserved.
+// Copyright © 2019 Peter Cerno. All rights reserved.
 
 #include <chrono>
 #include <fstream>
@@ -230,7 +230,8 @@ int main(int argc, char* argv[]) {
 
   long start_timestamp_sec = 0;
   long end_timestamp_sec = 0;
-  if (!ConvertDateUTCToTimestampSec(FLAGS_start_date_utc,
+  if (FLAGS_start_date_utc.empty() || FLAGS_end_date_utc.empty() ||
+      !ConvertDateUTCToTimestampSec(FLAGS_start_date_utc,
                                     &start_timestamp_sec) ||
       !ConvertDateUTCToTimestampSec(FLAGS_end_date_utc, &end_timestamp_sec)) {
     std::cerr << "Invalid time period" << std::endl;
@@ -281,8 +282,9 @@ int main(int argc, char* argv[]) {
     EvalResult eval_result = trader_eval.Evaluate(
         trader_instance.get(), /* keep_intermediate_states = */ true);
     for (const EvalResult::Period& period : eval_result.period()) {
-      std::cout << "[" << ConvertTimestampSecToDateTimeUTC(
-                              period.start_timestamp_sec())
+      std::cout << "["
+                << ConvertTimestampSecToDateTimeUTC(
+                       period.start_timestamp_sec())
                 << " - "
                 << ConvertTimestampSecToDateTimeUTC(period.end_timestamp_sec())
                 << "): "

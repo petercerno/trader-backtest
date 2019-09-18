@@ -1,4 +1,4 @@
-// Copyright © 2017 Peter Cerno. All rights reserved.
+// Copyright © 2019 Peter Cerno. All rights reserved.
 
 #ifndef UTIL_TIME_H
 #define UTIL_TIME_H
@@ -9,6 +9,8 @@ namespace trader {
 
 // Converts date YYYY-MM-DD in UTC to UNIX timestamp (in seconds).
 // Also supports YYYY-MM-DD hh:mm:ss format.
+// If empty string is provided, sets the output timestamp_sec to 0.
+// Returns true on success.
 bool ConvertDateUTCToTimestampSec(const std::string& datetime_utc,
                                   long* timestamp_sec);
 

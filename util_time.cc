@@ -1,4 +1,4 @@
-// Copyright © 2017 Peter Cerno. All rights reserved.
+// Copyright © 2019 Peter Cerno. All rights reserved.
 
 #include "util_time.h"
 
@@ -77,6 +77,10 @@ std::tm AddMonthsToTm(const struct std::tm& tm, int months) {
 bool ConvertDateUTCToTimestampSec(const std::string& datetime_utc,
                                   long* timestamp_sec) {
   assert(timestamp_sec != nullptr);  // Undefined timestamp_sec
+  if (datetime_utc.empty()) {
+    *timestamp_sec = 0;
+    return true;
+  }
   struct std::tm tm = {0};
   std::string date_parse{datetime_utc};
   if (datetime_utc.length() == 10) {
