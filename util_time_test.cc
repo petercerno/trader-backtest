@@ -8,8 +8,6 @@ namespace trader {
 
 TEST(ConvertDateUTCToTimestampSecTest, Basic) {
   long timestamp_sec = -1;
-  ASSERT_FALSE(ConvertDateUTCToTimestampSec("", &timestamp_sec));
-  EXPECT_EQ(-1, timestamp_sec);
   ASSERT_FALSE(ConvertDateUTCToTimestampSec("Hello World!", &timestamp_sec));
   EXPECT_EQ(-1, timestamp_sec);
   ASSERT_TRUE(ConvertDateUTCToTimestampSec("1970-01-01", &timestamp_sec));
@@ -20,6 +18,8 @@ TEST(ConvertDateUTCToTimestampSecTest, Basic) {
   EXPECT_EQ(1483228800, timestamp_sec);
   ASSERT_TRUE(ConvertDateUTCToTimestampSec("2050-12-31", &timestamp_sec));
   EXPECT_EQ(2556057600, timestamp_sec);
+  ASSERT_TRUE(ConvertDateUTCToTimestampSec("", &timestamp_sec));
+  EXPECT_EQ(0, timestamp_sec);
   timestamp_sec = -1;
   ASSERT_FALSE(ConvertDateUTCToTimestampSec("1000-01-01", &timestamp_sec));
   EXPECT_EQ(-1, timestamp_sec);
