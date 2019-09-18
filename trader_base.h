@@ -28,6 +28,9 @@ using HistoryGap = std::pair<long, long>;
 // Gaps in the price history.
 using HistoryGaps = std::vector<HistoryGap>;
 
+// Returns true iff the price history has non-decreasing timestamps.
+bool CheckPriceHistoryTimestamps(const PriceHistory& price_history);
+
 // Returns the top n largest (chronologically sorted) price history gaps within
 // the interval [start_timestamp_sec, end_timestamp_sec).
 HistoryGaps GetPriceHistoryGaps(const PriceHistory& price_history,

@@ -18,6 +18,16 @@ void TraderInterface::SetLogStream(std::ostream* os) { os_ = os; }
 
 std::ostream* TraderInterface::LogStream() const { return os_; }
 
+bool CheckPriceHistoryTimestamps(const PriceHistory& price_history) {
+  for (size_t i = 1; i < price_history.size(); ++i) {
+    if (price_history[i].timestamp_sec() <
+        price_history[i - 1].timestamp_sec()) {
+      return false;
+    }
+  }
+  return true;
+}
+
 HistoryGaps GetPriceHistoryGaps(const PriceHistory& price_history,
                                 long start_timestamp_sec,
                                 long end_timestamp_sec, int top_n) {
@@ -151,4 +161,3 @@ OhlcHistory Resample(const PriceHistory& price_history,
 }
 
 }  // namespace trader
-

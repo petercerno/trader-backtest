@@ -38,6 +38,27 @@ void ExpectNearOhlcTick(int timestamp_sec, float open, float high, float low,
 }
 }  // namespace
 
+TEST(CheckPriceHistoryTimestampsTest, NonDecreasing) {
+  PriceHistory price_history;
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229400, 800.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483230000, 750.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483230000, 750.0f, 0.5e3f, &price_history);
+  AddPriceRecord(1483230600, 850.0f, 2.0e3f, &price_history);
+  AddPriceRecord(1483231200, 800.0f, 1.5e3f, &price_history);
+  ASSERT_TRUE(CheckPriceHistoryTimestamps(price_history));
+}
+
+TEST(CheckPriceHistoryTimestampsTest, SingleSwap) {
+  PriceHistory price_history;
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229400, 800.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483230600, 850.0f, 2.0e3f, &price_history);
+  AddPriceRecord(1483230000, 750.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483231200, 800.0f, 1.5e3f, &price_history);
+  ASSERT_FALSE(CheckPriceHistoryTimestamps(price_history));
+}
+
 TEST(HistorySubsetTest, Basic) {
   PriceHistory price_history;
   AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);

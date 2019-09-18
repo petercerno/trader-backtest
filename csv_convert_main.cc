@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -32,6 +33,15 @@ DEFINE_bool(compress, true, "Whether to compress the output file.");
 
 using namespace trader;
 
+// Converts the duration (in seconds) to a string.
+std::string DurationToString(long duration_sec) {
+  const long duration_hours = duration_sec / 3600;
+  const long duration_minutes = (duration_sec / 60) % 60;
+  std::stringstream ss;
+  ss << duration_hours << " hour(s) and " << duration_minutes << " minute(s)";
+  return ss.str();
+}
+
 // Converts the price history csv file if enabled by flags.
 void ConvertPriceHistoryIfPossible(long start_timestamp_sec,
                                    long end_timestamp_sec) {
@@ -48,6 +58,21 @@ void ConvertPriceHistoryIfPossible(long start_timestamp_sec,
     std::cerr << "Failed to read price history CSV file: " << input_file
               << std::endl;
     return;
+  }
+  if (!CheckPriceHistoryTimestamps(price_history)) {
+    std::cerr << "Price history timestamps are not sorted" << std::endl;
+    return;
+  }
+  HistoryGaps history_gaps =
+      GetPriceHistoryGaps(price_history, start_timestamp_sec, end_timestamp_sec,
+                          /* top_n = */ 10);
+  std::cout << "Top 10 gaps:" << std::endl;
+  for (const HistoryGap& history_gap : history_gaps) {
+    const long gap_duration_sec = history_gap.second - history_gap.first;
+    std::cout << "[" << ConvertTimestampSecToDateTimeUTC(history_gap.first)
+              << " - " << ConvertTimestampSecToDateTimeUTC(history_gap.second)
+              << "] Duration: " << DurationToString(gap_duration_sec)
+              << std::endl;
   }
   const auto price_history_subset =
       HistorySubset(price_history, start_timestamp_sec, end_timestamp_sec);
