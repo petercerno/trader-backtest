@@ -15,12 +15,12 @@
 DEFINE_string(input_price_history_csv_file, "",
               "Input CSV file containing the historical prices.");
 DEFINE_string(output_price_history_delimited_proto_file, "",
-              "Ouptut file containing the delimited PriceRecord protos.");
+              "Output file containing the delimited PriceRecord protos.");
 
 DEFINE_string(input_ohlc_history_csv_file, "",
               "Input CSV file containing the OHLC prices.");
 DEFINE_string(output_ohlc_history_delimited_proto_file, "",
-              "Ouptut file containing the delimited OhlcRecord protos.");
+              "Output file containing the delimited OhlcRecord protos.");
 
 using namespace trader;
 
