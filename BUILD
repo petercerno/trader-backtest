@@ -2,7 +2,7 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 
 proto_library(
     name = "trader_proto",
-    srcs = ["trader.proto"]
+    srcs = ["trader.proto"],
 )
 
 cc_proto_library(
