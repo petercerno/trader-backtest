@@ -1,8 +1,13 @@
-load(':protobuf.bzl', 'cc_proto')
+load("@rules_proto//proto:defs.bzl", "proto_library")
 
-cc_proto(
-    name = "trader",
-    src = "trader.proto"
+proto_library(
+    name = "trader_proto",
+    srcs = ["trader.proto"]
+)
+
+cc_proto_library(
+    name = "trader_cc_proto",
+    deps = [":trader_proto"],
 )
 
 cc_library(
@@ -14,10 +19,10 @@ cc_library(
 cc_test(
     name = "util_time_test",
     srcs = ["util_time_test.cc"],
-    copts = ["-Iexternal/gtest/googletest/include"],
+    copts = ["-Iexternal/gtest/include"],
     deps = [
         ":util_time",
-        "@gtest//:main"
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -25,18 +30,17 @@ cc_library(
     name = "util_proto",
     srcs = ["util_proto.cc"],
     hdrs = ["util_proto.h"],
-    deps = ["@protobuf//:protobuf"],
-    copts = ["-Iprotobuf/src"],
+    deps = [":trader_cc_proto"],
 )
 
 cc_test(
     name = "util_proto_test",
     srcs = ["util_proto_test.cc"],
-    copts = ["-Iexternal/gtest/googletest/include"],
+    copts = ["-Iexternal/gtest/include"],
     deps = [
-        ":trader_proto",
+        ":trader_cc_proto",
         ":util_proto",
-        "@gtest//:main"
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -44,16 +48,16 @@ cc_library(
     name = "trader_base",
     srcs = ["trader_base.cc"],
     hdrs = ["trader_base.h"],
-    deps = [":trader_proto"],
+    deps = [":trader_cc_proto"],
 )
 
 cc_test(
     name = "trader_base_test",
     srcs = ["trader_base_test.cc"],
-    copts = ["-Iexternal/gtest/googletest/include"],
+    copts = ["-Iexternal/gtest/include"],
     deps = [
         ":trader_base",
-        "@gtest//:main"
+        "@googletest//:gtest_main",
     ],
 )
 
