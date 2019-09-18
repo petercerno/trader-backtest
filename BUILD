@@ -90,6 +90,16 @@ cc_library(
     deps = [":trader_base"],
 )
 
+cc_test(
+    name = "exchange_account_test",
+    srcs = ["exchange_account_test.cc"],
+    copts = ["-Iexternal/gtest/include"],
+    deps = [
+        ":exchange_account",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "trader_eval",
     srcs = ["trader_eval.cc"],
