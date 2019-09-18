@@ -11,9 +11,7 @@
 #include <unistd.h>
 
 #include <google/protobuf/io/coded_stream.h>
-// Bazel currently does not support protobuf with zlib:
-// https://groups.google.com/forum/#!topic/protobuf/D34IAqqh1Iw
-// #include <google/protobuf/io/gzip_stream.h>
+#include <google/protobuf/io/gzip_stream.h>
 #include <google/protobuf/io/zero_copy_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/message.h>
@@ -43,9 +41,9 @@ bool ReadDelimitedMessagesFromFile(const std::string& file_name,
   }
   {
     google::protobuf::io::FileInputStream file_stream(fd);
-    //google::protobuf::io::GzipInputStream gzip_stream(&file_stream);
+    google::protobuf::io::GzipInputStream gzip_stream(&file_stream);
     T message;
-    while (ReadDelimitedFrom(&file_stream, &message)) {
+    while (ReadDelimitedFrom(&gzip_stream, &message)) {
       messages->emplace_back(message);
     }
   }
@@ -65,12 +63,12 @@ bool WriteDelimitedMessagesToFile(const std::vector<T>& messages,
   bool success = true;
   {
     google::protobuf::io::FileOutputStream file_stream(fd);
-    //google::protobuf::io::GzipOutputStream::Options options;
-    //options.format = google::protobuf::io::GzipOutputStream::GZIP;
-    //options.compression_level = compressionLevel;
-    //google::protobuf::io::GzipOutputStream gzip_stream(&file_stream, options);
+    google::protobuf::io::GzipOutputStream::Options options;
+    options.format = google::protobuf::io::GzipOutputStream::GZIP;
+    // options.compression_level = Z_DEFAULT_COMPRESSION;
+    google::protobuf::io::GzipOutputStream gzip_stream(&file_stream, options);
     for (const T& message : messages) {
-      if (!WriteDelimitedTo(message, &file_stream)) {
+      if (!WriteDelimitedTo(message, &gzip_stream)) {
         std::cerr << "Cannot write message: " << message.DebugString()
                   << std::endl;
         success = false;
