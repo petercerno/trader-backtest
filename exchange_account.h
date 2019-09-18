@@ -5,6 +5,9 @@
 
 #include "trader_base.h"
 
+#define FRIEND_TEST(test_case_name, test_name) \
+  friend class test_case_name##_##test_name##_Test
+
 namespace trader {
 
 // Exchange account. For simplicity, we implement the following exchange:
@@ -34,7 +37,11 @@ class ExchangeAccount {
                                 bool keep_intermediate_states,
                                 TraderInterface* trader) const;
 
- private:
+ protected:
+  // Returns true if the order is valid.
+  static bool IsValidOrder(const Order& order);
+  // Returns true if the order can be executed at the ohlc_tick.
+  static bool IsExecutableOrder(const Order& order, const OhlcTick& ohlc_tick);
   // Returns the transaction fee config corresponding to the given order.
   const ExchangeAccountConfig::TransactionFeeConfig& GetTransactionFeeConfig(
       const Order& order) const;
@@ -68,6 +75,10 @@ class ExchangeAccount {
       ExchangeAccountState* state,
       const ExchangeAccountState* previous_state) const;
 
+  FRIEND_TEST(ExchangeAccountTest, IsValidOrderBasicTest);
+  FRIEND_TEST(ExchangeAccountTest, IsExecutableOrderBasicTest);
+
+ private:
   // Exchange account configuration.
   ExchangeAccountConfig exchange_account_config_;
 };

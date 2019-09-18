@@ -1,63 +1,11 @@
 // Copyright © 2017 Peter Cerno. All rights reserved.
 
-#include <limits>
-
 #include "exchange_account.h"
+
+#include <limits>
 
 namespace trader {
 namespace {
-// Returns true if the order is valid.
-bool ValidOrder(const Order& order) {
-  return
-      // Both order type and order side must be defined.
-      order.has_type() && order.has_side() &&
-      (  // Positive price is required for non-market orders.
-          order.type() == Order::MARKET ||
-          (order.has_price() && order.price() > 0)) &&
-      (  // Buy order must specify positive cash amount.
-          (order.side() == Order::BUY && order.has_cash_amount() &&
-           order.cash_amount() > 0) ||
-          // Sell order must specify positive security (crypto currency) amount.
-          (order.side() == Order::SELL && order.has_security_amount() &&
-           order.security_amount() > 0));
-}
-
-// Returns true if the order can be executed at the ohlc_tick.
-bool ExecutableOrder(const Order& order, const OhlcTick& ohlc_tick) {
-  if (ValidOrder(order)) {
-    switch (order.type()) {
-      case Order::MARKET:
-        // Market order can be always executed.
-        return true;
-      case Order::LIMIT:
-        if (order.side() == Order::BUY) {
-          // Buy limit order can be executed when the actual price drops
-          // below the limit order price.
-          return ohlc_tick.low() <= order.price();
-        } else {
-          assert(order.side() == Order::SELL);
-          // Sell limit order can be executed when the actual price exceeds
-          // the limit order price.
-          return ohlc_tick.high() >= order.price();
-        }
-      case Order::STOP:
-        if (order.side() == Order::BUY) {
-          // Buy stop order can be executed when the actual price exceeds
-          // the stop order price.
-          return ohlc_tick.high() >= order.price();
-        } else {
-          assert(order.side() == Order::SELL);
-          // Sell stop order can be executed when the actual price drops
-          // below the stop order price.
-          return ohlc_tick.low() <= order.price();
-        }
-      default:
-        assert(false);  // Invalid order type.
-    }
-  }
-  return false;
-}
-
 // Returns the amount floored to the given unit.
 float GetFlooredAmount(float amount, float unit) {
   if (unit <= 0) {
@@ -123,9 +71,9 @@ ExchangeAccountStates ExchangeAccount::Execute(const OhlcHistory& ohlc_history,
     state.set_security_balance(security_balance);
     state.set_cash_balance(cash_balance);
     for (const Order& order : orders) {
-      assert(ValidOrder(order));  // Invalid order.
+      assert(IsValidOrder(order));  // Invalid order.
       *state.add_order() = order;
-      if (ExecutableOrder(order, ohlc_tick)) {
+      if (IsExecutableOrder(order, ohlc_tick)) {
         // Execute the order at the ohlc_tick.
         const float price = GetTradedPrice(order, ohlc_tick);
         const float max_security_amount =
@@ -160,6 +108,57 @@ ExchangeAccountStates ExchangeAccount::Execute(const OhlcHistory& ohlc_history,
     trader->Update(ohlc_tick, security_balance, cash_balance, &orders);
   }
   return exchange_account_states;
+}
+
+bool ExchangeAccount::IsValidOrder(const Order& order) {
+  return
+      // Both order type and order side must be defined.
+      order.has_type() && order.has_side() &&
+      (  // Positive price is required for non-market orders.
+          order.type() == Order::MARKET ||
+          (order.has_price() && order.price() > 0)) &&
+      (  // Buy order must specify positive cash amount.
+          (order.side() == Order::BUY && order.has_cash_amount() &&
+           order.cash_amount() > 0) ||
+          // Sell order must specify positive security (crypto currency) amount.
+          (order.side() == Order::SELL && order.has_security_amount() &&
+           order.security_amount() > 0));
+}
+
+bool ExchangeAccount::IsExecutableOrder(const Order& order,
+                                        const OhlcTick& ohlc_tick) {
+  if (IsValidOrder(order)) {
+    switch (order.type()) {
+      case Order::MARKET:
+        // Market order can be always executed.
+        return true;
+      case Order::LIMIT:
+        if (order.side() == Order::BUY) {
+          // Buy limit order can be executed when the actual price drops
+          // below the limit order price.
+          return ohlc_tick.low() <= order.price();
+        } else {
+          assert(order.side() == Order::SELL);
+          // Sell limit order can be executed when the actual price exceeds
+          // the limit order price.
+          return ohlc_tick.high() >= order.price();
+        }
+      case Order::STOP:
+        if (order.side() == Order::BUY) {
+          // Buy stop order can be executed when the actual price exceeds
+          // the stop order price.
+          return ohlc_tick.high() >= order.price();
+        } else {
+          assert(order.side() == Order::SELL);
+          // Sell stop order can be executed when the actual price drops
+          // below the stop order price.
+          return ohlc_tick.low() <= order.price();
+        }
+      default:
+        assert(false);  // Invalid order type.
+    }
+  }
+  return false;
 }
 
 const ExchangeAccountConfig::TransactionFeeConfig&
