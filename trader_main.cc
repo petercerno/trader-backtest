@@ -25,13 +25,13 @@ DEFINE_string(input_price_history_delimited_proto_file, "",
 DEFINE_string(input_ohlc_history_delimited_proto_file, "",
               "Input file containing the delimited OhlcRecord protos.");
 DEFINE_string(output_exchange_states_csv_file, "",
-              "Ouptut CSV file containing the exchange account states.");
+              "Output CSV file containing the exchange account states.");
 
 // Trader.
 DEFINE_string(trader, "limit-v2",
               "Trader to be executed. [limit, limit-v2, stop].");
 DEFINE_string(output_trader_log_file, "",
-              "Ouptut file containing the trader-dependent log.");
+              "Output file containing the trader-dependent log.");
 
 // Time period and sampling.
 DEFINE_string(start_date_utc, "2016-01-01",
