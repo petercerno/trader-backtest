@@ -81,25 +81,54 @@ HistoryGaps GetPriceHistoryGaps(const PriceHistory& price_history,
 
 PriceHistory RemoveOutliers(const PriceHistory& price_history,
                             float max_price_deviation_per_min) {
+  static constexpr int MAX_LOOKAHEAD = 10;
+  static constexpr int MIN_LOOKAHEAD_PERSISTENT = 3;
   PriceHistory price_history_clean;
-  if (price_history.empty()) {
-    return price_history_clean;
-  }
-  price_history_clean.push_back(price_history[0]);
-  for (size_t i = 1; i < price_history.size(); ++i) {
-    const PriceRecord& price_record_prev = price_history[i - 1];
+  for (size_t i = 0; i < price_history.size(); ++i) {
     const PriceRecord& price_record = price_history[i];
-    if (price_record.price() > 0 && price_record_prev.price() > 0 &&
-        price_record.timestamp_sec() >= price_record_prev.timestamp_sec()) {
-      const float duration_min =
-          std::max(1.0f, static_cast<float>(price_record.timestamp_sec() -
-                                            price_record_prev.timestamp_sec()) /
-                             60.0f);
-      const float deviation =
-          std::abs(price_record.price() / price_record_prev.price() - 1.0f);
-      if (deviation < max_price_deviation_per_min * std::sqrt(duration_min)) {
-        price_history_clean.push_back(price_record);
+    if (price_record.price() <= 0 || price_record.volume() <= 0) {
+      continue;
+    }
+    if (price_history_clean.empty()) {
+      price_history_clean.push_back(price_record);
+      continue;
+    }
+    const PriceRecord& price_record_prev = price_history_clean.back();
+    const float reference_price = price_record_prev.price();
+    const float duration_min =
+        std::max(1.0f, static_cast<float>(price_record.timestamp_sec() -
+                                          price_record_prev.timestamp_sec()) /
+                           60.0f);
+    const float jump_factor =
+        (1.0f + max_price_deviation_per_min) * std::sqrt(duration_min);
+    const float jump_up_price = reference_price * jump_factor;
+    const float jump_down_price = reference_price / jump_factor;
+    const bool jumped_up = price_record.price() > jump_up_price;
+    const bool jumped_down = price_record.price() < jump_down_price;
+    bool is_outlier = false;
+    if (jumped_up || jumped_down) {
+      // Let's look ahead if this jump persists.
+      int lookahead_count = 0;
+      int lookahead_persistent_count = 0;
+      const float middle_up_price =
+          0.8f * jump_up_price + 0.2f * reference_price;
+      const float middle_down_price =
+          0.8f * jump_down_price + 0.2f * reference_price;
+      for (size_t j = i + 1;
+           j < price_history.size() && lookahead_count < MAX_LOOKAHEAD; ++j) {
+        if (price_history[j].price() <= 0 || price_history[j].volume() <= 0) {
+          continue;
+        }
+        if ((jumped_up && price_history[j].price() > middle_up_price) ||
+            (jumped_down && price_history[j].price() < middle_down_price)) {
+          ++lookahead_persistent_count;
+        }
+        ++lookahead_count;
       }
+      is_outlier = lookahead_persistent_count < MIN_LOOKAHEAD_PERSISTENT;
+    }
+    if (!is_outlier) {
+      price_history_clean.push_back(price_record);
     }
   }
   return price_history_clean;

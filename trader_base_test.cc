@@ -211,7 +211,66 @@ TEST(RemoveOutliersTest, Empty) {
   ASSERT_TRUE(price_history_clean.empty());
 }
 
-TEST(RemoveOutliersTest, Basic) {
+TEST(RemoveOutliersTest, NoOutliers) {
+  PriceHistory price_history;
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228860, 705.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483228920, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228980, 695.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229040, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229100, 705.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229160, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229220, 695.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229280, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229340, 705.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229400, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229460, 695.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229520, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229580, 705.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229640, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229700, 695.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229760, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229820, 705.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229880, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229940, 695.0f, 1.5e3f, &price_history);
+  PriceHistory price_history_clean = RemoveOutliers(price_history, 0.02);
+  ASSERT_EQ(20, price_history_clean.size());
+  for (size_t i = 0; i < 20; ++i) {
+    ExpectNearPriceRecord(price_history[i], price_history_clean[i]);
+  }
+}
+
+TEST(RemoveOutliersTest, NonPositivePrice) {
+  PriceHistory price_history;
+  AddPriceRecord(1483228800, 0.01f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228860, 0.01f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228920, 0.00f, 1.0e3f, &price_history);  // Outlier.
+  AddPriceRecord(1483228980, 0.01f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229040, 0.01f, 1.0e3f, &price_history);
+  PriceHistory price_history_clean = RemoveOutliers(price_history, 0.02);
+  ASSERT_EQ(4, price_history_clean.size());
+  ExpectNearPriceRecord(price_history[0], price_history_clean[0]);
+  ExpectNearPriceRecord(price_history[1], price_history_clean[1]);
+  ExpectNearPriceRecord(price_history[3], price_history_clean[2]);
+  ExpectNearPriceRecord(price_history[4], price_history_clean[3]);
+}
+
+TEST(RemoveOutliersTest, NonPositiveVolume) {
+  PriceHistory price_history;
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228860, 705.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228920, 700.0f, 0.000f, &price_history);  // Outlier.
+  AddPriceRecord(1483228980, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229040, 695.0f, 1.0e3f, &price_history);
+  PriceHistory price_history_clean = RemoveOutliers(price_history, 0.02);
+  ASSERT_EQ(4, price_history_clean.size());
+  ExpectNearPriceRecord(price_history[0], price_history_clean[0]);
+  ExpectNearPriceRecord(price_history[1], price_history_clean[1]);
+  ExpectNearPriceRecord(price_history[3], price_history_clean[2]);
+  ExpectNearPriceRecord(price_history[4], price_history_clean[3]);
+}
+
+TEST(RemoveOutliersTest, SimpleOutlier) {
   PriceHistory price_history;
   AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
   AddPriceRecord(1483228860, 705.0f, 1.0e3f, &price_history);
@@ -219,10 +278,81 @@ TEST(RemoveOutliersTest, Basic) {
   AddPriceRecord(1483228980, 700.0f, 1.0e3f, &price_history);
   AddPriceRecord(1483229040, 695.0f, 1.0e3f, &price_history);
   PriceHistory price_history_clean = RemoveOutliers(price_history, 0.02);
-  ASSERT_EQ(3, price_history_clean.size());
+  ASSERT_EQ(4, price_history_clean.size());
   ExpectNearPriceRecord(price_history[0], price_history_clean[0]);
   ExpectNearPriceRecord(price_history[1], price_history_clean[1]);
-  ExpectNearPriceRecord(price_history[4], price_history_clean[2]);
+  ExpectNearPriceRecord(price_history[3], price_history_clean[2]);
+  ExpectNearPriceRecord(price_history[4], price_history_clean[3]);
+}
+
+TEST(RemoveOutliersTest, NonPersistentOutliers) {
+  PriceHistory price_history;
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228860, 705.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483228920, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228980, 695.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229040, 750.0f, 1.0e3f, &price_history);  // Outlier.
+  AddPriceRecord(1483229100, 705.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229160, 750.0f, 1.0e3f, &price_history);  // Outlier.
+  AddPriceRecord(1483229220, 695.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229280, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229340, 705.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229400, 450.0f, 1.0e3f, &price_history);  // Outlier.
+  AddPriceRecord(1483229460, 695.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229520, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229580, 705.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229640, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229700, 695.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229760, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229820, 705.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229880, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229940, 695.0f, 1.5e3f, &price_history);
+  PriceHistory price_history_clean = RemoveOutliers(price_history, 0.02);
+  ASSERT_EQ(17, price_history_clean.size());
+  for (size_t i = 0; i < 4; ++i) {
+    ExpectNearPriceRecord(price_history[i], price_history_clean[i]);
+  }
+  for (size_t i = 5; i < 6; ++i) {
+    ExpectNearPriceRecord(price_history[i], price_history_clean[i - 1]);
+  }
+  for (size_t i = 7; i < 10; ++i) {
+    ExpectNearPriceRecord(price_history[i], price_history_clean[i - 2]);
+  }
+  for (size_t i = 11; i < 20; ++i) {
+    ExpectNearPriceRecord(price_history[i], price_history_clean[i - 3]);
+  }
+}
+
+TEST(RemoveOutliersTest, PersistentJumps) {
+  PriceHistory price_history;
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228860, 705.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483228920, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228980, 695.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229040, 750.0f, 1.0e3f, &price_history);  // Persistent.
+  AddPriceRecord(1483229100, 705.0f, 1.5e3f, &price_history);  // Outlier.
+  AddPriceRecord(1483229160, 750.0f, 1.0e3f, &price_history);  // Persistent.
+  AddPriceRecord(1483229220, 745.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229280, 750.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229340, 755.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229400, 750.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229460, 745.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229520, 750.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229580, 755.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229640, 700.0f, 1.0e3f, &price_history);  // Persistent.
+  AddPriceRecord(1483229700, 695.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229760, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229820, 705.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483229880, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483229940, 695.0f, 1.5e3f, &price_history);
+  PriceHistory price_history_clean = RemoveOutliers(price_history, 0.02);
+  ASSERT_EQ(19, price_history_clean.size());
+  for (size_t i = 0; i < 5; ++i) {
+    ExpectNearPriceRecord(price_history[i], price_history_clean[i]);
+  }
+  for (size_t i = 6; i < 20; ++i) {
+    ExpectNearPriceRecord(price_history[i], price_history_clean[i - 1]);
+  }
 }
 
 TEST(HistorySubsetCopyTest, Basic) {
