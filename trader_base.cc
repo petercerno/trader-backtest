@@ -150,7 +150,7 @@ std::map<size_t, bool> GetOutlierIndicesWithContext(
   for (size_t i = start_i; i < outlier_indices.size(); ++i) {
     const size_t j = outlier_indices[i];
     const size_t a = (j <= left_context_size) ? 0 : j - left_context_size;
-    const size_t b = std::min(j + right_context_size, price_history_size);
+    const size_t b = std::min(j + right_context_size + 1, price_history_size);
     for (size_t k = a; k < b; ++k) {
       // Keep existing outliers.
       index_to_outlier[k] |= false;
