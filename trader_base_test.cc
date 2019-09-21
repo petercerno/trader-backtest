@@ -421,6 +421,145 @@ TEST(RemoveOutliersTest, PersistentJumps) {
   EXPECT_EQ(5, outlier_indices[0]);
 }
 
+TEST(GetOutlierIndicesWithContextTest, NoOutliers) {
+  std::vector<size_t> outlier_indices;
+  std::map<size_t, bool> index_to_outlier =
+      GetOutlierIndicesWithContext(outlier_indices,
+                                   /* price_history_size = */ 100,
+                                   /* left_context_size = */ 5,
+                                   /* right_context_size = */ 5,
+                                   /* last_n = */ 10);
+  ASSERT_TRUE(index_to_outlier.empty());
+}
+
+TEST(GetOutlierIndicesWithContextTest, SingleOutlierAtTheBeginning) {
+  std::vector<size_t> outlier_indices{3};
+  std::map<size_t, bool> index_to_outlier =
+      GetOutlierIndicesWithContext(outlier_indices,
+                                   /* price_history_size = */ 100,
+                                   /* left_context_size = */ 5,
+                                   /* right_context_size = */ 5,
+                                   /* last_n = */ 10);
+  ASSERT_EQ(9, index_to_outlier.size());
+  EXPECT_FALSE(index_to_outlier.at(0));
+  EXPECT_FALSE(index_to_outlier.at(1));
+  EXPECT_FALSE(index_to_outlier.at(2));
+  EXPECT_TRUE(index_to_outlier.at(3));
+  EXPECT_FALSE(index_to_outlier.at(4));
+  EXPECT_FALSE(index_to_outlier.at(5));
+  EXPECT_FALSE(index_to_outlier.at(6));
+  EXPECT_FALSE(index_to_outlier.at(7));
+  EXPECT_FALSE(index_to_outlier.at(8));
+}
+
+TEST(GetOutlierIndicesWithContextTest, SingleOutlierInTheMiddle) {
+  std::vector<size_t> outlier_indices{50};
+  std::map<size_t, bool> index_to_outlier =
+      GetOutlierIndicesWithContext(outlier_indices,
+                                   /* price_history_size = */ 100,
+                                   /* left_context_size = */ 5,
+                                   /* right_context_size = */ 5,
+                                   /* last_n = */ 10);
+  ASSERT_EQ(11, index_to_outlier.size());
+  EXPECT_FALSE(index_to_outlier.at(45));
+  EXPECT_FALSE(index_to_outlier.at(46));
+  EXPECT_FALSE(index_to_outlier.at(47));
+  EXPECT_FALSE(index_to_outlier.at(48));
+  EXPECT_FALSE(index_to_outlier.at(49));
+  EXPECT_TRUE(index_to_outlier.at(50));
+  EXPECT_FALSE(index_to_outlier.at(51));
+  EXPECT_FALSE(index_to_outlier.at(52));
+  EXPECT_FALSE(index_to_outlier.at(53));
+  EXPECT_FALSE(index_to_outlier.at(54));
+  EXPECT_FALSE(index_to_outlier.at(55));
+}
+
+TEST(GetOutlierIndicesWithContextTest, SingleOutlierAtTheEnd) {
+  std::vector<size_t> outlier_indices{97};
+  std::map<size_t, bool> index_to_outlier =
+      GetOutlierIndicesWithContext(outlier_indices,
+                                   /* price_history_size = */ 100,
+                                   /* left_context_size = */ 5,
+                                   /* right_context_size = */ 5,
+                                   /* last_n = */ 10);
+  ASSERT_EQ(8, index_to_outlier.size());
+  EXPECT_FALSE(index_to_outlier.at(92));
+  EXPECT_FALSE(index_to_outlier.at(93));
+  EXPECT_FALSE(index_to_outlier.at(94));
+  EXPECT_FALSE(index_to_outlier.at(95));
+  EXPECT_FALSE(index_to_outlier.at(96));
+  EXPECT_TRUE(index_to_outlier.at(97));
+  EXPECT_FALSE(index_to_outlier.at(98));
+  EXPECT_FALSE(index_to_outlier.at(99));
+}
+
+TEST(GetOutlierIndicesWithContextTest, MultipleOutliersAtTheBeginning) {
+  std::vector<size_t> outlier_indices{3, 4, 7};
+  std::map<size_t, bool> index_to_outlier =
+      GetOutlierIndicesWithContext(outlier_indices,
+                                   /* price_history_size = */ 100,
+                                   /* left_context_size = */ 5,
+                                   /* right_context_size = */ 5,
+                                   /* last_n = */ 10);
+  ASSERT_EQ(13, index_to_outlier.size());
+  EXPECT_FALSE(index_to_outlier.at(0));
+  EXPECT_FALSE(index_to_outlier.at(1));
+  EXPECT_FALSE(index_to_outlier.at(2));
+  EXPECT_TRUE(index_to_outlier.at(3));
+  EXPECT_TRUE(index_to_outlier.at(4));
+  EXPECT_FALSE(index_to_outlier.at(5));
+  EXPECT_FALSE(index_to_outlier.at(6));
+  EXPECT_TRUE(index_to_outlier.at(7));
+  EXPECT_FALSE(index_to_outlier.at(8));
+  EXPECT_FALSE(index_to_outlier.at(9));
+  EXPECT_FALSE(index_to_outlier.at(10));
+  EXPECT_FALSE(index_to_outlier.at(11));
+  EXPECT_FALSE(index_to_outlier.at(12));
+}
+
+TEST(GetOutlierIndicesWithContextTest, MultipleOutliersInTheMiddle) {
+  std::vector<size_t> outlier_indices{50, 51, 53};
+  std::map<size_t, bool> index_to_outlier =
+      GetOutlierIndicesWithContext(outlier_indices,
+                                   /* price_history_size = */ 100,
+                                   /* left_context_size = */ 3,
+                                   /* right_context_size = */ 3,
+                                   /* last_n = */ 10);
+  ASSERT_EQ(10, index_to_outlier.size());
+  EXPECT_FALSE(index_to_outlier.at(47));
+  EXPECT_FALSE(index_to_outlier.at(48));
+  EXPECT_FALSE(index_to_outlier.at(49));
+  EXPECT_TRUE(index_to_outlier.at(50));
+  EXPECT_TRUE(index_to_outlier.at(51));
+  EXPECT_FALSE(index_to_outlier.at(52));
+  EXPECT_TRUE(index_to_outlier.at(53));
+  EXPECT_FALSE(index_to_outlier.at(54));
+  EXPECT_FALSE(index_to_outlier.at(55));
+  EXPECT_FALSE(index_to_outlier.at(56));
+}
+
+TEST(GetOutlierIndicesWithContextTest, MultipleOutliersAtTheEnd) {
+  std::vector<size_t> outlier_indices{94, 95, 97};
+  std::map<size_t, bool> index_to_outlier =
+      GetOutlierIndicesWithContext(outlier_indices,
+                                   /* price_history_size = */ 100,
+                                   /* left_context_size = */ 5,
+                                   /* right_context_size = */ 5,
+                                   /* last_n = */ 10);
+  ASSERT_EQ(11, index_to_outlier.size());
+  EXPECT_FALSE(index_to_outlier.at(89));
+  EXPECT_FALSE(index_to_outlier.at(90));
+  EXPECT_FALSE(index_to_outlier.at(91));
+  EXPECT_FALSE(index_to_outlier.at(92));
+  EXPECT_FALSE(index_to_outlier.at(93));
+  EXPECT_TRUE(index_to_outlier.at(94));
+  EXPECT_TRUE(index_to_outlier.at(95));
+  EXPECT_FALSE(index_to_outlier.at(96));
+  EXPECT_TRUE(index_to_outlier.at(97));
+  EXPECT_FALSE(index_to_outlier.at(98));
+  EXPECT_FALSE(index_to_outlier.at(99));
+}
+
 TEST(HistorySubsetCopyTest, Basic) {
   PriceHistory price_history;
   AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
