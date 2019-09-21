@@ -38,7 +38,7 @@ DEFINE_string(start_date_utc, "2016-01-01",
               "Start date YYYY-MM-DD in UTC (included).");
 DEFINE_string(end_date_utc, "2017-01-01",
               "End date YYYY-MM-DD in UTC (excluded).");
-DEFINE_double(max_price_deviation_per_min, 0.02,
+DEFINE_double(max_price_deviation_per_min, 0.05,
               "Maximum allowed price deviation per minute.");
 DEFINE_int32(sampling_rate_sec, 300, "Sampling rate in seconds.");
 DEFINE_int32(evaluation_period_months, 6, "Evaluation period in months.");
@@ -195,19 +195,47 @@ OhlcHistory GetOhlcHistoryFromFlags(long start_timestamp_sec,
     HistoryGaps history_gaps = GetPriceHistoryGaps(
         price_history, start_timestamp_sec, end_timestamp_sec,
         /* top_n = */ 10);
-    std::cout << "Top 10 gaps:" << std::endl;
+    std::cout << std::endl << "Top 10 gaps:" << std::endl;
     for (const HistoryGap& history_gap : history_gaps) {
       const long gap_duration_sec = history_gap.second - history_gap.first;
-      std::cout << "[" << ConvertTimestampSecToDateTimeUTC(history_gap.first)
-                << " - " << ConvertTimestampSecToDateTimeUTC(history_gap.second)
-                << "] Duration: " << DurationToString(gap_duration_sec)
-                << std::endl;
+      std::cout << history_gap.first << " ["
+                << ConvertTimestampSecToDateTimeUTC(history_gap.first) << "] - "
+                << history_gap.second << " ["
+                << ConvertTimestampSecToDateTimeUTC(history_gap.second)
+                << "]: " << DurationToString(gap_duration_sec) << std::endl;
     }
-    PriceHistory price_history_clean =
-        RemoveOutliers(price_history, FLAGS_max_price_deviation_per_min,
-                       /* outlier_indices = */ nullptr);
-    std::cout << "Removed " << price_history.size() - price_history_clean.size()
-              << " outliers" << std::endl;
+    std::vector<size_t> outlier_indices;
+    PriceHistory price_history_clean = RemoveOutliers(
+        price_history, FLAGS_max_price_deviation_per_min, &outlier_indices);
+    const size_t num_outliers =
+        price_history.size() - price_history_clean.size();
+    std::cout << std::endl
+              << "Removed " << num_outliers << " outliers" << std::endl;
+    std::cout << "Last 10 outliers:" << std::endl;
+    std::map<size_t, bool> index_to_outlier =
+        GetOutlierIndicesWithContext(outlier_indices,       // nowrap
+                                     price_history.size(),  // nowrap
+                                     /* left_context_size = */ 5,
+                                     /* right_context_size = */ 5,
+                                     /* last_n = */ 10);
+    size_t index_prev = 0;
+    for (const auto& index_outlier_pair : index_to_outlier) {
+      const size_t index = index_outlier_pair.first;
+      const bool is_outlier = index_outlier_pair.second;
+      const PriceRecord& price_record = price_history[index];
+      if (index_prev > 0 && index > index_prev + 1) {
+        std::cout << "   ..." << std::endl;
+      }
+      std::cout << (is_outlier ? " x " : "   ")          // nowrap
+                << price_record.timestamp_sec() << " ["  // nowrap
+                << ConvertTimestampSecToDateTimeUTC(
+                       price_record.timestamp_sec())
+                << "]: "                         // nowrap
+                << price_record.price() << " ["  // nowrap
+                << price_record.volume() << "]"  // nowrap
+                << std::endl;
+      index_prev = index;
+    }
     return Resample(price_history_clean, start_timestamp_sec, end_timestamp_sec,
                     FLAGS_sampling_rate_sec);
   } else if (!FLAGS_input_ohlc_history_delimited_proto_file.empty()) {
@@ -254,6 +282,7 @@ int main(int argc, char* argv[]) {
   TraderEval trader_eval(exchange_account_config, eval_config, ohlc_history);
 
   if (FLAGS_evaluate_batch) {
+    std::cout << std::endl << "Batch evaluation:" << std::endl;
     TraderBatch trader_batch = GetTraderBatch();
     std::vector<EvalResult> eval_results =
         trader_eval.EvaluateBatch(trader_batch);
@@ -263,6 +292,7 @@ int main(int argc, char* argv[]) {
               });
     PrintEvalResults(eval_results, 20);
   } else {
+    std::cout << std::endl << "Trader evaluation:" << std::endl;
     TraderInstance trader_instance = GetTraderInstance();
     std::ofstream trader_log_stream;
     if (!FLAGS_output_trader_log_file.empty()) {
