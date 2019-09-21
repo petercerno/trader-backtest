@@ -1,4 +1,4 @@
-// Copyright © 2017 Peter Cerno. All rights reserved.
+// Copyright © 2019 Peter Cerno. All rights reserved.
 
 #include "trader_base.h"
 
@@ -205,10 +205,20 @@ TEST(GetPriceHistoryGapsTest, Basic) {
   EXPECT_EQ(1483231500, history_gaps[3].second);
 }
 
-TEST(RemoveOutliersTest, Empty) {
+TEST(RemoveOutliersTest, EmptyPriceHistory) {
   PriceHistory price_history;
-  PriceHistory price_history_clean = RemoveOutliers(price_history, 0.01);
+  PriceHistory price_history_clean =
+      RemoveOutliers(price_history, 0.01, /* outlier_indices = */ nullptr);
   ASSERT_TRUE(price_history_clean.empty());
+}
+
+TEST(RemoveOutliersTest, EmptyPriceHistoryHasEmptyOutlierIndices) {
+  PriceHistory price_history;
+  std::vector<size_t> outlier_indices;
+  PriceHistory price_history_clean =
+      RemoveOutliers(price_history, 0.01, &outlier_indices);
+  ASSERT_TRUE(price_history_clean.empty());
+  ASSERT_TRUE(outlier_indices.empty());
 }
 
 TEST(RemoveOutliersTest, NoOutliers) {
@@ -233,11 +243,21 @@ TEST(RemoveOutliersTest, NoOutliers) {
   AddPriceRecord(1483229820, 705.0f, 1.5e3f, &price_history);
   AddPriceRecord(1483229880, 700.0f, 1.0e3f, &price_history);
   AddPriceRecord(1483229940, 695.0f, 1.5e3f, &price_history);
-  PriceHistory price_history_clean = RemoveOutliers(price_history, 0.02);
+  // Without outlier_indices.
+  PriceHistory price_history_clean =
+      RemoveOutliers(price_history, 0.02, /* outlier_indices = */ nullptr);
   ASSERT_EQ(20, price_history_clean.size());
   for (size_t i = 0; i < 20; ++i) {
     ExpectNearPriceRecord(price_history[i], price_history_clean[i]);
   }
+  // With outlier_indices.
+  std::vector<size_t> outlier_indices;
+  price_history_clean = RemoveOutliers(price_history, 0.02, &outlier_indices);
+  ASSERT_EQ(20, price_history_clean.size());
+  for (size_t i = 0; i < 20; ++i) {
+    ExpectNearPriceRecord(price_history[i], price_history_clean[i]);
+  }
+  ASSERT_EQ(0, outlier_indices.size());
 }
 
 TEST(RemoveOutliersTest, NonPositivePrice) {
@@ -247,12 +267,24 @@ TEST(RemoveOutliersTest, NonPositivePrice) {
   AddPriceRecord(1483228920, 0.00f, 1.0e3f, &price_history);  // Outlier.
   AddPriceRecord(1483228980, 0.01f, 1.0e3f, &price_history);
   AddPriceRecord(1483229040, 0.01f, 1.0e3f, &price_history);
-  PriceHistory price_history_clean = RemoveOutliers(price_history, 0.02);
+  // Without outlier_indices.
+  PriceHistory price_history_clean =
+      RemoveOutliers(price_history, 0.02, /* outlier_indices = */ nullptr);
   ASSERT_EQ(4, price_history_clean.size());
   ExpectNearPriceRecord(price_history[0], price_history_clean[0]);
   ExpectNearPriceRecord(price_history[1], price_history_clean[1]);
   ExpectNearPriceRecord(price_history[3], price_history_clean[2]);
   ExpectNearPriceRecord(price_history[4], price_history_clean[3]);
+  // With outlier_indices.
+  std::vector<size_t> outlier_indices;
+  price_history_clean = RemoveOutliers(price_history, 0.02, &outlier_indices);
+  ASSERT_EQ(4, price_history_clean.size());
+  ExpectNearPriceRecord(price_history[0], price_history_clean[0]);
+  ExpectNearPriceRecord(price_history[1], price_history_clean[1]);
+  ExpectNearPriceRecord(price_history[3], price_history_clean[2]);
+  ExpectNearPriceRecord(price_history[4], price_history_clean[3]);
+  ASSERT_EQ(1, outlier_indices.size());
+  EXPECT_EQ(2, outlier_indices[0]);
 }
 
 TEST(RemoveOutliersTest, NonPositiveVolume) {
@@ -262,12 +294,24 @@ TEST(RemoveOutliersTest, NonPositiveVolume) {
   AddPriceRecord(1483228920, 700.0f, 0.000f, &price_history);  // Outlier.
   AddPriceRecord(1483228980, 700.0f, 1.0e3f, &price_history);
   AddPriceRecord(1483229040, 695.0f, 1.0e3f, &price_history);
-  PriceHistory price_history_clean = RemoveOutliers(price_history, 0.02);
+  // Without outlier_indices.
+  PriceHistory price_history_clean =
+      RemoveOutliers(price_history, 0.02, /* outlier_indices = */ nullptr);
   ASSERT_EQ(4, price_history_clean.size());
   ExpectNearPriceRecord(price_history[0], price_history_clean[0]);
   ExpectNearPriceRecord(price_history[1], price_history_clean[1]);
   ExpectNearPriceRecord(price_history[3], price_history_clean[2]);
   ExpectNearPriceRecord(price_history[4], price_history_clean[3]);
+  // With outlier_indices.
+  std::vector<size_t> outlier_indices;
+  price_history_clean = RemoveOutliers(price_history, 0.02, &outlier_indices);
+  ASSERT_EQ(4, price_history_clean.size());
+  ExpectNearPriceRecord(price_history[0], price_history_clean[0]);
+  ExpectNearPriceRecord(price_history[1], price_history_clean[1]);
+  ExpectNearPriceRecord(price_history[3], price_history_clean[2]);
+  ExpectNearPriceRecord(price_history[4], price_history_clean[3]);
+  ASSERT_EQ(1, outlier_indices.size());
+  EXPECT_EQ(2, outlier_indices[0]);
 }
 
 TEST(RemoveOutliersTest, SimpleOutlier) {
@@ -277,12 +321,24 @@ TEST(RemoveOutliersTest, SimpleOutlier) {
   AddPriceRecord(1483228920, 750.0f, 1.0e3f, &price_history);
   AddPriceRecord(1483228980, 700.0f, 1.0e3f, &price_history);
   AddPriceRecord(1483229040, 695.0f, 1.0e3f, &price_history);
-  PriceHistory price_history_clean = RemoveOutliers(price_history, 0.02);
+  // Without outlier_indices.
+  PriceHistory price_history_clean =
+      RemoveOutliers(price_history, 0.02, /* outlier_indices = */ nullptr);
   ASSERT_EQ(4, price_history_clean.size());
   ExpectNearPriceRecord(price_history[0], price_history_clean[0]);
   ExpectNearPriceRecord(price_history[1], price_history_clean[1]);
   ExpectNearPriceRecord(price_history[3], price_history_clean[2]);
   ExpectNearPriceRecord(price_history[4], price_history_clean[3]);
+  // With outlier_indices.
+  std::vector<size_t> outlier_indices;
+  price_history_clean = RemoveOutliers(price_history, 0.02, &outlier_indices);
+  ASSERT_EQ(4, price_history_clean.size());
+  ExpectNearPriceRecord(price_history[0], price_history_clean[0]);
+  ExpectNearPriceRecord(price_history[1], price_history_clean[1]);
+  ExpectNearPriceRecord(price_history[3], price_history_clean[2]);
+  ExpectNearPriceRecord(price_history[4], price_history_clean[3]);
+  ASSERT_EQ(1, outlier_indices.size());
+  EXPECT_EQ(2, outlier_indices[0]);
 }
 
 TEST(RemoveOutliersTest, NonPersistentOutliers) {
@@ -307,7 +363,9 @@ TEST(RemoveOutliersTest, NonPersistentOutliers) {
   AddPriceRecord(1483229820, 705.0f, 1.5e3f, &price_history);
   AddPriceRecord(1483229880, 700.0f, 1.0e3f, &price_history);
   AddPriceRecord(1483229940, 695.0f, 1.5e3f, &price_history);
-  PriceHistory price_history_clean = RemoveOutliers(price_history, 0.02);
+  std::vector<size_t> outlier_indices;
+  PriceHistory price_history_clean =
+      RemoveOutliers(price_history, 0.02, &outlier_indices);
   ASSERT_EQ(17, price_history_clean.size());
   for (size_t i = 0; i < 4; ++i) {
     ExpectNearPriceRecord(price_history[i], price_history_clean[i]);
@@ -321,6 +379,10 @@ TEST(RemoveOutliersTest, NonPersistentOutliers) {
   for (size_t i = 11; i < 20; ++i) {
     ExpectNearPriceRecord(price_history[i], price_history_clean[i - 3]);
   }
+  ASSERT_EQ(3, outlier_indices.size());
+  EXPECT_EQ(4, outlier_indices[0]);
+  EXPECT_EQ(6, outlier_indices[1]);
+  EXPECT_EQ(10, outlier_indices[2]);
 }
 
 TEST(RemoveOutliersTest, PersistentJumps) {
@@ -345,7 +407,9 @@ TEST(RemoveOutliersTest, PersistentJumps) {
   AddPriceRecord(1483229820, 705.0f, 1.5e3f, &price_history);
   AddPriceRecord(1483229880, 700.0f, 1.0e3f, &price_history);
   AddPriceRecord(1483229940, 695.0f, 1.5e3f, &price_history);
-  PriceHistory price_history_clean = RemoveOutliers(price_history, 0.02);
+  std::vector<size_t> outlier_indices;
+  PriceHistory price_history_clean =
+      RemoveOutliers(price_history, 0.02, &outlier_indices);
   ASSERT_EQ(19, price_history_clean.size());
   for (size_t i = 0; i < 5; ++i) {
     ExpectNearPriceRecord(price_history[i], price_history_clean[i]);
@@ -353,6 +417,8 @@ TEST(RemoveOutliersTest, PersistentJumps) {
   for (size_t i = 6; i < 20; ++i) {
     ExpectNearPriceRecord(price_history[i], price_history_clean[i - 1]);
   }
+  ASSERT_EQ(1, outlier_indices.size());
+  EXPECT_EQ(5, outlier_indices[0]);
 }
 
 TEST(HistorySubsetCopyTest, Basic) {

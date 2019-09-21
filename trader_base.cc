@@ -1,4 +1,4 @@
-// Copyright © 2017 Peter Cerno. All rights reserved.
+// Copyright © 2019 Peter Cerno. All rights reserved.
 
 #include "trader_base.h"
 
@@ -80,13 +80,17 @@ HistoryGaps GetPriceHistoryGaps(const PriceHistory& price_history,
 }
 
 PriceHistory RemoveOutliers(const PriceHistory& price_history,
-                            float max_price_deviation_per_min) {
+                            float max_price_deviation_per_min,
+                            std::vector<size_t>* outlier_indices) {
   static constexpr int MAX_LOOKAHEAD = 10;
   static constexpr int MIN_LOOKAHEAD_PERSISTENT = 3;
   PriceHistory price_history_clean;
   for (size_t i = 0; i < price_history.size(); ++i) {
     const PriceRecord& price_record = price_history[i];
     if (price_record.price() <= 0 || price_record.volume() <= 0) {
+      if (outlier_indices != nullptr) {
+        outlier_indices->push_back(i);
+      }
       continue;
     }
     if (price_history_clean.empty()) {
@@ -129,6 +133,8 @@ PriceHistory RemoveOutliers(const PriceHistory& price_history,
     }
     if (!is_outlier) {
       price_history_clean.push_back(price_record);
+    } else if (outlier_indices != nullptr) {
+      outlier_indices->push_back(i);
     }
   }
   return price_history_clean;

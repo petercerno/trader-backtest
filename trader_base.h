@@ -1,4 +1,4 @@
-// Copyright © 2017 Peter Cerno. All rights reserved.
+// Copyright © 2019 Peter Cerno. All rights reserved.
 
 #ifndef TRADER_BASE_H
 #define TRADER_BASE_H
@@ -39,8 +39,10 @@ HistoryGaps GetPriceHistoryGaps(const PriceHistory& price_history,
 
 // Returns price history with removed outliers.
 // max_price_deviation_per_min is maximum allowed price deviation per minute.
+// outlier_indices is an optional output vector of removed outlier indices.
 PriceHistory RemoveOutliers(const PriceHistory& price_history,
-                            float max_price_deviation_per_min);
+                            float max_price_deviation_per_min,
+                            std::vector<size_t>* outlier_indices);
 
 // Returns the resampled ohlc_history within the interval [start_timestamp_sec,
 // end_timestamp_sec) according to the given sampling rate (in seconds).

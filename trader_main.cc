@@ -204,7 +204,8 @@ OhlcHistory GetOhlcHistoryFromFlags(long start_timestamp_sec,
                 << std::endl;
     }
     PriceHistory price_history_clean =
-        RemoveOutliers(price_history, FLAGS_max_price_deviation_per_min);
+        RemoveOutliers(price_history, FLAGS_max_price_deviation_per_min,
+                       /* outlier_indices = */ nullptr);
     std::cout << "Removed " << price_history.size() - price_history_clean.size()
               << " outliers" << std::endl;
     return Resample(price_history_clean, start_timestamp_sec, end_timestamp_sec,
