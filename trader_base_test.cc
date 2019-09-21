@@ -287,11 +287,11 @@ TEST(RemoveOutliersTest, NonPositivePrice) {
   EXPECT_EQ(2, outlier_indices[0]);
 }
 
-TEST(RemoveOutliersTest, NonPositiveVolume) {
+TEST(RemoveOutliersTest, NegativeVolume) {
   PriceHistory price_history;
   AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
   AddPriceRecord(1483228860, 705.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483228920, 700.0f, 0.000f, &price_history);  // Outlier.
+  AddPriceRecord(1483228920, 700.0f, -0.05f, &price_history);  // Outlier.
   AddPriceRecord(1483228980, 700.0f, 1.0e3f, &price_history);
   AddPriceRecord(1483229040, 695.0f, 1.0e3f, &price_history);
   // Without outlier_indices.

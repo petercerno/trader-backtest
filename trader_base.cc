@@ -30,7 +30,7 @@ bool CheckPriceHistoryTimestamps(const PriceHistory& price_history) {
 
 HistoryGaps GetPriceHistoryGaps(const PriceHistory& price_history,
                                 long start_timestamp_sec,
-                                long end_timestamp_sec, int top_n) {
+                                long end_timestamp_sec, size_t top_n) {
   if (price_history.empty()) {
     return {};
   }
@@ -87,7 +87,7 @@ PriceHistory RemoveOutliers(const PriceHistory& price_history,
   PriceHistory price_history_clean;
   for (size_t i = 0; i < price_history.size(); ++i) {
     const PriceRecord& price_record = price_history[i];
-    if (price_record.price() <= 0 || price_record.volume() <= 0) {
+    if (price_record.price() <= 0 || price_record.volume() < 0) {
       if (outlier_indices != nullptr) {
         outlier_indices->push_back(i);
       }
@@ -120,7 +120,7 @@ PriceHistory RemoveOutliers(const PriceHistory& price_history,
           0.8f * jump_down_price + 0.2f * reference_price;
       for (size_t j = i + 1;
            j < price_history.size() && lookahead_count < MAX_LOOKAHEAD; ++j) {
-        if (price_history[j].price() <= 0 || price_history[j].volume() <= 0) {
+        if (price_history[j].price() <= 0 || price_history[j].volume() < 0) {
           continue;
         }
         if ((jumped_up && price_history[j].price() > middle_up_price) ||
@@ -138,6 +138,26 @@ PriceHistory RemoveOutliers(const PriceHistory& price_history,
     }
   }
   return price_history_clean;
+}
+
+std::map<size_t, bool> GetOutlierIndicesWithContext(
+    const std::vector<size_t>& outlier_indices, size_t price_history_size,
+    size_t left_context_size, size_t right_context_size, size_t last_n) {
+  std::map<size_t, bool> index_to_outlier;
+  const size_t start_i = (last_n == 0 || outlier_indices.size() <= last_n)
+                             ? 0
+                             : outlier_indices.size() - last_n;
+  for (size_t i = start_i; i < outlier_indices.size(); ++i) {
+    const size_t j = outlier_indices[i];
+    const size_t a = (j <= left_context_size) ? 0 : j - left_context_size;
+    const size_t b = std::min(j + right_context_size, price_history_size);
+    for (size_t k = a; k < b; ++k) {
+      // Keep existing outliers.
+      index_to_outlier[k] |= false;
+    }
+    index_to_outlier[j] = true;
+  }
+  return index_to_outlier;
 }
 
 OhlcHistory Resample(const PriceHistory& price_history,
