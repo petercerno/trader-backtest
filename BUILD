@@ -19,7 +19,6 @@ cc_library(
 cc_test(
     name = "util_time_test",
     srcs = ["util_time_test.cc"],
-    copts = ["-Iexternal/gtest/include"],
     deps = [
         ":util_time",
         "@googletest//:gtest_main",
@@ -36,7 +35,6 @@ cc_library(
 cc_test(
     name = "util_proto_test",
     srcs = ["util_proto_test.cc"],
-    copts = ["-Iexternal/gtest/include"],
     deps = [
         ":trader_cc_proto",
         ":util_proto",
@@ -46,17 +44,46 @@ cc_test(
 
 cc_library(
     name = "trader_base",
-    srcs = ["trader_base.cc"],
     hdrs = ["trader_base.h"],
     deps = [":trader_cc_proto"],
+)
+
+cc_library(
+    name = "util_test",
+    srcs = ["util_test.cc"],
+    hdrs = ["util_test.h"],
+    deps = [
+        ":trader_base",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(
     name = "trader_base_test",
     srcs = ["trader_base_test.cc"],
-    copts = ["-Iexternal/gtest/include"],
     deps = [
         ":trader_base",
+        ":util_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "trader_util",
+    srcs = ["trader_util.cc"],
+    hdrs = ["trader_util.h"],
+    deps = [
+        ":trader_base",
+        ":trader_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "trader_util_test",
+    srcs = ["trader_util_test.cc"],
+    deps = [
+        ":trader_util",
+        ":util_test",
         "@googletest//:gtest_main",
     ],
 )
@@ -93,7 +120,6 @@ cc_library(
 cc_test(
     name = "exchange_account_test",
     srcs = ["exchange_account_test.cc"],
-    copts = ["-Iexternal/gtest/include"],
     deps = [
         ":exchange_account",
         "@googletest//:gtest_main",
@@ -119,6 +145,7 @@ cc_binary(
         ":trader_eval",
         ":trader_impls",
         ":trader_io",
+        ":trader_util",
         ":util_proto",
         ":util_time",
         "//external:gflags",
@@ -131,6 +158,7 @@ cc_binary(
     deps = [
         ":trader_base",
         ":trader_io",
+        ":trader_util",
         ":util_proto",
         ":util_time",
         "//external:gflags",

@@ -1,22 +1,12 @@
 // Copyright © 2019 Peter Cerno. All rights reserved.
 
-#include "trader_base.h"
+#include "trader_util.h"
 
+#include <algorithm>
+#include <cmath>
 #include <queue>
 
 namespace trader {
-
-namespace {
-// Returns the downsampled timestamp (in seconds) according to the given
-// sampling rate (in seconds).
-int Downsample(int timestamp_sec, int sampling_rate_sec) {
-  return sampling_rate_sec * (timestamp_sec / sampling_rate_sec);
-}
-}  // namespace
-
-void TraderInterface::SetLogStream(std::ostream* os) { os_ = os; }
-
-std::ostream* TraderInterface::LogStream() const { return os_; }
 
 bool CheckPriceHistoryTimestamps(const PriceHistory& price_history) {
   for (size_t i = 1; i < price_history.size(); ++i) {
@@ -173,7 +163,7 @@ OhlcHistory Resample(const PriceHistory& price_history,
        price_record_it != price_history_subset.second; ++price_record_it) {
     const PriceRecord& price_record = *price_record_it;
     const int downsampled_timestamp_sec =
-        Downsample(price_record.timestamp_sec(), sampling_rate_sec);
+        sampling_rate_sec * (price_record.timestamp_sec() / sampling_rate_sec);
     while (!resampled_ohlc_history.empty() &&
            resampled_ohlc_history.back().timestamp_sec() + sampling_rate_sec <
                downsampled_timestamp_sec) {

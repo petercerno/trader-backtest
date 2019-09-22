@@ -16,6 +16,7 @@
 #include "trader_base.h"
 #include "trader_eval.h"
 #include "trader_io.h"
+#include "trader_util.h"
 #include "util_proto.h"
 #include "util_time.h"
 
