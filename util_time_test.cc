@@ -87,6 +87,22 @@ TEST(ConvertTimestampSecToDateTimeUTCTest, Basic) {
             ConvertTimestampSecToDateTimeUTC(2556061200));
 }
 
+TEST(DurationToStringTest, Basic) {
+  EXPECT_EQ("0:00:00", DurationToString(0));
+  EXPECT_EQ("0:00:05", DurationToString(5));
+  EXPECT_EQ("0:00:10", DurationToString(10));
+  EXPECT_EQ("0:01:00", DurationToString(60));
+  EXPECT_EQ("0:01:05", DurationToString(65));
+  EXPECT_EQ("0:01:10", DurationToString(70));
+  EXPECT_EQ("1:00:00", DurationToString(3600));
+  EXPECT_EQ("1:00:05", DurationToString(3605));
+  EXPECT_EQ("1:00:10", DurationToString(3610));
+  EXPECT_EQ("1:05:00", DurationToString(3900));
+  EXPECT_EQ("1:05:05", DurationToString(3905));
+  EXPECT_EQ("1:05:10", DurationToString(3910));
+  EXPECT_EQ("100:00:00", DurationToString(360000));
+}
+
 TEST(AddMonthsToTimestampSec, Basic) {
   EXPECT_EQ(0, AddMonthsToTimestampSec(0, 0));
   EXPECT_EQ(1, AddMonthsToTimestampSec(1, 0));

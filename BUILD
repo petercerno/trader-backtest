@@ -92,7 +92,11 @@ cc_library(
     name = "trader_io",
     srcs = ["trader_io.cc"],
     hdrs = ["trader_io.h"],
-    deps = [":trader_base"],
+    deps = [
+        ":trader_base",
+        ":trader_util",
+        ":util_time",
+    ],
 )
 
 cc_library(

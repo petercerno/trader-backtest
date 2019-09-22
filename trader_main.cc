@@ -3,7 +3,6 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -177,15 +176,6 @@ std::vector<T> ReadHistory(const std::string& file_name) {
   return history;
 }
 
-// Converts the duration (in seconds) to a string.
-std::string DurationToString(long duration_sec) {
-  const long duration_hours = duration_sec / 3600;
-  const long duration_minutes = (duration_sec / 60) % 60;
-  std::stringstream ss;
-  ss << duration_hours << " hour(s) and " << duration_minutes << " minute(s)";
-  return ss.str();
-}
-
 // Gets the OHLC history based on flags.
 OhlcHistory GetOhlcHistoryFromFlags(long start_timestamp_sec,
                                     long end_timestamp_sec) {
@@ -193,50 +183,19 @@ OhlcHistory GetOhlcHistoryFromFlags(long start_timestamp_sec,
       FLAGS_sampling_rate_sec > 0) {
     PriceHistory price_history = ReadHistory<PriceRecord>(
         FLAGS_input_price_history_delimited_proto_file);
-    HistoryGaps history_gaps = GetPriceHistoryGaps(
-        price_history, start_timestamp_sec, end_timestamp_sec,
-        /* top_n = */ 10);
     std::cout << std::endl << "Top 10 gaps:" << std::endl;
-    for (const HistoryGap& history_gap : history_gaps) {
-      const long gap_duration_sec = history_gap.second - history_gap.first;
-      std::cout << history_gap.first << " ["
-                << ConvertTimestampSecToDateTimeUTC(history_gap.first) << "] - "
-                << history_gap.second << " ["
-                << ConvertTimestampSecToDateTimeUTC(history_gap.second)
-                << "]: " << DurationToString(gap_duration_sec) << std::endl;
-    }
+    PrintPriceHistoryGaps(price_history, start_timestamp_sec, end_timestamp_sec,
+                          /* top_n = */ 10);
     std::vector<size_t> outlier_indices;
     PriceHistory price_history_clean = RemoveOutliers(
         price_history, FLAGS_max_price_deviation_per_min, &outlier_indices);
-    const size_t num_outliers =
-        price_history.size() - price_history_clean.size();
     std::cout << std::endl
-              << "Removed " << num_outliers << " outliers" << std::endl;
+              << "Removed " << outlier_indices.size() << " outliers"
+              << std::endl;
     std::cout << "Last 10 outliers:" << std::endl;
-    std::map<size_t, bool> index_to_outlier =
-        GetOutlierIndicesWithContext(outlier_indices,       // nowrap
-                                     price_history.size(),  // nowrap
-                                     /* left_context_size = */ 5,
-                                     /* right_context_size = */ 5,
-                                     /* last_n = */ 10);
-    size_t index_prev = 0;
-    for (const auto& index_outlier_pair : index_to_outlier) {
-      const size_t index = index_outlier_pair.first;
-      const bool is_outlier = index_outlier_pair.second;
-      const PriceRecord& price_record = price_history[index];
-      if (index_prev > 0 && index > index_prev + 1) {
-        std::cout << "   ..." << std::endl;
-      }
-      std::cout << (is_outlier ? " x " : "   ")          // nowrap
-                << price_record.timestamp_sec() << " ["  // nowrap
-                << ConvertTimestampSecToDateTimeUTC(
-                       price_record.timestamp_sec())
-                << "]: "                         // nowrap
-                << price_record.price() << " ["  // nowrap
-                << price_record.volume() << "]"  // nowrap
-                << std::endl;
-      index_prev = index;
-    }
+    PrintOutliersWithContext(price_history, outlier_indices,
+                             /* left_context_size = */ 5,
+                             /* right_context_size = */ 5, /* last_n = */ 10);
     return Resample(price_history_clean, start_timestamp_sec, end_timestamp_sec,
                     FLAGS_sampling_rate_sec);
   } else if (!FLAGS_input_ohlc_history_delimited_proto_file.empty()) {

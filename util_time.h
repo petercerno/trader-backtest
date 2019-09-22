@@ -20,6 +20,9 @@ std::string ConvertTimestampSecToDateUTC(long timestamp_sec);
 // Converts UNIX timestamp (in seconds) to datetime YYYY-MM-DD hh:mm:ss in UTC.
 std::string ConvertTimestampSecToDateTimeUTC(long timestamp_sec);
 
+// Converts duration (in seconds) to string hh:mm:ss.
+std::string DurationToString(long duration_sec);
+
 // Adds months to UNIX timestamp (in seconds).
 long AddMonthsToTimestampSec(long timestamp_sec, int months);
 

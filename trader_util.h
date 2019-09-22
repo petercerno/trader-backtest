@@ -22,6 +22,7 @@ using HistoryGaps = std::vector<HistoryGap>;
 
 // Returns the top n largest (chronologically sorted) price history gaps within
 // the interval [start_timestamp_sec, end_timestamp_sec).
+// TODO: Use begin/end iterators instead of price_history.
 HistoryGaps GetPriceHistoryGaps(const PriceHistory& price_history,
                                 long start_timestamp_sec,
                                 long end_timestamp_sec, size_t top_n);
@@ -29,6 +30,7 @@ HistoryGaps GetPriceHistoryGaps(const PriceHistory& price_history,
 // Returns price history with removed outliers.
 // max_price_deviation_per_min is maximum allowed price deviation per minute.
 // outlier_indices is an optional output vector of removed outlier indices.
+// TODO: Use begin/end iterators instead of price_history.
 PriceHistory RemoveOutliers(const PriceHistory& price_history,
                             float max_price_deviation_per_min,
                             std::vector<size_t>* outlier_indices);
@@ -44,6 +46,7 @@ std::map<size_t, bool> GetOutlierIndicesWithContext(
 
 // Returns the resampled ohlc_history within the interval [start_timestamp_sec,
 // end_timestamp_sec) according to the given sampling rate (in seconds).
+// TODO: Use begin/end iterators instead of price_history.
 OhlcHistory Resample(const PriceHistory& price_history,
                      long start_timestamp_sec, long end_timestamp_sec,
                      int sampling_rate_sec);

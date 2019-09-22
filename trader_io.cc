@@ -1,11 +1,15 @@
-// Copyright © 2017 Peter Cerno. All rights reserved.
+// Copyright © 2019 Peter Cerno. All rights reserved.
 
 #include "trader_io.h"
 
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <sstream>
+
+#include "trader_util.h"
+#include "util_time.h"
 
 namespace trader {
 namespace {
@@ -160,6 +164,50 @@ bool WriteExchangeAccountStatesToCsvFile(
             << state.value() << std::endl;
   }
   return true;
+}
+
+void PrintPriceHistoryGaps(const PriceHistory& price_history,
+                           long start_timestamp_sec, long end_timestamp_sec,
+                           size_t top_n) {
+  HistoryGaps history_gaps = GetPriceHistoryGaps(
+      price_history, start_timestamp_sec, end_timestamp_sec, top_n);
+  for (const HistoryGap& history_gap : history_gaps) {
+    const long gap_duration_sec = history_gap.second - history_gap.first;
+    std::cout << history_gap.first << " ["
+              << ConvertTimestampSecToDateTimeUTC(history_gap.first) << "] - "
+              << history_gap.second << " ["
+              << ConvertTimestampSecToDateTimeUTC(history_gap.second)
+              << "]: " << DurationToString(gap_duration_sec) << std::endl;
+  }
+}
+
+void PrintOutliersWithContext(const PriceHistory& price_history,
+                              const std::vector<size_t>& outlier_indices,
+                              size_t left_context_size,
+                              size_t right_context_size, size_t last_n) {
+  std::map<size_t, bool> index_to_outlier = GetOutlierIndicesWithContext(
+      outlier_indices, price_history.size(), left_context_size,
+      right_context_size, last_n);
+  size_t index_prev = 0;
+  for (const auto& index_outlier_pair : index_to_outlier) {
+    const size_t index = index_outlier_pair.first;
+    const bool is_outlier = index_outlier_pair.second;
+    const PriceRecord& price_record = price_history[index];
+    if (index_prev > 0 && index > index_prev + 1) {
+      std::cout << "   ..." << std::endl;
+    }
+    std::cout << (is_outlier ? " x " : "   ")  // nowrap
+              << price_record.timestamp_sec()  // nowrap
+              << " ["                          // nowrap
+              << ConvertTimestampSecToDateTimeUTC(price_record.timestamp_sec())
+              << "]: "                               // nowrap
+              << std::fixed << std::setprecision(2)  // nowrap
+              << price_record.price() << " ["        // nowrap
+              << std::fixed << std::setprecision(4)  // nowrap
+              << price_record.volume() << "]"        // nowrap
+              << std::endl;
+    index_prev = index;
+  }
 }
 
 void PrintExchangeAccountStatesStats(

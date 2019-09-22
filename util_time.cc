@@ -131,6 +131,17 @@ std::string ConvertTimestampSecToDateTimeUTC(long timestamp_sec) {
   return ss.str();
 }
 
+std::string DurationToString(long duration_sec) {
+  const long hours = duration_sec / 3600;
+  const long minutes = (duration_sec / 60) % 60;
+  const long seconds = duration_sec % 60;
+  std::stringstream ss;
+  ss << hours << ":"                                         // nowrap
+     << std::setfill('0') << std::setw(2) << minutes << ":"  // nowrap
+     << std::setfill('0') << std::setw(2) << seconds;
+  return ss.str();
+}
+
 long AddMonthsToTimestampSec(long timestamp_sec, int months) {
   struct std::tm tm(
       AddMonthsToTm(ConvertTimestampSecToTm(timestamp_sec), months));

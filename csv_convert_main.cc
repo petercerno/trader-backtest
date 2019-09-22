@@ -2,7 +2,6 @@
 
 #include <chrono>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -33,15 +32,6 @@ DEFINE_string(end_date_utc, "", "End date YYYY-MM-DD in UTC (excluded).");
 DEFINE_bool(compress, true, "Whether to compress the output protobuf file.");
 
 using namespace trader;
-
-// Converts the duration (in seconds) to a string.
-std::string DurationToString(long duration_sec) {
-  const long duration_hours = duration_sec / 3600;
-  const long duration_minutes = (duration_sec / 60) % 60;
-  std::stringstream ss;
-  ss << duration_hours << " hour(s) and " << duration_minutes << " minute(s)";
-  return ss.str();
-}
 
 // Converts the price history CSV file to a delimited protobuf file.
 void ConvertPriceHistory(
