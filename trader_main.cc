@@ -177,12 +177,17 @@ std::vector<T> ReadHistory(const std::string& file_name) {
 }
 
 // Gets the OHLC history based on flags.
+// TODO: Deduplicate this from csv_convert_main.cc.
 OhlcHistory GetOhlcHistoryFromFlags(long start_timestamp_sec,
                                     long end_timestamp_sec) {
   if (!FLAGS_input_price_history_delimited_proto_file.empty() &&
       FLAGS_sampling_rate_sec > 0) {
     PriceHistory price_history = ReadHistory<PriceRecord>(
         FLAGS_input_price_history_delimited_proto_file);
+    if (!CheckPriceHistoryTimestamps(price_history)) {
+      std::cerr << "Price history timestamps are not sorted" << std::endl;
+      return {};
+    }
     std::cout << std::endl << "Top 10 gaps:" << std::endl;
     PrintPriceHistoryGaps(price_history, start_timestamp_sec, end_timestamp_sec,
                           /* top_n = */ 10);
