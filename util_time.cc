@@ -131,6 +131,21 @@ std::string ConvertTimestampSecToDateTimeUTC(long timestamp_sec) {
   return ss.str();
 }
 
+std::string TimestampPeriodToString(long start_timestamp_sec,
+                                    long end_timestamp_sec) {
+  std::stringstream ss;
+  const std::string start_str =
+      start_timestamp_sec > 0
+          ? ConvertTimestampSecToDateTimeUTC(start_timestamp_sec)
+          : "BEGIN";
+  const std::string end_str =
+      end_timestamp_sec > 0
+          ? ConvertTimestampSecToDateTimeUTC(end_timestamp_sec)
+          : "END";
+  ss << "[" << start_str << " - " << end_str << ")";
+  return ss.str();
+}
+
 std::string DurationToString(long duration_sec) {
   const long hours = duration_sec / 3600;
   const long minutes = (duration_sec / 60) % 60;

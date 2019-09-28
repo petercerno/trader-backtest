@@ -20,6 +20,10 @@ std::string ConvertTimestampSecToDateUTC(long timestamp_sec);
 // Converts UNIX timestamp (in seconds) to datetime YYYY-MM-DD hh:mm:ss in UTC.
 std::string ConvertTimestampSecToDateTimeUTC(long timestamp_sec);
 
+// Converts [start_timestamp_sec, end_timestamp_sec) period to string.
+std::string TimestampPeriodToString(long start_timestamp_sec,
+                                    long end_timestamp_sec);
+
 // Converts duration (in seconds) to string hh:mm:ss.
 std::string DurationToString(long duration_sec);
 

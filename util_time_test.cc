@@ -103,6 +103,21 @@ TEST(DurationToStringTest, Basic) {
   EXPECT_EQ("100:00:00", DurationToString(360000));
 }
 
+TEST(TimestampPeriodToStringTest, Basic) {
+  EXPECT_EQ("[BEGIN - END)",
+            TimestampPeriodToString(/* start_timestamp_sec = */ 0,
+                                    /* end_timestamp_sec = */ 0));
+  EXPECT_EQ("[BEGIN - 2017-01-01 00:00:00)",
+            TimestampPeriodToString(/* start_timestamp_sec = */ 0,
+                                    /* end_timestamp_sec = */ 1483228800));
+  EXPECT_EQ("[2000-02-29 00:00:00 - END)",
+            TimestampPeriodToString(/* start_timestamp_sec = */ 951782400,
+                                    /* end_timestamp_sec = */ 0));
+  EXPECT_EQ("[2000-02-29 00:00:10 - 2017-01-01 00:05:00)",
+            TimestampPeriodToString(/* start_timestamp_sec = */ 951782410,
+                                    /* end_timestamp_sec = */ 1483229100));
+}
+
 TEST(AddMonthsToTimestampSec, Basic) {
   EXPECT_EQ(0, AddMonthsToTimestampSec(0, 0));
   EXPECT_EQ(1, AddMonthsToTimestampSec(1, 0));
