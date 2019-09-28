@@ -25,16 +25,17 @@ bool WriteExchangeAccountStatesToCsvFile(
     const ExchangeAccountStates& exchange_account_states,
     const std::string& file_name);
 
-// Prints the top n largest (chronologically sorted) price history gaps within
-// the interval [start_timestamp_sec, end_timestamp_sec).
-void PrintPriceHistoryGaps(const PriceHistory& price_history,
+// Prints the top_n largest (chronologically sorted) price history gaps.
+void PrintPriceHistoryGaps(PriceHistory::const_iterator begin,
+                           PriceHistory::const_iterator end,
                            long start_timestamp_sec, long end_timestamp_sec,
                            size_t top_n);
 
-// Prints a subset of price_history that covers the last_n outliers.
+// Prints a subset of the given price history that covers the last_n outliers.
 // Every outlier is surrounded by left_context_size of previous prices (if
 // possible) and right_context_size of follow-up prices (if possible).
-void PrintOutliersWithContext(const PriceHistory& price_history,
+void PrintOutliersWithContext(PriceHistory::const_iterator begin,
+                              PriceHistory::const_iterator end,
                               const std::vector<size_t>& outlier_indices,
                               size_t left_context_size,
                               size_t right_context_size, size_t last_n);

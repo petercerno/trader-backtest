@@ -20,18 +20,17 @@ using HistoryGap = std::pair<long, long>;
 // Gaps in the price history.
 using HistoryGaps = std::vector<HistoryGap>;
 
-// Returns the top n largest (chronologically sorted) price history gaps within
-// the interval [start_timestamp_sec, end_timestamp_sec).
-// TODO: Use begin/end iterators instead of price_history.
-HistoryGaps GetPriceHistoryGaps(const PriceHistory& price_history,
+// Returns the top_n largest (chronologically sorted) price history gaps.
+HistoryGaps GetPriceHistoryGaps(PriceHistory::const_iterator begin,
+                                PriceHistory::const_iterator end,
                                 long start_timestamp_sec,
                                 long end_timestamp_sec, size_t top_n);
 
 // Returns price history with removed outliers.
 // max_price_deviation_per_min is maximum allowed price deviation per minute.
 // outlier_indices is an optional output vector of removed outlier indices.
-// TODO: Use begin/end iterators instead of price_history.
-PriceHistory RemoveOutliers(const PriceHistory& price_history,
+PriceHistory RemoveOutliers(PriceHistory::const_iterator begin,
+                            PriceHistory::const_iterator end,
                             float max_price_deviation_per_min,
                             std::vector<size_t>* outlier_indices);
 
@@ -44,12 +43,9 @@ std::map<size_t, bool> GetOutlierIndicesWithContext(
     const std::vector<size_t>& outlier_indices, size_t price_history_size,
     size_t left_context_size, size_t right_context_size, size_t last_n);
 
-// Returns the resampled ohlc_history within the interval [start_timestamp_sec,
-// end_timestamp_sec) according to the given sampling rate (in seconds).
-// TODO: Use begin/end iterators instead of price_history.
-OhlcHistory Resample(const PriceHistory& price_history,
-                     long start_timestamp_sec, long end_timestamp_sec,
-                     int sampling_rate_sec);
+// Returns the resampled ohlc_history with the given sampling rate (in seconds).
+OhlcHistory Resample(PriceHistory::const_iterator begin,
+                     PriceHistory::const_iterator end, int sampling_rate_sec);
 
 }  // namespace trader
 

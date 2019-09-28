@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <sstream>
 
@@ -166,11 +167,12 @@ bool WriteExchangeAccountStatesToCsvFile(
   return true;
 }
 
-void PrintPriceHistoryGaps(const PriceHistory& price_history,
+void PrintPriceHistoryGaps(PriceHistory::const_iterator begin,
+                           PriceHistory::const_iterator end,
                            long start_timestamp_sec, long end_timestamp_sec,
                            size_t top_n) {
   HistoryGaps history_gaps = GetPriceHistoryGaps(
-      price_history, start_timestamp_sec, end_timestamp_sec, top_n);
+      begin, end, start_timestamp_sec, end_timestamp_sec, top_n);
   for (const HistoryGap& history_gap : history_gaps) {
     const long gap_duration_sec = history_gap.second - history_gap.first;
     std::cout << history_gap.first << " ["
@@ -181,18 +183,21 @@ void PrintPriceHistoryGaps(const PriceHistory& price_history,
   }
 }
 
-void PrintOutliersWithContext(const PriceHistory& price_history,
+void PrintOutliersWithContext(PriceHistory::const_iterator begin,
+                              PriceHistory::const_iterator end,
                               const std::vector<size_t>& outlier_indices,
                               size_t left_context_size,
                               size_t right_context_size, size_t last_n) {
+  const size_t price_history_size = std::distance(begin, end);
   std::map<size_t, bool> index_to_outlier = GetOutlierIndicesWithContext(
-      outlier_indices, price_history.size(), left_context_size,
+      outlier_indices, price_history_size, left_context_size,
       right_context_size, last_n);
   size_t index_prev = 0;
   for (const auto& index_outlier_pair : index_to_outlier) {
     const size_t index = index_outlier_pair.first;
     const bool is_outlier = index_outlier_pair.second;
-    const PriceRecord& price_record = price_history[index];
+    assert(index < price_history_size);
+    const PriceRecord& price_record = *(begin + index);
     if (index_prev > 0 && index > index_prev + 1) {
       std::cout << "   ..." << std::endl;
     }

@@ -50,20 +50,10 @@ bool ReadPriceHistory(const std::string& input_price_history_csv_file,
               << input_price_history_csv_file << std::endl;
     return false;
   }
+  std::cout << "Loaded " << price_history->size() << " records" << std::endl;
   if (!CheckPriceHistoryTimestamps(*price_history)) {
     std::cerr << "Price history timestamps are not sorted" << std::endl;
     return false;
-  }
-  HistoryGaps history_gaps = GetPriceHistoryGaps(
-      *price_history, start_timestamp_sec, end_timestamp_sec,
-      /* top_n = */ 10);
-  std::cout << "Top 10 gaps:" << std::endl;
-  for (const HistoryGap& history_gap : history_gaps) {
-    const long gap_duration_sec = history_gap.second - history_gap.first;
-    std::cout << "[" << ConvertTimestampSecToDateTimeUTC(history_gap.first)
-              << " - " << ConvertTimestampSecToDateTimeUTC(history_gap.second)
-              << "] Duration: " << DurationToString(gap_duration_sec)
-              << std::endl;
   }
   return true;
 }
@@ -82,8 +72,22 @@ void ConvertPriceHistory(
   }
   const auto price_history_subset =
       HistorySubset(price_history, start_timestamp_sec, end_timestamp_sec);
-  std::cerr << "Writing price history file: "
-            << output_price_history_delimited_proto_file << std::endl;
+  std::cout << "Selected "
+            << std::distance(price_history_subset.first,
+                             price_history_subset.second)
+            << " records within the period: "
+            << TimestampPeriodToString(start_timestamp_sec, end_timestamp_sec)
+            << std::endl;
+  std::cout << "Top 10 gaps:" << std::endl;
+  PrintPriceHistoryGaps(/* begin = */ price_history_subset.first,
+                        /* end = */ price_history_subset.second,
+                        start_timestamp_sec, end_timestamp_sec,
+                        /* top_n = */ 10);
+  std::cerr << "Writing "
+            << std::distance(price_history_subset.first,
+                             price_history_subset.second)
+            << " records to " << output_price_history_delimited_proto_file
+            << std::endl;
   if (!WriteDelimitedMessagesToFile(
           price_history_subset.first, price_history_subset.second,
           output_price_history_delimited_proto_file, FLAGS_compress)) {
@@ -93,8 +97,8 @@ void ConvertPriceHistory(
   }
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::high_resolution_clock::now() - start);
-  std::cout << "Converted " << price_history.size() << " price records in "
-            << duration.count() / 1000.0 << " seconds" << std::endl;
+  std::cout << "Finished in " << duration.count() / 1000.0 << " seconds"
+            << std::endl;
 }
 
 // Reads the price history CSV file, removes outliers, resamples the price
@@ -111,18 +115,38 @@ void ConvertPriceHistoryToOhlcHistory(
                         end_timestamp_sec, &price_history)) {
     return;
   }
+  const auto price_history_subset =
+      HistorySubset(price_history, start_timestamp_sec, end_timestamp_sec);
+  std::cout << "Selected "
+            << std::distance(price_history_subset.first,
+                             price_history_subset.second)
+            << " records within the period: "
+            << TimestampPeriodToString(start_timestamp_sec, end_timestamp_sec)
+            << std::endl;
+  std::cout << "Top 10 gaps:" << std::endl;
+  PrintPriceHistoryGaps(/* begin = */ price_history_subset.first,
+                        /* end = */ price_history_subset.second,
+                        start_timestamp_sec, end_timestamp_sec,
+                        /* top_n = */ 10);
   std::vector<size_t> outlier_indices;
   PriceHistory price_history_clean = RemoveOutliers(
-      price_history, FLAGS_max_price_deviation_per_min, &outlier_indices);
-  std::cout << std::endl
-            << "Removed " << outlier_indices.size() << " outliers" << std::endl;
+      /* begin = */ price_history_subset.first,
+      /* end = */ price_history_subset.second,
+      FLAGS_max_price_deviation_per_min, &outlier_indices);
+  std::cout << "Removed " << outlier_indices.size() << " outliers" << std::endl;
   std::cout << "Last 10 outliers:" << std::endl;
-  PrintOutliersWithContext(price_history, outlier_indices,
+  PrintOutliersWithContext(/* begin = */ price_history_subset.first,
+                           /* end = */ price_history_subset.second,
+                           outlier_indices,
                            /* left_context_size = */ 5,
                            /* right_context_size = */ 5, /* last_n = */ 10);
   OhlcHistory ohlc_history =
-      Resample(price_history_clean, start_timestamp_sec, end_timestamp_sec,
+      Resample(price_history_clean.begin(), price_history_clean.end(),
                FLAGS_sampling_rate_sec);
+  std::cout << "Resampled " << price_history_clean.size() << " records to "
+            << ohlc_history.size() << " OHLC ticks" << std::endl;
+  std::cerr << "Writing " << ohlc_history.size() << " OHLC ticks to "
+            << output_ohlc_history_delimited_proto_file << std::endl;
   if (!WriteDelimitedMessagesToFile(ohlc_history.begin(), ohlc_history.end(),
                                     output_ohlc_history_delimited_proto_file,
                                     FLAGS_compress)) {
@@ -132,9 +156,8 @@ void ConvertPriceHistoryToOhlcHistory(
   }
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::high_resolution_clock::now() - start);
-  std::cout << "Converted " << price_history.size() << " price records to "
-            << ohlc_history.size() << " OHLC records in "
-            << duration.count() / 1000.0 << " seconds" << std::endl;
+  std::cout << "Finished in " << duration.count() / 1000.0 << " seconds"
+            << std::endl;
 }
 
 // Converts the OHLC history CSV file to delimited protobuf file.
@@ -152,8 +175,20 @@ void ConvertOhlcHistory(
               << input_ohlc_history_csv_file << std::endl;
     return;
   }
+  std::cout << "Loaded " << ohlc_history.size() << " OHLC ticks" << std::endl;
   const auto ohlc_history_subset =
       HistorySubset(ohlc_history, start_timestamp_sec, end_timestamp_sec);
+  std::cout << "Selected "
+            << std::distance(ohlc_history_subset.first,
+                             ohlc_history_subset.second)
+            << " OHLC ticks within the period: "
+            << TimestampPeriodToString(start_timestamp_sec, end_timestamp_sec)
+            << std::endl;
+  std::cerr << "Writing "
+            << std::distance(ohlc_history_subset.first,
+                             ohlc_history_subset.second)
+            << " OHLC ticks to " << output_ohlc_history_delimited_proto_file
+            << std::endl;
   if (!WriteDelimitedMessagesToFile(
           ohlc_history_subset.first, ohlc_history_subset.second,
           output_ohlc_history_delimited_proto_file, FLAGS_compress)) {
@@ -163,8 +198,8 @@ void ConvertOhlcHistory(
   }
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::high_resolution_clock::now() - start);
-  std::cout << "Converted " << ohlc_history.size() << " OHLC records in "
-            << duration.count() / 1000.0 << " seconds" << std::endl;
+  std::cout << "Finished in " << duration.count() / 1000.0 << " seconds"
+            << std::endl;
 }
 
 int main(int argc, char* argv[]) {

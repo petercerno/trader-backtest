@@ -188,26 +188,48 @@ OhlcHistory GetOhlcHistoryFromFlags(long start_timestamp_sec,
       std::cerr << "Price history timestamps are not sorted" << std::endl;
       return {};
     }
-    std::cout << std::endl << "Top 10 gaps:" << std::endl;
-    PrintPriceHistoryGaps(price_history, start_timestamp_sec, end_timestamp_sec,
+    const auto price_history_subset =
+        HistorySubset(price_history, start_timestamp_sec, end_timestamp_sec);
+    std::cout << "Selected "
+              << std::distance(price_history_subset.first,
+                               price_history_subset.second)
+              << " records within the period: "
+              << TimestampPeriodToString(start_timestamp_sec, end_timestamp_sec)
+              << std::endl;
+    std::cout << "Top 10 gaps:" << std::endl;
+    PrintPriceHistoryGaps(/* begin = */ price_history_subset.first,
+                          /* end = */ price_history_subset.second,
+                          start_timestamp_sec, end_timestamp_sec,
                           /* top_n = */ 10);
     std::vector<size_t> outlier_indices;
     PriceHistory price_history_clean = RemoveOutliers(
-        price_history, FLAGS_max_price_deviation_per_min, &outlier_indices);
-    std::cout << std::endl
-              << "Removed " << outlier_indices.size() << " outliers"
+        /* begin = */ price_history_subset.first,
+        /* end = */ price_history_subset.second,
+        FLAGS_max_price_deviation_per_min, &outlier_indices);
+    std::cout << "Removed " << outlier_indices.size() << " outliers"
               << std::endl;
     std::cout << "Last 10 outliers:" << std::endl;
-    PrintOutliersWithContext(price_history, outlier_indices,
+    PrintOutliersWithContext(/* begin = */ price_history_subset.first,
+                             /* end = */ price_history_subset.second,
+                             outlier_indices,
                              /* left_context_size = */ 5,
                              /* right_context_size = */ 5, /* last_n = */ 10);
-    return Resample(price_history_clean, start_timestamp_sec, end_timestamp_sec,
-                    FLAGS_sampling_rate_sec);
+    OhlcHistory ohlc_history =
+        Resample(price_history_clean.begin(), price_history_clean.end(),
+                 FLAGS_sampling_rate_sec);
+    std::cout << "Resampled " << price_history_clean.size() << " records to "
+              << ohlc_history.size() << " OHLC ticks" << std::endl;
+    return ohlc_history;
   } else if (!FLAGS_input_ohlc_history_delimited_proto_file.empty()) {
     OhlcHistory ohlc_history =
         ReadHistory<OhlcTick>(FLAGS_input_ohlc_history_delimited_proto_file);
-    return HistorySubsetCopy(ohlc_history, start_timestamp_sec,
-                             end_timestamp_sec);
+    OhlcHistory ohlc_history_subset =
+        HistorySubsetCopy(ohlc_history, start_timestamp_sec, end_timestamp_sec);
+    std::cout << "Selected " << ohlc_history_subset.size()
+              << " OHLC ticks within the period: "
+              << TimestampPeriodToString(start_timestamp_sec, end_timestamp_sec)
+              << std::endl;
+    return ohlc_history_subset;
   }
   return {};
 }
