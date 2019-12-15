@@ -161,8 +161,8 @@ bool ExchangeAccount::IsExecutableOrder(const Order& order,
   return false;
 }
 
-const ExchangeAccountConfig::TransactionFeeConfig&
-ExchangeAccount::GetTransactionFeeConfig(const Order& order) const {
+const FeeConfig& ExchangeAccount::GetTransactionFeeConfig(
+    const Order& order) const {
   switch (order.type()) {
     case Order::MARKET:
       return exchange_account_config_.market_order_fee_config();

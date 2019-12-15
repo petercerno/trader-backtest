@@ -55,6 +55,16 @@ message Order {
   optional float cash_amount = 5;
 }
 
+// Transaction fee configuration.
+message FeeConfig {
+  // Relative transaction fee.
+  optional float relative_fee = 1;
+  // Fixed transaction fee in base currency.
+  optional float fixed_fee = 2;
+  // Minimum transaction fee in base currency.
+  optional float minimum_fee = 3;
+}
+
 // Exchange account configuration.
 message ExchangeAccountConfig {
   // Starting security (crypto currency) balance (e.g. BTC balance).
@@ -66,21 +76,12 @@ message ExchangeAccountConfig {
   optional float security_balance_unit = 3;
   // Smallest indivisible unit for cash balance. Not used if zero.
   optional float cash_balance_unit = 4;
-  // Transaction fee configuration.
-  message TransactionFeeConfig {
-    // Relative transaction fee.
-    optional float relative_fee = 1;
-    // Fixed transaction fee in base currency.
-    optional float fixed_fee = 2;
-    // Minimum transaction fee in base currency.
-    optional float minimum_fee = 3;
-  }
   // Transaction fee configuration for market orders.
-  optional TransactionFeeConfig market_order_fee_config = 5;
+  optional FeeConfig market_order_fee_config = 5;
   // Transaction fee configuration for limit orders.
-  optional TransactionFeeConfig limit_order_fee_config = 6;
+  optional FeeConfig limit_order_fee_config = 6;
   // Transaction fee configuration for stop orders.
-  optional TransactionFeeConfig stop_order_fee_config = 7;
+  optional FeeConfig stop_order_fee_config = 7;
   // Accuracy of executing market orders w.r.t. the OhlcTick.
   // If 1.0 then the market order will be executed at the OhlcTick open price.
   // If 0.0 then the buy (sell) market order will be executed at the highest

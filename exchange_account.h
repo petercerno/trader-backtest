@@ -43,8 +43,7 @@ class ExchangeAccount {
   // Returns true if the order can be executed at the ohlc_tick.
   static bool IsExecutableOrder(const Order& order, const OhlcTick& ohlc_tick);
   // Returns the transaction fee config corresponding to the given order.
-  const ExchangeAccountConfig::TransactionFeeConfig& GetTransactionFeeConfig(
-      const Order& order) const;
+  const FeeConfig& GetTransactionFeeConfig(const Order& order) const;
   // Returns the transaction fee (in base currency) corresponding to the given
   // order and the transferred cash_amount. It is a non-decreasing function
   // of the cash_amount.
