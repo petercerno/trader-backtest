@@ -69,13 +69,26 @@ cc_test(
 )
 
 cc_library(
+    name = "trader_account",
+    srcs = ["trader_account.cc"],
+    hdrs = ["trader_account.h"],
+    deps = [":trader_base"],
+)
+
+cc_test(
+    name = "trader_account_test",
+    srcs = ["trader_account_test.cc"],
+    deps = [
+        ":trader_account",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "trader_util",
     srcs = ["trader_util.cc"],
     hdrs = ["trader_util.h"],
-    deps = [
-        ":trader_base",
-        ":trader_cc_proto",
-    ],
+    deps = [":trader_base"],
 )
 
 cc_test(
