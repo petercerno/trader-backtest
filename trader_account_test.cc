@@ -729,7 +729,7 @@ TEST(BuyTest, BuyAtCashWithFeeAndLimitedPrecision) {
   EXPECT_FLOAT_EQ(10.0f, trader_account.total_fee);
 }
 
-TEST(BuyTest, SellWithoutFeeAndInfinitePrecision) {
+TEST(SellTest, SellWithoutFeeAndInfinitePrecision) {
   TraderAccount trader_account;
   FeeConfig fee_config;
 
@@ -766,7 +766,7 @@ TEST(BuyTest, SellWithoutFeeAndInfinitePrecision) {
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 }
 
-TEST(BuyTest, SellWithoutFeeAndLimitedPrecision) {
+TEST(SellTest, SellWithoutFeeAndLimitedPrecision) {
   TraderAccount trader_account;
   FeeConfig fee_config;
 
@@ -806,7 +806,7 @@ TEST(BuyTest, SellWithoutFeeAndLimitedPrecision) {
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 }
 
-TEST(BuyTest, SellWithFeeAndLimitedPrecision) {
+TEST(SellTest, SellWithFeeAndLimitedPrecision) {
   TraderAccount trader_account;
   FeeConfig fee_config;
 
@@ -854,7 +854,7 @@ TEST(BuyTest, SellWithFeeAndLimitedPrecision) {
   EXPECT_FLOAT_EQ(10.0f, trader_account.total_fee);
 }
 
-TEST(BuyTest, SellAtCashWithoutFeeAndInfinitePrecision) {
+TEST(SellTest, SellAtCashWithoutFeeAndInfinitePrecision) {
   TraderAccount trader_account;
   FeeConfig fee_config;
 
@@ -927,7 +927,7 @@ TEST(BuyTest, SellAtCashWithoutFeeAndInfinitePrecision) {
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 }
 
-TEST(BuyTest, SellAtCashWithoutFeeAndLimitedPrecision) {
+TEST(SellTest, SellAtCashWithoutFeeAndLimitedPrecision) {
   TraderAccount trader_account;
   FeeConfig fee_config;
 
@@ -1003,7 +1003,7 @@ TEST(BuyTest, SellAtCashWithoutFeeAndLimitedPrecision) {
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 }
 
-TEST(BuyTest, SellAtCashWithFeeAndLimitedPrecision) {
+TEST(SellTest, SellAtCashWithFeeAndLimitedPrecision) {
   TraderAccount trader_account;
   FeeConfig fee_config;
 
@@ -1089,6 +1089,114 @@ TEST(BuyTest, SellAtCashWithFeeAndLimitedPrecision) {
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(10.0f, trader_account.total_fee);
+}
+
+TEST(BuyTest, MarketBuyWithFeeAndLimitedPrecision) {
+  TraderAccount trader_account;
+  FeeConfig fee_config;
+
+  fee_config.set_relative_fee(0.1f);
+  fee_config.set_fixed_fee(1.0f);
+  fee_config.set_minimum_fee(1.5f);
+
+  OhlcTick ohlc_tick;
+  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+
+  trader_account.market_liquidity = 0.5f;
+  EXPECT_FLOAT_EQ(15.0f, trader_account.GetMarketBuyPrice(ohlc_tick));
+
+  trader_account.security_unit = 0.1f;
+  trader_account.cash_unit = 1.0f;
+
+  trader_account.security_balance = 10.0f;
+  trader_account.cash_balance = 1000.0f;
+  trader_account.total_fee = 0.0f;
+  EXPECT_TRUE(trader_account.MarketBuy(fee_config, ohlc_tick,
+                                       /* security_amount = */ 10.0f));
+  EXPECT_FLOAT_EQ(20.0f, trader_account.security_balance);
+  EXPECT_FLOAT_EQ(834.0f, trader_account.cash_balance);
+  EXPECT_FLOAT_EQ(16.0f, trader_account.total_fee);
+}
+
+TEST(BuyTest, MarketBuyAtCashWithFeeAndLimitedPrecision) {
+  TraderAccount trader_account;
+  FeeConfig fee_config;
+
+  fee_config.set_relative_fee(0.1f);
+  fee_config.set_fixed_fee(1.0f);
+  fee_config.set_minimum_fee(1.5f);
+
+  OhlcTick ohlc_tick;
+  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+
+  trader_account.market_liquidity = 0.5f;
+  EXPECT_FLOAT_EQ(15.0f, trader_account.GetMarketBuyPrice(ohlc_tick));
+
+  trader_account.security_unit = 0.1f;
+  trader_account.cash_unit = 1.0f;
+
+  trader_account.security_balance = 10.0f;
+  trader_account.cash_balance = 1000.0f;
+  trader_account.total_fee = 0.0f;
+  EXPECT_TRUE(trader_account.MarketBuyAtCash(fee_config, ohlc_tick,
+                                             /* cash_amount = */ 169.0f));
+  EXPECT_FLOAT_EQ(20.0f, trader_account.security_balance);
+  EXPECT_FLOAT_EQ(834.0f, trader_account.cash_balance);
+  EXPECT_FLOAT_EQ(16.0f, trader_account.total_fee);
+}
+
+TEST(SellTest, MarketSellWithFeeAndLimitedPrecision) {
+  TraderAccount trader_account;
+  FeeConfig fee_config;
+
+  fee_config.set_relative_fee(0.1f);
+  fee_config.set_fixed_fee(1.0f);
+  fee_config.set_minimum_fee(1.5f);
+
+  OhlcTick ohlc_tick;
+  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+
+  trader_account.market_liquidity = 1.0f;
+  EXPECT_FLOAT_EQ(10.0f, trader_account.GetMarketSellPrice(ohlc_tick));
+
+  trader_account.security_unit = 0.1f;
+  trader_account.cash_unit = 1.0f;
+
+  trader_account.security_balance = 15.0f;
+  trader_account.cash_balance = 950.0f;
+  trader_account.total_fee = 0.0f;
+  EXPECT_TRUE(trader_account.MarketSell(fee_config, ohlc_tick,
+                                        /* security_amount = */ 5.0f));
+  EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
+  EXPECT_FLOAT_EQ(994.0f, trader_account.cash_balance);
+  EXPECT_FLOAT_EQ(6.0f, trader_account.total_fee);
+}
+
+TEST(SellTest, MarketSellAtCashWithFeeAndLimitedPrecision) {
+  TraderAccount trader_account;
+  FeeConfig fee_config;
+
+  fee_config.set_relative_fee(0.1f);
+  fee_config.set_fixed_fee(1.0f);
+  fee_config.set_minimum_fee(1.5f);
+
+  OhlcTick ohlc_tick;
+  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+
+  trader_account.market_liquidity = 1.0f;
+  EXPECT_FLOAT_EQ(10.0f, trader_account.GetMarketSellPrice(ohlc_tick));
+
+  trader_account.security_unit = 0.1f;
+  trader_account.cash_unit = 1.0f;
+
+  trader_account.security_balance = 15.0f;
+  trader_account.cash_balance = 950.0f;
+  trader_account.total_fee = 0.0f;
+  EXPECT_TRUE(trader_account.MarketSellAtCash(fee_config, ohlc_tick,
+                                              /* cash_amount = */ 50.0f));
+  EXPECT_FLOAT_EQ(9.4f, trader_account.security_balance);
+  EXPECT_FLOAT_EQ(999.0f, trader_account.cash_balance);
+  EXPECT_FLOAT_EQ(7.0f, trader_account.total_fee);
 }
 
 }  // namespace trader
