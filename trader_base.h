@@ -1,12 +1,17 @@
-// Copyright © 2019 Peter Cerno. All rights reserved.
+// Copyright © 2020 Peter Cerno. All rights reserved.
 
 #ifndef TRADER_BASE_H
 #define TRADER_BASE_H
 
 #include <algorithm>
+#include <cassert>
+#include <functional>
+#include <future>
+#include <iomanip>
 #include <iterator>
 #include <memory>
 #include <ostream>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -21,33 +26,29 @@ using PriceHistory = std::vector<PriceRecord>;
 // Historical OHLC ticks over time.
 using OhlcHistory = std::vector<OhlcTick>;
 
-// Exchange account states over time.
-using ExchangeAccountStates = std::vector<ExchangeAccountState>;
-
-// Evaluation results for different configurations.
-using EvalResults = std::vector<EvalResult>;
-
-// Forward declaration of TraderInterface.
-class TraderInterface;
-
-// Single instance of a trader.
-using TraderInstance = std::unique_ptr<TraderInterface>;
-// Batch of traders.
-using TraderBatch = std::vector<TraderInstance>;
-
-// Trader interface. At the beginning of every OHLC tick, there are no active
-// orders on the exchange. After processing the OHLC tick, the trader can emit
-// zero or more orders. We assume that all the emitted orders can be executed on
-// the exchange independently of each other. At the next OHLC tick, the exchange
-// either executes or cancels every emitted order (independently), and then the
-// whole process repeats again.
+// Every trader works as follows:
+// - At every step the trader receives the latest OHLC tick T[i] and account
+//   balances. The current time is at the end of the OHLC tick T[i] time period.
+//   The trader updates its internal state based on this OHLC tick T[i].
+// - Then trader needs to decide what orders to emit. There are no active orders
+//   on the exchange at this moment (see the explanation below).
+// - Once the trader decides, which orders to emit, the exchange will execute
+//   (or cancel) all these orders on the follow-up OHLC tick T[i+1]. The trader
+//   does not see the follow-up OHLC tick T[i+1], so the process is fair.
+// - Once all orders are executed (or canceled) by the exchange, the trader
+//   receives the follow-up OHLC tick T[i+1] and the whole process repeats.
+// Note that at every step every order gets either executed or canceled by the
+// exchange. This is a design simplification so that there are no active orders
+// that the trader needs to maintain over time.
+// In practice, however, we would not cancel orders if they would be re-emitted
+// again. We would simply modify the existing orders if needed.
 class TraderInterface {
  public:
   TraderInterface() {}
   virtual ~TraderInterface() {}
 
   // Updates the (internal) trader state and emits zero or more orders.
-  // We assume that orders is not null and points to an empty vector.
+  // We assume that "orders" is not null and points to an empty vector.
   // This method is called consecutively (by the exchange) on every OHLC tick.
   // Trader can assume that there are no active orders when this method is
   // called. The emitted orders will be either executed or cancelled by the
@@ -55,26 +56,28 @@ class TraderInterface {
   virtual void Update(const OhlcTick& ohlc_tick, float security_balance,
                       float cash_balance, std::vector<Order>* orders) = 0;
 
-  // Sets the trader's logging stream. Nullptr disables the logging.
-  // Does not take the ownership of the stream.
-  // Traders can use the stream to log their internal trader-dependent info.
-  // WARNING: The logging stream must NOT be destroyed before the trader.
-  // WARNING: Logging is slow and should be disabled for batch optimization.
-  virtual void SetLogStream(std::ostream* os) { os_ = os; }
+  // Outputs the internal trader state into the output stream "os".
+  // Does nothing if "os" is nullptr.
+  // Note that it is recommended to output the internal state as a string of
+  // comma-separated values for easier analysis.
+  virtual void LogInternalState(std::ostream* os) const = 0;
+};
 
-  // Returns the trader's logging stream.
-  virtual std::ostream* LogStream() const { return os_; }
+// Usually we want to evaluate the same trader over different time periods.
+// This is where the trader factory comes in handy, as it can emit a new
+// instance of the same trader (with the same configuration) whenever needed.
+class TraderFactoryInterface {
+ public:
+  TraderFactoryInterface() {}
+  virtual ~TraderFactoryInterface() {}
 
-  // Returns the string representation of the trader (and its configuration).
-  virtual std::string ToString() const = 0;
+  // Returns a name identifying all traders emitted by this factory.
+  // The name may only contain letters [a-z], [A-Z], numbers [0-9], dot [.],
+  // space [ ], dash [-], and underscore [_]. Other characters are not allowed.
+  virtual std::string GetTraderName() const = 0;
 
-  // Returns a new (freshly initialized) instance of the same trader.
-  // By default, the new instance does not inherit the logging stream.
-  virtual TraderInstance NewInstance() const = 0;
-
- protected:
-  // Trader's logging stream.
-  std::ostream* os_ = nullptr;
+  // Returns a new (freshly initialized) instance of a trader.
+  virtual std::unique_ptr<TraderInterface> NewTrader() const = 0;
 };
 
 // Returns a pair of iterators covering the time interval [start_timestamp_sec,
