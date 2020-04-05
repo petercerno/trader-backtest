@@ -33,8 +33,8 @@ message OhlcTick {
 message Order {
   enum Type {
     MARKET = 0;  // Market order.
-    LIMIT = 1;   // Limit order.
-    STOP = 2;    // Stop order.
+    STOP = 1;    // Stop order.
+    LIMIT = 2;   // Limit order.
   }
   enum Side {
     BUY = 0;     // Buy order.
@@ -47,12 +47,14 @@ message Order {
   // Target price at which to execute the order. Ignored for market orders.
   // The actual traded price might differ for stop orders.
   optional float price = 3;
-  // Traded security (crypto currency) amount for sell orders. Ignored for buy
-  // orders. The actual traded amount might be smaller due to exchange fees.
-  optional float security_amount = 4;
-  // Traded cash amount for buy orders. Ignored for sell orders.
-  // The actual traded amount might be smaller due to exchange fees.
-  optional float cash_amount = 5;
+  oneof oneof_amount {
+    // The amount of security (crypto currency) to by buy / sell.
+    float security_amount = 4;
+    // The (maximum) amount of cash to be spent on buying (or to be received
+    // when selling) the security (crypto currency).
+    // The actual traded amount might be smaller due to exchange fees.
+    float cash_amount = 5;
+  }
 }
 
 // Transaction fee configuration.
@@ -65,70 +67,64 @@ message FeeConfig {
   optional float minimum_fee = 3;
 }
 
-// Exchange account configuration.
-message ExchangeAccountConfig {
+// Trader account configuration.
+message TraderAccountConfig {
   // Starting security (crypto currency) balance (e.g. BTC balance).
   optional float start_security_balance = 1;
   // Starting cash balance in base currency (e.g. USD balance).
   optional float start_cash_balance = 2;
   // Smallest indivisible unit for security (crypto currency) balance.
   // Not used if zero.
-  optional float security_balance_unit = 3;
+  optional float security_unit = 3;
   // Smallest indivisible unit for cash balance. Not used if zero.
-  optional float cash_balance_unit = 4;
+  optional float cash_unit = 4;
   // Transaction fee configuration for market orders.
   optional FeeConfig market_order_fee_config = 5;
-  // Transaction fee configuration for limit orders.
-  optional FeeConfig limit_order_fee_config = 6;
   // Transaction fee configuration for stop orders.
-  optional FeeConfig stop_order_fee_config = 7;
-  // Accuracy of executing market orders w.r.t. the OhlcTick.
-  // If 1.0 then the market order will be executed at the OhlcTick open price.
-  // If 0.0 then the buy (sell) market order will be executed at the highest
-  // (lowest) price of the given OhlcTick.
-  optional float market_order_accuracy = 8;
-  // Accuracy of executing stop orders at their target price.
-  // If 1.0 then the stop order will be executed exactly at its target price.
-  // If 0.0 then the buy (sell) stop order will be executed at the highest
-  // (lowest) price of the given OhlcTick.
-  optional float stop_order_accuracy = 9;
-  // Ratio of the OhlcTick volume that is used to fill the limit order.
-  // If the actual traded volume * limit_order_fill_volume_ratio is less than
-  // the limit order size, then the limit order is filled only partially.
+  optional FeeConfig stop_order_fee_config = 6;
+  // Transaction fee configuration for limit orders.
+  optional FeeConfig limit_order_fee_config = 7;
+  // Liquidity for executing market (stop) orders w.r.t. the given OhlcTick
+  // from the interval [0; 1].
+  // If 1.0 then the market (stop) order will be executed at the opening price
+  // (stop order price). This is the best price for the given order.
+  // If 0.0 then the buy (sell) order will be executed at the highest (lowest)
+  // price of the given OhlcTick. This is the worst price for the given order.
+  // Anything in between 0.0 and 1.0 will be linearly interpolated.
+  optional float market_liquidity = 8;
+  // Fraction of the OhlcTick volume that will be used to fill the limit order.
+  // If the actual traded volume * max_volume_ratio is less than the limit
+  // order size, then the limit order will be filled only partially.
   // Not used if zero.
-  optional float limit_order_fill_volume_ratio = 10;
+  optional float max_volume_ratio = 9;
 }
 
-// Exchange account state at the end of the OhlcTick time interval.
-message ExchangeAccountState {
-  // OhlcTick.
-  optional OhlcTick ohlc_tick = 1;
-  // Active orders available at the beginning of the OhlcTick.
-  repeated Order order = 2;
-  // Number of executed orders (including partially filled limit orders).
-  optional int32 executed_orders = 3;
-  // Traded security (crypto currency) amount over all executed orders
-  // (including partially filled limit orders).
-  optional float traded_security_amount = 4;
-  // Transaction fee (in base currency) over all executed orders (including
-  // partially filled limit orders).
-  optional float transaction_fee = 5;
-  // Total accumulated number of executed orders over time.
-  optional int32 accumulated_executed_orders = 6;
-  // Total accumulated traded security (crypto currency) amount over time.
-  optional float accumulated_security_amount = 7;
-  // Total accumulated transaction fee over time (in base currency).
-  optional float accumulated_fee = 8;
-  // Security (crypto currency) balance at the end of the OhlcTick.
-  optional float security_balance = 9;
-  // Cash balance (in base currency) at the end of the OhlcTick.
-  optional float cash_balance = 10;
-  // Total value (in base currency) at the end of the OhlcTick.
-  optional float value = 11;
-}
+// Result of trader execution over a region of the OHLC history.
+message TraderExecutionResult {
+  // Security (crypto currency) balance at the beginning of trader execution.
+  optional float start_security_balance = 1;
+  // Cash balance in base currency at the beginning of trader execution.
+  optional float start_cash_balance = 2;
+  // Security (crypto currency) balance at the end of trader execution.
+  optional float end_security_balance = 3;
+  // Cash balance in base currency at the end of trader execution.
+  optional float end_cash_balance = 4;
+  // Security (crypto currency) price at the beginning of trader execution.
+  optional float start_price = 5;
+  // Security (crypto currency) price at the end of trader execution.
+  optional float end_price = 6;
+  // Total value (in base currency) at the beginning of trader execution.
+  optional float start_value = 7;
+  // Total value (in base currency) at the end of trader execution.
+  optional float end_value = 8;
+  // Total number of executed exchange orders.
+  optional int32 total_executed_orders = 9;
+  // Total accumulated transaction fee (in base currency).
+  optional float total_fee = 10;
+};
 
-// Evaluation configuration.
-message EvalConfig {
+// Trader evaluation configuration.
+message TraderEvaluationConfig {
   // Starting UNIX timestamp (in seconds).
   optional int32 start_timestamp_sec = 1;
   // Ending UNIX timestamp (in seconds).
@@ -137,36 +133,26 @@ message EvalConfig {
   optional int32 evaluation_period_months = 3;
 }
 
-// Trader evaluation result w.r.t. a fixed configuration.
-message EvalResult {
-  // Exchange account configuration.
-  optional ExchangeAccountConfig exchange_account_config = 1;
+// Trader evaluation result for a given evaluation configuration.
+message TraderEvaluationResult {
+  // Trader account configuration.
+  optional TraderAccountConfig trader_account_config = 1;
   // Evaluation configuration.
-  optional EvalConfig eval_config = 2;
+  optional TraderEvaluationConfig trader_eval_config = 2;
   // String representation of the trader (its configuration).
-  optional string trader = 3;
+  optional string trader_name = 3;
   // Trader evaluation over a specific period.
   message Period {
     // Starting UNIX timestamp (in seconds) of the evaluation period (included).
     optional int32 start_timestamp_sec = 1;
     // Ending UNIX timestamp (in seconds) of the evaluation period (excluded).
     optional int32 end_timestamp_sec = 2;
+    // Result of trader execution over the period.
+    optional TraderExecutionResult result = 3;
     // Final percentual gain of the trader (after fees).
-    optional float trader_final_gain = 3;
-    // Final value in base currency of the trader (after fees).
-    optional float trader_final_value = 4;
-    // Total number of executed orders.
-    optional int32 total_executed_orders = 5;
-    // Total traded security (crypto currency) amount.
-    optional float total_security_amount = 6;
-    // Total trader fees in base currency.
-    optional float total_fee = 7;
-    // Final percentual gain of the baseline method.
-    optional float base_final_gain = 8;
-    // Final value in base currency of the baseline method.
-    optional float base_final_value = 9;
-    // Exchange account states corresponding to this evaluation period.
-    repeated ExchangeAccountState exchange_account_state = 10;
+    optional float trader_final_gain = 4;
+    // Final percentual gain of the baseline (buy and hold) method.
+    optional float base_final_gain = 5;
   }
   // Trader evaluation over multiple periods.
   repeated Period period = 4;
@@ -174,15 +160,13 @@ message EvalResult {
   optional float score = 5;
   // Average percentual gain of the trader (after fees).
   optional float avg_trader_gain = 6;
+  // Average percentual gain of the baseline method.
+  optional float avg_base_gain = 7;
   // Average total number of executed orders.
-  optional float avg_total_executed_orders = 7;
-  // Average total traded security (crypto currency) amount.
-  optional float avg_total_security_amount = 8;
+  optional float avg_total_executed_orders = 8;
   // Average total trader fees in base currency.
   optional float avg_total_fee = 9;
-  // Average percentual gain of the baseline method.
-  optional float avg_base_gain = 10;
-}
+  }
 
 // Stop trader configuration.
 message StopTraderConfig {

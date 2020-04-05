@@ -43,6 +43,13 @@ cc_test(
 )
 
 cc_library(
+    name = "trader_account",
+    srcs = ["trader_account.cc"],
+    hdrs = ["trader_account.h"],
+    deps = [":trader_cc_proto"],
+)
+
+cc_library(
     name = "trader_base",
     hdrs = ["trader_base.h"],
     deps = [":trader_cc_proto"],
@@ -59,27 +66,20 @@ cc_library(
 )
 
 cc_test(
+    name = "trader_account_test",
+    srcs = ["trader_account_test.cc"],
+    deps = [
+        ":trader_account",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
     name = "trader_base_test",
     srcs = ["trader_base_test.cc"],
     deps = [
         ":trader_base",
         ":util_test",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "trader_account",
-    srcs = ["trader_account.cc"],
-    hdrs = ["trader_account.h"],
-    deps = [":trader_base"],
-)
-
-cc_test(
-    name = "trader_account_test",
-    srcs = ["trader_account_test.cc"],
-    deps = [
-        ":trader_account",
         "@googletest//:gtest_main",
     ],
 )
@@ -148,7 +148,7 @@ cc_library(
     srcs = ["trader_eval.cc"],
     hdrs = ["trader_eval.h"],
     deps = [
-        ":exchange_account",
+        ":trader_account",
         ":trader_base",
         ":util_time",
     ],
