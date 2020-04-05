@@ -1,11 +1,11 @@
-// Copyright © 2019 Peter Cerno. All rights reserved.
+// Copyright © 2020 Peter Cerno. All rights reserved.
 
 #ifndef TRADER_ACCOUNT_H
 #define TRADER_ACCOUNT_H
 
 #include <limits>
 
-#include "trader_base.h"
+#include "trader.pb.h"
 
 namespace trader {
 
