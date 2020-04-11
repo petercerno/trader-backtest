@@ -99,7 +99,7 @@ void LogExchangeState(const OhlcTick& ohlc_tick,
   LogTraderAccount(trader_account, os);
   *os << ",";
   LogEmptyOrder(os);
-  *os << "\n";
+  *os << std::endl;
 }
 
 // Logs the "ohlc_tick", "trader_account", "order" to the output stream "os".
@@ -114,7 +114,7 @@ void LogExchangeState(const OhlcTick& ohlc_tick,
   LogTraderAccount(trader_account, os);
   *os << ",";
   LogOrder(order, os);
-  *os << "\n";
+  *os << std::endl;
 }
 }  // namespace
 
