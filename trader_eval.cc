@@ -19,6 +19,20 @@ float GetAverage(const C& container, F selector) {
   return sum / container.size();
 }
 
+// Returns the geometric average of values returned by the selector.
+template <typename C, typename F>
+float GetGeometricAverage(const C& container, F selector) {
+  if (container.empty()) {
+    return 0;
+  }
+  double mul = 1;
+  for (const auto& element : container) {
+    mul *= selector(element);
+  }
+  assert(mul >= 0);
+  return static_cast<float>(std::pow(mul, 1.0 / container.size()));
+}
+
 // Initializes the trader account based on the trader account configuration.
 void InitTraderAccount(const TraderAccountConfig& trader_account_config,
                        TraderAccount* trader_account) {
@@ -299,12 +313,15 @@ TraderEvaluationResult EvaluateTrader(
     period->set_trader_final_gain(result.end_value() / result.start_value());
     assert(result.start_price() > 0 && result.end_price() > 0);
     period->set_base_final_gain(result.end_price() / result.start_price());
+    if (trader_eval_config.evaluation_period_months() == 0) {
+      break;
+    }
   }
-  trader_eval_result.set_score(
-      GetAverage(trader_eval_result.period(),
-                 [](const TraderEvaluationResult::Period& period) {
-                   return period.trader_final_gain() / period.base_final_gain();
-                 }));
+  trader_eval_result.set_score(GetGeometricAverage(
+      trader_eval_result.period(),
+      [](const TraderEvaluationResult::Period& period) {
+        return period.trader_final_gain() / period.base_final_gain();
+      }));
   trader_eval_result.set_avg_trader_gain(
       GetAverage(trader_eval_result.period(),
                  [](const TraderEvaluationResult::Period& period) {

@@ -100,6 +100,7 @@ cc_test(
     srcs = ["trader_eval_test.cc"],
     deps = [
         ":trader_eval",
+        ":util_time",
         "@googletest//:gtest_main",
     ],
 )
