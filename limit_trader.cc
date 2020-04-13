@@ -3,12 +3,10 @@
 #include "limit_trader.h"
 
 namespace trader {
-namespace {
-static const int kSecondsPerHour = 60 * 60;
-}  // namespace
 
 void LimitTrader::Update(const OhlcTick& ohlc_tick, float security_balance,
                          float cash_balance, std::vector<Order>* orders) {
+  static constexpr int kSecondsPerHour = 60 * 60;
   assert(orders != nullptr);
   const int timestamp_sec = ohlc_tick.timestamp_sec();
   const float price = ohlc_tick.close();
@@ -105,7 +103,7 @@ LimitTraderFactory::GetBatchOfTraders(
         trader_config.set_alpha_per_hour(alpha_per_hour);
         trader_config.set_limit_buy_margin(limit_buy_margin);
         trader_config.set_limit_sell_margin(limit_sell_margin);
-        batch.emplace_back(new LimitTrader(trader_config));
+        batch.emplace_back(new LimitTraderFactory(trader_config));
       }
   return batch;
 }
