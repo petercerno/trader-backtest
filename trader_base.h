@@ -72,8 +72,7 @@ class TraderFactoryInterface {
   virtual ~TraderFactoryInterface() {}
 
   // Returns a name identifying all traders emitted by this factory.
-  // The name may only contain letters [a-z], [A-Z], numbers [0-9], dot [.],
-  // space [ ], dash [-], and underscore [_]. Other characters are not allowed.
+  // The name should be escaped for the CSV file format.
   virtual std::string GetTraderName() const = 0;
 
   // Returns a new (freshly initialized) instance of a trader.
