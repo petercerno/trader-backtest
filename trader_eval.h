@@ -38,10 +38,12 @@ TraderEvaluationResult EvaluateTrader(
 
 // Evaluates (in parallel) a batch of traders (as defined by the vector of
 // "trader_factories") over one or more regions of the OHLC history.
-TraderEvaluationResult EvaluateBatchOfTraders(
+std::vector<TraderEvaluationResult> EvaluateBatchOfTraders(
     const TraderAccountConfig& trader_account_config,
-    const TraderEvaluationConfig& eval_config, const OhlcHistory& ohlc_history,
-    const std::vector<const TraderFactoryInterface*>& trader_factories);
+    const TraderEvaluationConfig& trader_eval_config,
+    const OhlcHistory& ohlc_history,
+    const std::vector<std::unique_ptr<TraderFactoryInterface>>&
+        trader_factories);
 
 }  // namespace trader
 

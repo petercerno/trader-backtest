@@ -458,10 +458,14 @@ TEST(ExecuteOrderTest, LimitSellAtCashWithFeeAndLimitedPrecision) {
 namespace {
 // Compares two protobuf messages and outputs a diff if they differ.
 void ExpectProtoEq(const google::protobuf::Message& expected_message,
-                   const google::protobuf::Message& message) {
+                   const google::protobuf::Message& message,
+                   bool full_scope = true) {
   EXPECT_EQ(expected_message.GetTypeName(), message.GetTypeName());
   std::string diff_report;
   google::protobuf::util::MessageDifferencer differencer;
+  differencer.set_scope(
+      full_scope ? google::protobuf::util::MessageDifferencer::FULL
+                 : google::protobuf::util::MessageDifferencer::PARTIAL);
   differencer.ReportDifferencesToString(&diff_report);
   EXPECT_TRUE(differencer.Compare(expected_message, message)) << diff_report;
 }
@@ -1043,6 +1047,271 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
         )",
       &expected_result));
   ExpectProtoEq(expected_result, result);
+}
+
+TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
+  TraderAccountConfig trader_account_config;
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+      R"(
+        start_security_balance: 10
+        start_cash_balance: 0
+        security_unit: 0.1
+        cash_unit: 1
+        limit_order_fee_config {
+            relative_fee: 0.1
+            fixed_fee: 1
+            minimum_fee: 1.5
+        }
+        market_liquidity: 0.5
+        max_volume_ratio: 0.1
+        )",
+      &trader_account_config));
+
+  OhlcHistory ohlc_history;
+  SetupMonthlyOhlcHistory(&ohlc_history);
+
+  TraderEvaluationConfig trader_eval_config;
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+      R"(
+        start_timestamp_sec: 1483228800
+        end_timestamp_sec: 1514764800
+        evaluation_period_months: 6
+        )",
+      &trader_eval_config));
+
+  std::vector<std::unique_ptr<TraderFactoryInterface>> trader_factories;
+  trader_factories.emplace_back(new TestTraderFactory(/* buy_price = */ 50,
+                                                      /* sell_price = */ 200));
+  trader_factories.emplace_back(new TestTraderFactory(/* buy_price = */ 40,
+                                                      /* sell_price = */ 250));
+  trader_factories.emplace_back(new TestTraderFactory(/* buy_price = */ 30,
+                                                      /* sell_price = */ 500));
+
+  std::vector<TraderEvaluationResult> trader_eval_results =
+      EvaluateBatchOfTraders(trader_account_config, trader_eval_config,
+                             ohlc_history, trader_factories);
+
+  ASSERT_EQ(3, trader_eval_results.size());
+  TraderEvaluationResult expected_result[3];
+
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+      R"(
+        trader_account_config {
+            start_security_balance: 10
+            start_cash_balance: 0
+            security_unit: 0.1
+            cash_unit: 1
+            limit_order_fee_config {
+                relative_fee: 0.1
+                fixed_fee: 1
+                minimum_fee: 1.5
+            }
+            market_liquidity: 0.5
+            max_volume_ratio: 0.1
+        }
+        trader_eval_config {
+            start_timestamp_sec: 1483228800
+            end_timestamp_sec: 1514764800
+            evaluation_period_months: 6
+        }
+        trader_name: "test-trader[50,200]"
+        period {
+            start_timestamp_sec: 1483228800
+            end_timestamp_sec: 1498867200
+            trader_final_gain: 2.17083335
+            base_final_gain: 0.666666687
+        }
+        period {
+            start_timestamp_sec: 1485907200
+            end_timestamp_sec: 1501545600
+            trader_final_gain: 3.244
+            base_final_gain: 1
+        }
+        period {
+            start_timestamp_sec: 1488326400
+            end_timestamp_sec: 1504224000
+            trader_final_gain: 1.285
+            base_final_gain: 1.71428573
+        }
+        period {
+            start_timestamp_sec: 1491004800
+            end_timestamp_sec: 1506816000
+            trader_final_gain: 1.799
+            base_final_gain: 4
+        }
+        period {
+            start_timestamp_sec: 1493596800
+            end_timestamp_sec: 1509494400
+            trader_final_gain: 3.598
+            base_final_gain: 6
+        }
+        period {
+            start_timestamp_sec: 1496275200
+            end_timestamp_sec: 1512086400
+            trader_final_gain: 2.24875
+            base_final_gain: 8.125
+        }
+        period {
+            start_timestamp_sec: 1498867200
+            end_timestamp_sec: 1514764800
+            trader_final_gain: 1.19933331
+            base_final_gain: 5
+        }
+        score: 0.75648129
+        avg_trader_gain: 2.22070217
+        avg_base_gain: 3.78656459
+        avg_total_executed_orders: 1.28571427
+        avg_total_fee: 247.571426
+        )",
+      &expected_result[0]));
+  ExpectProtoEq(expected_result[0], trader_eval_results[0],
+                /* full_scope = */ false);
+
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+      R"(
+        trader_account_config {
+            start_security_balance: 10
+            start_cash_balance: 0
+            security_unit: 0.1
+            cash_unit: 1
+            limit_order_fee_config {
+                relative_fee: 0.1
+                fixed_fee: 1
+                minimum_fee: 1.5
+            }
+            market_liquidity: 0.5
+            max_volume_ratio: 0.1
+        }
+        trader_eval_config {
+            start_timestamp_sec: 1483228800
+            end_timestamp_sec: 1514764800
+            evaluation_period_months: 6
+        }
+        trader_name: "test-trader[40,250]"
+        period {
+            start_timestamp_sec: 1483228800
+            end_timestamp_sec: 1498867200
+            trader_final_gain: 3.38833332
+            base_final_gain: 0.666666687
+        }
+        period {
+            start_timestamp_sec: 1485907200
+            end_timestamp_sec: 1501545600
+            trader_final_gain: 5.06733322
+            base_final_gain: 1
+        }
+        period {
+            start_timestamp_sec: 1488326400
+            end_timestamp_sec: 1504224000
+            trader_final_gain: 1.60642862
+            base_final_gain: 1.71428573
+        }
+        period {
+            start_timestamp_sec: 1491004800
+            end_timestamp_sec: 1506816000
+            trader_final_gain: 2.249
+            base_final_gain: 4
+        }
+        period {
+            start_timestamp_sec: 1493596800
+            end_timestamp_sec: 1509494400
+            trader_final_gain: 4.498
+            base_final_gain: 6
+        }
+        period {
+            start_timestamp_sec: 1496275200
+            end_timestamp_sec: 1512086400
+            trader_final_gain: 2.81125
+            base_final_gain: 8.125
+        }
+        period {
+            start_timestamp_sec: 1498867200
+            end_timestamp_sec: 1514764800
+            trader_final_gain: 1.49933338
+            base_final_gain: 5
+        }
+        score: 1.00773919
+        avg_trader_gain: 3.01709747
+        avg_base_gain: 3.78656459
+        avg_total_executed_orders: 1.28571427
+        avg_total_fee: 309
+        )",
+      &expected_result[1]));
+  ExpectProtoEq(expected_result[1], trader_eval_results[1],
+                /* full_scope = */ false);
+
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+      R"(
+        trader_account_config {
+            start_security_balance: 10
+            start_cash_balance: 0
+            security_unit: 0.1
+            cash_unit: 1
+            limit_order_fee_config {
+                relative_fee: 0.1
+                fixed_fee: 1
+                minimum_fee: 1.5
+            }
+            market_liquidity: 0.5
+            max_volume_ratio: 0.1
+        }
+        trader_eval_config {
+            start_timestamp_sec: 1483228800
+            end_timestamp_sec: 1514764800
+            evaluation_period_months: 6
+        }
+        trader_name: "test-trader[30,500]"
+        period {
+            start_timestamp_sec: 1483228800
+            end_timestamp_sec: 1498867200
+            trader_final_gain: 0.666666687
+            base_final_gain: 0.666666687
+        }
+        period {
+            start_timestamp_sec: 1485907200
+            end_timestamp_sec: 1501545600
+            trader_final_gain: 1
+            base_final_gain: 1
+        }
+        period {
+            start_timestamp_sec: 1488326400
+            end_timestamp_sec: 1504224000
+            trader_final_gain: 1.71428573
+            base_final_gain: 1.71428573
+        }
+        period {
+            start_timestamp_sec: 1491004800
+            end_timestamp_sec: 1506816000
+            trader_final_gain: 4
+            base_final_gain: 4
+        }
+        period {
+            start_timestamp_sec: 1493596800
+            end_timestamp_sec: 1509494400
+            trader_final_gain: 6
+            base_final_gain: 6
+        }
+        period {
+            start_timestamp_sec: 1496275200
+            end_timestamp_sec: 1512086400
+            trader_final_gain: 5.62375
+            base_final_gain: 8.125
+        }
+        period {
+            start_timestamp_sec: 1498867200
+            end_timestamp_sec: 1514764800
+            trader_final_gain: 2.99933338
+            base_final_gain: 5
+        }
+        score: 0.881993413
+        avg_trader_gain: 3.14343381
+        avg_base_gain: 3.78656459
+        avg_total_executed_orders: 0.285714298
+        avg_total_fee: 143.142853
+        )",
+      &expected_result[2]));
+  ExpectProtoEq(expected_result[2], trader_eval_results[2],
+                /* full_scope = */ false);
 }
 
 }  // namespace trader

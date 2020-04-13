@@ -345,4 +345,29 @@ TraderEvaluationResult EvaluateTrader(
   return trader_eval_result;
 }
 
+std::vector<TraderEvaluationResult> EvaluateBatchOfTraders(
+    const TraderAccountConfig& trader_account_config,
+    const TraderEvaluationConfig& trader_eval_config,
+    const OhlcHistory& ohlc_history,
+    const std::vector<std::unique_ptr<TraderFactoryInterface>>&
+        trader_factories) {
+  std::vector<TraderEvaluationResult> trader_eval_results;
+  std::vector<std::future<TraderEvaluationResult>> trader_eval_result_futures;
+  for (const auto& trader_factory_ptr : trader_factories) {
+    const TraderFactoryInterface& trader_factory = *trader_factory_ptr.get();
+    trader_eval_result_futures.emplace_back(
+        std::async([&trader_account_config, &trader_eval_config, &ohlc_history,
+                    &trader_factory]() {
+          return EvaluateTrader(trader_account_config, trader_eval_config,
+                                ohlc_history, trader_factory,
+                                /* exchange_os = */ nullptr,
+                                /* trader_os = */ nullptr);
+        }));
+  }
+  for (auto& trader_eval_result_future : trader_eval_result_futures) {
+    trader_eval_results.emplace_back(trader_eval_result_future.get());
+  }
+  return trader_eval_results;
+}
+
 }  // namespace trader
