@@ -553,13 +553,13 @@ class TestTrader : public TraderInterface {
     orders->emplace_back();
     Order* order = &orders->back();
     if (is_long_) {
-      order->set_type(Order::Type::Order_Type_LIMIT);
-      order->set_side(Order::Side::Order_Side_SELL);
+      order->set_type(Order_Type_LIMIT);
+      order->set_side(Order_Side_SELL);
       order->set_security_amount(last_security_balance_);
       order->set_price(sell_price_);
     } else {
-      order->set_type(Order::Type::Order_Type_LIMIT);
-      order->set_side(Order::Side::Order_Side_BUY);
+      order->set_type(Order_Type_LIMIT);
+      order->set_side(Order_Side_BUY);
       order->set_cash_amount(last_cash_balance_);
       order->set_price(buy_price_);
     }
@@ -593,7 +593,7 @@ class TestTrader : public TraderInterface {
   // Last seen trader account balance.
   float last_security_balance_ = 0.0f;
   float last_cash_balance_ = 0.0f;
-  // Last seen timestamp (in seconds).
+  // Last seen UNIX timestamp (in seconds).
   int last_timestamp_sec_ = 0;
   // Last seen close price.
   float last_close_ = 0.0f;
@@ -601,7 +601,7 @@ class TestTrader : public TraderInterface {
   bool is_long_ = false;
 };
 
-// Trader factory that emits TestTrader as defined above.
+// Factory that emits TestTrader as defined above.
 class TestTraderFactory : public TraderFactoryInterface {
  public:
   TestTraderFactory(float buy_price, float sell_price)
@@ -611,7 +611,7 @@ class TestTraderFactory : public TraderFactoryInterface {
   std::string GetTraderName() const override {
     std::stringstream trader_name_os;
     trader_name_os << std::fixed << std::setprecision(0) << "test-trader"
-                   << "[" << buy_price_ << "," << sell_price_ << "]";
+                   << "[" << buy_price_ << "|" << sell_price_ << "]";
     return trader_name_os.str();
   }
 
@@ -738,7 +738,7 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
 
   TestTraderFactory trader_factory(/* buy_price = */ 50,
                                    /* sell_price = */ 200);
-  EXPECT_EQ("test-trader[50,200]", trader_factory.GetTraderName());
+  EXPECT_EQ("test-trader[50|200]", trader_factory.GetTraderName());
 
   std::stringstream exchange_os;
   std::stringstream trader_os;
@@ -768,7 +768,7 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
             end_timestamp_sec: 1514764800
             evaluation_period_months: 0
         }
-        trader_name: "test-trader[50,200]"
+        trader_name: "test-trader[50|200]"
         period {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1514764800
@@ -884,7 +884,7 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
 
   TestTraderFactory trader_factory(/* buy_price = */ 50,
                                    /* sell_price = */ 200);
-  EXPECT_EQ("test-trader[50,200]", trader_factory.GetTraderName());
+  EXPECT_EQ("test-trader[50|200]", trader_factory.GetTraderName());
 
   TraderEvaluationResult result =
       EvaluateTrader(trader_account_config, trader_eval_config, ohlc_history,
@@ -912,7 +912,7 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
             end_timestamp_sec: 1514764800
             evaluation_period_months: 6
         }
-        trader_name: "test-trader[50,200]"
+        trader_name: "test-trader[50|200]"
         period {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1498867200
@@ -1114,7 +1114,7 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
             end_timestamp_sec: 1514764800
             evaluation_period_months: 6
         }
-        trader_name: "test-trader[50,200]"
+        trader_name: "test-trader[50|200]"
         period {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1498867200
@@ -1187,7 +1187,7 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
             end_timestamp_sec: 1514764800
             evaluation_period_months: 6
         }
-        trader_name: "test-trader[40,250]"
+        trader_name: "test-trader[40|250]"
         period {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1498867200
@@ -1260,7 +1260,7 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
             end_timestamp_sec: 1514764800
             evaluation_period_months: 6
         }
-        trader_name: "test-trader[30,500]"
+        trader_name: "test-trader[30|500]"
         period {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1498867200
