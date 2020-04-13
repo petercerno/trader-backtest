@@ -56,7 +56,7 @@ TEST(CheckPriceHistoryTimestampsTest, SingleSwap) {
 
 TEST(GetPriceHistoryGapsTest, EmptyPriceHistory) {
   PriceHistory price_history;
-  HistoryGaps history_gaps = GetPriceHistoryGaps(
+  std::vector<HistoryGap> history_gaps = GetPriceHistoryGaps(
       /* begin = */ price_history.begin(), /* end = */ price_history.end(),
       /* start_timestamp_sec = */ 0,
       /* end_timestamp_sec = */ 0,
@@ -73,7 +73,7 @@ TEST(GetPriceHistoryGapsTest, EmptyPriceHistory) {
 TEST(GetPriceHistoryGapsTest, SingleRecordPriceHistory) {
   PriceHistory price_history;
   AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
-  HistoryGaps history_gaps = GetPriceHistoryGaps(
+  std::vector<HistoryGap> history_gaps = GetPriceHistoryGaps(
       /* begin = */ price_history.begin(), /* end = */ price_history.end(),
       /* start_timestamp_sec = */ 0,
       /* end_timestamp_sec = */ 0,
@@ -89,7 +89,7 @@ TEST(GetPriceHistoryGapsTest, MultipleRecordsPriceHistory) {
   AddPriceRecord(1483230900, 800.0f, 1.5e3f, &price_history);
   AddPriceRecord(1483231500, 820.0f, 1.0e3f, &price_history);
   AddPriceRecord(1483231800, 840.0f, 1.0e3f, &price_history);
-  HistoryGaps history_gaps = GetPriceHistoryGaps(
+  std::vector<HistoryGap> history_gaps = GetPriceHistoryGaps(
       /* begin = */ price_history.begin(), /* end = */ price_history.end(),
       /* start_timestamp_sec = */ 0,
       /* end_timestamp_sec = */ 0,

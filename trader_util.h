@@ -1,11 +1,7 @@
-// Copyright © 2019 Peter Cerno. All rights reserved.
+// Copyright © 2020 Peter Cerno. All rights reserved.
 
 #ifndef TRADER_UTIL_H
 #define TRADER_UTIL_H
-
-#include <map>
-#include <utility>
-#include <vector>
 
 #include "trader_base.h"
 
@@ -17,14 +13,12 @@ bool CheckPriceHistoryTimestamps(const PriceHistory& price_history);
 // Gap in the price history, represented as a pair of timestamps (in seconds).
 using HistoryGap = std::pair<long, long>;
 
-// Gaps in the price history.
-using HistoryGaps = std::vector<HistoryGap>;
-
 // Returns the top_n largest (chronologically sorted) price history gaps.
-HistoryGaps GetPriceHistoryGaps(PriceHistory::const_iterator begin,
-                                PriceHistory::const_iterator end,
-                                long start_timestamp_sec,
-                                long end_timestamp_sec, size_t top_n);
+std::vector<HistoryGap> GetPriceHistoryGaps(PriceHistory::const_iterator begin,
+                                            PriceHistory::const_iterator end,
+                                            long start_timestamp_sec,
+                                            long end_timestamp_sec,
+                                            size_t top_n);
 
 // Returns price history with removed outliers.
 // max_price_deviation_per_min is maximum allowed price deviation per minute.

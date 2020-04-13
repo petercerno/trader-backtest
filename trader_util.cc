@@ -1,11 +1,6 @@
-// Copyright © 2019 Peter Cerno. All rights reserved.
+// Copyright © 2020 Peter Cerno. All rights reserved.
 
 #include "trader_util.h"
-
-#include <algorithm>
-#include <cmath>
-#include <iterator>
-#include <queue>
 
 namespace trader {
 
@@ -19,10 +14,11 @@ bool CheckPriceHistoryTimestamps(const PriceHistory& price_history) {
   return true;
 }
 
-HistoryGaps GetPriceHistoryGaps(PriceHistory::const_iterator begin,
-                                PriceHistory::const_iterator end,
-                                long start_timestamp_sec,
-                                long end_timestamp_sec, size_t top_n) {
+std::vector<HistoryGap> GetPriceHistoryGaps(PriceHistory::const_iterator begin,
+                                            PriceHistory::const_iterator end,
+                                            long start_timestamp_sec,
+                                            long end_timestamp_sec,
+                                            size_t top_n) {
   if (begin == end) {
     return {};
   }
@@ -32,7 +28,7 @@ HistoryGaps GetPriceHistoryGaps(PriceHistory::const_iterator begin,
   };
   std::priority_queue<HistoryGap, std::vector<HistoryGap>, decltype(gap_cmp)>
       gap_queue(gap_cmp);
-  HistoryGaps history_gaps;
+  std::vector<HistoryGap> history_gaps;
   if (start_timestamp_sec > 0) {
     gap_queue.push(HistoryGap{start_timestamp_sec, begin->timestamp_sec()});
   }
