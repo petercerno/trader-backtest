@@ -1,4 +1,4 @@
-// Copyright © 2017 Peter Cerno. All rights reserved.
+// Copyright © 2020 Peter Cerno. All rights reserved.
 
 #include "stop_trader.h"
 
