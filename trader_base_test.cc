@@ -1,14 +1,26 @@
-// Copyright © 2019 Peter Cerno. All rights reserved.
+// Copyright © 2020 Peter Cerno. All rights reserved.
 
 #include "trader_base.h"
-#include "util_test.h"
 
 #include "gtest/gtest.h"
 
 namespace trader {
+namespace {
+void AddPriceRecord(int timestamp_sec, float price, float volume,
+                    PriceHistory* price_history) {
+  price_history->emplace_back();
+  price_history->back().set_timestamp_sec(timestamp_sec);
+  price_history->back().set_price(price);
+  price_history->back().set_volume(volume);
+}
 
-using testing::AddPriceRecord;
-using testing::ExpectNearPriceRecord;
+void ExpectNearPriceRecord(const PriceRecord& expected,
+                           const PriceRecord& actual) {
+  EXPECT_EQ(expected.timestamp_sec(), actual.timestamp_sec());
+  EXPECT_FLOAT_EQ(expected.price(), actual.price());
+  EXPECT_FLOAT_EQ(expected.volume(), actual.volume());
+}
+}  // namespace
 
 TEST(HistorySubsetTest, Basic) {
   PriceHistory price_history;

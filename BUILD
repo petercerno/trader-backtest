@@ -64,22 +64,11 @@ cc_library(
     deps = [":trader_cc_proto"],
 )
 
-cc_library(
-    name = "util_test",
-    srcs = ["util_test.cc"],
-    hdrs = ["util_test.h"],
-    deps = [
-        ":trader_base",
-        "@googletest//:gtest_main",
-    ],
-)
-
 cc_test(
     name = "trader_base_test",
     srcs = ["trader_base_test.cc"],
     deps = [
         ":trader_base",
-        ":util_test",
         "@googletest//:gtest_main",
     ],
 )
@@ -117,7 +106,6 @@ cc_test(
     srcs = ["trader_util_test.cc"],
     deps = [
         ":trader_util",
-        ":util_test",
         "@googletest//:gtest_main",
     ],
 )
