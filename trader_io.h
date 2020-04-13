@@ -1,10 +1,7 @@
-// Copyright © 2019 Peter Cerno. All rights reserved.
+// Copyright © 2020 Peter Cerno. All rights reserved.
 
 #ifndef TRADER_IO_H
 #define TRADER_IO_H
-
-#include <string>
-#include <vector>
 
 #include "trader_base.h"
 
@@ -19,11 +16,6 @@ bool ReadPriceHistoryFromCsvFile(const std::string& file_name,
 // given ohlc_history vector.
 bool ReadOhlcHistoryFromCsvFile(const std::string& file_name,
                                 OhlcHistory* ohlc_history);
-
-// Writes exchange account states to the given csv file.
-bool WriteExchangeAccountStatesToCsvFile(
-    const ExchangeAccountStates& exchange_account_states,
-    const std::string& file_name);
 
 // Prints the top_n largest (chronologically sorted) price history gaps.
 void PrintPriceHistoryGaps(PriceHistory::const_iterator begin,
@@ -40,12 +32,10 @@ void PrintOutliersWithContext(PriceHistory::const_iterator begin,
                               size_t left_context_size,
                               size_t right_context_size, size_t last_n);
 
-// Prints some exchange account states statistics.
-void PrintExchangeAccountStatesStats(
-    const ExchangeAccountStates& exchange_account_states);
-
 // Prints top_n evaluation results.
-void PrintEvalResults(const EvalResults& eval_results, size_t top_n);
+void PrintTraderEvalResults(
+    const std::vector<TraderEvaluationResult>& trader_eval_results,
+    size_t top_n);
 
 }  // namespace trader
 
