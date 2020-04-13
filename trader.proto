@@ -29,34 +29,6 @@ message OhlcTick {
   optional float volume = 6;
 }
 
-// Exchange order.
-message Order {
-  enum Type {
-    MARKET = 0;  // Market order.
-    STOP = 1;    // Stop order.
-    LIMIT = 2;   // Limit order.
-  }
-  enum Side {
-    BUY = 0;     // Buy order.
-    SELL = 1;    // Sell order.
-  }
-  // Type of the order. Order is invalid if the order type is missing.
-  optional Type type = 1;
-  // Side of the order. Order is invalid if the order side is missing.
-  optional Side side = 2;
-  oneof oneof_amount {
-    // The amount of security (crypto currency) to by buy / sell.
-    float security_amount = 3;
-    // The (maximum) amount of cash to be spent on buying (or to be received
-    // when selling) the security (crypto currency).
-    // The actual traded amount might be smaller due to exchange fees.
-    float cash_amount = 4;
-  }
-  // Target price at which to execute the order. Ignored for market orders.
-  // The actual traded price might differ for stop orders.
-  optional float price = 5;
-}
-
 // Transaction fee configuration.
 message FeeConfig {
   // Relative transaction fee.
@@ -99,6 +71,34 @@ message TraderAccountConfig {
   optional float max_volume_ratio = 9;
 }
 
+// Exchange order.
+message Order {
+  enum Type {
+    MARKET = 0;  // Market order.
+    STOP = 1;    // Stop order.
+    LIMIT = 2;   // Limit order.
+  }
+  enum Side {
+    BUY = 0;     // Buy order.
+    SELL = 1;    // Sell order.
+  }
+  // Type of the order. Order is invalid if the order type is missing.
+  optional Type type = 1;
+  // Side of the order. Order is invalid if the order side is missing.
+  optional Side side = 2;
+  oneof oneof_amount {
+    // The amount of security (crypto currency) to by buy / sell.
+    float security_amount = 3;
+    // The (maximum) amount of cash to be spent on buying (or to be received
+    // when selling) the security (crypto currency).
+    // The actual traded amount might be smaller due to exchange fees.
+    float cash_amount = 4;
+  }
+  // Target price at which to execute the order. Ignored for market orders.
+  // The actual traded price might differ for stop orders.
+  optional float price = 5;
+}
+
 // Result of trader execution over a region of the OHLC history.
 message TraderExecutionResult {
   // Security (crypto currency) balance at the beginning of trader execution.
@@ -121,7 +121,7 @@ message TraderExecutionResult {
   optional int32 total_executed_orders = 9;
   // Total accumulated transaction fee (in base currency).
   optional float total_fee = 10;
-};
+}
 
 // Trader evaluation configuration.
 message TraderEvaluationConfig {
@@ -166,7 +166,7 @@ message TraderEvaluationResult {
   optional float avg_total_executed_orders = 8;
   // Average total trader fees in base currency.
   optional float avg_total_fee = 9;
-  }
+}
 
 // Stop trader configuration.
 message StopTraderConfig {
