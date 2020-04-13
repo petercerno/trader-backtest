@@ -137,31 +137,13 @@ cc_library(
     name = "trader_impls",
     srcs = [
         "limit_trader.cc",
-        "limit_trader_v2.cc",
         "stop_trader.cc",
     ],
     hdrs = [
         "limit_trader.h",
-        "limit_trader_v2.h",
         "stop_trader.h",
     ],
     deps = [":trader_base"],
-)
-
-cc_library(
-    name = "exchange_account",
-    srcs = ["exchange_account.cc"],
-    hdrs = ["exchange_account.h"],
-    deps = [":trader_base"],
-)
-
-cc_test(
-    name = "exchange_account_test",
-    srcs = ["exchange_account_test.cc"],
-    deps = [
-        ":exchange_account",
-        "@googletest//:gtest_main",
-    ],
 )
 
 cc_binary(
