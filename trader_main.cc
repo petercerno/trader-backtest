@@ -4,10 +4,10 @@
 
 #include "lib/trader_base.h"
 #include "lib/trader_eval.h"
-#include "util/util_proto.h"
-#include "util/util_time.h"
 #include "traders/limit_trader.h"
 #include "traders/stop_trader.h"
+#include "util/util_proto.h"
+#include "util/util_time.h"
 
 DEFINE_string(input_ohlc_history_delimited_proto_file, "",
               "Input file containing the delimited OhlcRecord protos.");
@@ -48,7 +48,7 @@ TraderAccountConfig GetTraderAccountConfig() {
   config.mutable_market_order_fee_config()->set_relative_fee(0.005f);
   config.mutable_market_order_fee_config()->set_fixed_fee(0);
   config.mutable_market_order_fee_config()->set_minimum_fee(0);
-  config.mutable_limit_order_fee_config()->set_relative_fee(0.005);
+  config.mutable_limit_order_fee_config()->set_relative_fee(0.005f);
   config.mutable_limit_order_fee_config()->set_fixed_fee(0);
   config.mutable_limit_order_fee_config()->set_minimum_fee(0);
   config.mutable_stop_order_fee_config()->set_relative_fee(0.005f);
@@ -122,7 +122,7 @@ template <typename T>
 std::vector<T> ReadHistory(const std::string& file_name) {
   std::vector<T> history;
   auto start = std::chrono::high_resolution_clock::now();
-  if (!ReadDelimitedMessagesFromFile(file_name, &history)) {
+  if (!ReadDelimitedMessagesFromFile<T>(file_name, &history)) {
     return {};
   }
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
