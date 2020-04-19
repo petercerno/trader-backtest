@@ -7,9 +7,6 @@
 
 namespace trader {
 
-// Returns true iff the price history has non-decreasing timestamps.
-bool CheckPriceHistoryTimestamps(const PriceHistory& price_history);
-
 // Gap in the price history, represented as a pair of timestamps (in seconds).
 using HistoryGap = std::pair<long, long>;
 
