@@ -1,6 +1,6 @@
 cc_binary(
-    name = "trader_main",
-    srcs = ["trader_main.cc"],
+    name = "trader",
+    srcs = ["trader.cc"],
     deps = [
         "//external:gflags",
         "//lib:trader_base",
@@ -12,8 +12,8 @@ cc_binary(
 )
 
 cc_binary(
-    name = "history_main",
-    srcs = ["history_main.cc"],
+    name = "convert",
+    srcs = ["convert.cc"],
     deps = [
         "//external:gflags",
         "//lib:trader_base",
