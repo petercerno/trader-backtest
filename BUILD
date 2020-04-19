@@ -12,8 +12,8 @@ cc_binary(
 )
 
 cc_binary(
-    name = "csv_convert_main",
-    srcs = ["csv_convert_main.cc"],
+    name = "history_main",
+    srcs = ["history_main.cc"],
     deps = [
         "//external:gflags",
         "//lib:trader_base",
