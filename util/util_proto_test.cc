@@ -1,20 +1,17 @@
-// Copyright © 2017 Peter Cerno. All rights reserved.
+// Copyright © 2020 Peter Cerno. All rights reserved.
 
-#include "util_proto.h"
+#include "util/util_proto.h"
 
 #include <sstream>
 #include <string>
-#include "gtest/gtest.h"
 
-#include "trader.pb.h"
+#include "gtest/gtest.h"
+#include "util/example.pb.h"
 
 using google::protobuf::io::IstreamInputStream;
 using google::protobuf::io::OstreamOutputStream;
 
 namespace trader {
-namespace {
-constexpr float kEpsilon = 1.0e-6f;
-}  // namespace
 
 TEST(ReadWriteDelimitedTest, ReadWriteEmptyStream) {
   std::ostringstream oss;
@@ -54,8 +51,8 @@ TEST(ReadWriteDelimitedTest, ReadWriteSinglePriceRecord) {
   }
   ASSERT_EQ(1, messages.size());
   EXPECT_EQ(1483228800, messages[0].timestamp_sec());
-  EXPECT_NEAR(700.0f, messages[0].price(), kEpsilon);
-  EXPECT_NEAR(1.5e4f, messages[0].volume(), kEpsilon);
+  EXPECT_FLOAT_EQ(700.0f, messages[0].price());
+  EXPECT_FLOAT_EQ(1.5e4f, messages[0].volume());
 }
 
 TEST(ReadWriteDelimitedTest, ReadWriteMultipleOhlcTicks) {
@@ -85,11 +82,11 @@ TEST(ReadWriteDelimitedTest, ReadWriteMultipleOhlcTicks) {
   }
   ASSERT_EQ(kNumTicks, messages.size());
   for (int i = 0; i < kNumTicks; ++i) {
-    EXPECT_NEAR(100.0f + 10.0f * i, messages[i].open(), kEpsilon);
-    EXPECT_NEAR(120.0f + 20.0f * i, messages[i].high(), kEpsilon);
-    EXPECT_NEAR(80.0f + 10.0f * i, messages[i].low(), kEpsilon);
-    EXPECT_NEAR(110.0f + 10.0f * i, messages[i].close(), kEpsilon);
-    EXPECT_NEAR(1.5e4f + 1.0e3f * i, messages[i].volume(), kEpsilon);
+    EXPECT_FLOAT_EQ(100.0f + 10.0f * i, messages[i].open());
+    EXPECT_FLOAT_EQ(120.0f + 20.0f * i, messages[i].high());
+    EXPECT_FLOAT_EQ(80.0f + 10.0f * i, messages[i].low());
+    EXPECT_FLOAT_EQ(110.0f + 10.0f * i, messages[i].close());
+    EXPECT_FLOAT_EQ(1.5e4f + 1.0e3f * i, messages[i].volume());
   }
 }
 

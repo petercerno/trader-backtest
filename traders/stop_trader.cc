@@ -1,10 +1,6 @@
 // Copyright © 2020 Peter Cerno. All rights reserved.
 
-#include "stop_trader.h"
-
-#include <iomanip>
-#include <ostream>
-#include <sstream>
+#include "traders/stop_trader.h"
 
 namespace trader {
 

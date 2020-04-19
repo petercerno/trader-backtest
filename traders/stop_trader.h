@@ -1,9 +1,10 @@
 // Copyright © 2020 Peter Cerno. All rights reserved.
 
-#ifndef STOP_TRADER_H
-#define STOP_TRADER_H
+#ifndef TRADERS_STOP_TRADER_H
+#define TRADERS_STOP_TRADER_H
 
-#include "trader_base.h"
+#include "lib/trader_base.h"
+#include "traders/trader_config.pb.h"
 
 namespace trader {
 
@@ -71,4 +72,4 @@ class StopTraderFactory : public TraderFactoryInterface {
 
 }  // namespace trader
 
-#endif  // STOP_TRADER_H
+#endif  // TRADERS_STOP_TRADER_H

@@ -1,6 +1,6 @@
 ## License
 
-Copyright © 2017 Peter Cerno. All rights reserved.
+Copyright © 2020 Peter Cerno. All rights reserved.
 
 No part of the code may be reproduced in any form by any electronic or mechanical means (including photocopying, recording, or information storage and retrieval) without permission in writing from the author.
 

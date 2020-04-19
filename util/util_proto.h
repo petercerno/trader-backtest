@@ -1,7 +1,7 @@
-// Copyright © 2019 Peter Cerno. All rights reserved.
+// Copyright © 2020 Peter Cerno. All rights reserved.
 
-#ifndef UTIL_PROTO_H
-#define UTIL_PROTO_H
+#ifndef UTIL_UTIL_PROTO_H
+#define UTIL_UTIL_PROTO_H
 
 #include <iostream>
 #include <string>
@@ -83,4 +83,4 @@ bool WriteDelimitedMessagesToFile(InputIterator first, InputIterator last,
 
 }  // namespace trader
 
-#endif  // UTIL_PROTO_H
+#endif  // UTIL_UTIL_PROTO_H

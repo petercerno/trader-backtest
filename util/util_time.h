@@ -1,7 +1,7 @@
-// Copyright © 2019 Peter Cerno. All rights reserved.
+// Copyright © 2020 Peter Cerno. All rights reserved.
 
-#ifndef UTIL_TIME_H
-#define UTIL_TIME_H
+#ifndef UTIL_UTIL_TIME_H
+#define UTIL_UTIL_TIME_H
 
 #include <string>
 
@@ -32,4 +32,4 @@ long AddMonthsToTimestampSec(long timestamp_sec, int months);
 
 }  // namespace trader
 
-#endif  // UTIL_TIME_H
+#endif  // UTIL_UTIL_TIME_H

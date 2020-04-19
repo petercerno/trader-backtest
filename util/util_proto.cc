@@ -1,6 +1,6 @@
-// Copyright © 2017 Peter Cerno. All rights reserved.
+// Copyright © 2020 Peter Cerno. All rights reserved.
 
-#include "util_proto.h"
+#include "util/util_proto.h"
 
 namespace trader {
 

@@ -1,7 +1,7 @@
 // Copyright © 2020 Peter Cerno. All rights reserved.
 
-#ifndef TRADER_BASE_H
-#define TRADER_BASE_H
+#ifndef LIB_TRADER_BASE_H
+#define LIB_TRADER_BASE_H
 
 #include <algorithm>
 #include <cassert>
@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-#include "trader.pb.h"
+#include "lib/trader.pb.h"
 
 namespace trader {
 
@@ -129,4 +129,4 @@ std::vector<T> HistorySubsetCopy(const std::vector<T>& history,
 
 }  // namespace trader
 
-#endif  // TRADER_BASE_H
+#endif  // LIB_TRADER_BASE_H

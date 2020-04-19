@@ -1,9 +1,10 @@
 // Copyright © 2020 Peter Cerno. All rights reserved.
 
-#ifndef LIMIT_TRADER_H
-#define LIMIT_TRADER_H
+#ifndef TRADERS_LIMIT_TRADER_H
+#define TRADERS_LIMIT_TRADER_H
 
-#include "trader_base.h"
+#include "lib/trader_base.h"
+#include "traders/trader_config.pb.h"
 
 namespace trader {
 
@@ -64,4 +65,4 @@ class LimitTraderFactory : public TraderFactoryInterface {
 
 }  // namespace trader
 
-#endif  // LIMIT_TRADER_H
+#endif  // TRADERS_LIMIT_TRADER_H

@@ -2,18 +2,18 @@ syntax = "proto2";
 
 package trader;
 
-// Security (crypto currency) price (quoted in base currency) at specific time.
+// Security (crypto currency) price at a specific time.
 message PriceRecord {
   // UNIX timestamp (in seconds).
   optional int32 timestamp_sec = 1;
-  // Security (crypto currency) price (quoted in base currency) (e.g. BTC/USD).
+  // Security (crypto currency) price (e.g. BTC/USD).
   optional float price = 2;
   // Traded security (crypto currency) volume.
   optional float volume = 3;
 }
 
-// Open, high, low, and close prices (quoted in base currency) for specific time
-// interval. The duration of the time interval is assumed implicitly.
+// Open, high, low, and close prices for specific time interval.
+// The duration of the time interval is assumed implicitly.
 message OhlcTick {
   // UNIX timestamp (in seconds) of the start of the time interval.
   optional int32 timestamp_sec = 1;
@@ -166,26 +166,4 @@ message TraderEvaluationResult {
   optional float avg_total_executed_orders = 8;
   // Average total trader fees in base currency.
   optional float avg_total_fee = 9;
-}
-
-// Stop trader configuration.
-message StopTraderConfig {
-  // Margin for setting the stop order price w.r.t. the current price.
-  optional float stop_order_margin = 1;
-  // Margin for moving the stop order price w.r.t. the current price.
-  optional float stop_order_move_margin = 2;
-  // Maximum relative stop order price increase per day.
-  optional float stop_order_increase_per_day = 3;
-  // Maximum relative stop order price decrease per day.
-  optional float stop_order_decrease_per_day = 4;
-}
-
-// Limit trader configuration.
-message LimitTraderConfig {
-  // Blending factor for the exponential price smoothing.
-  optional float alpha_per_hour = 1;
-  // Margin for placing the limit buy order price w.r.t. the smoothed price.
-  optional float limit_buy_margin = 2;
-  // Margin for placing the limit sell order price w.r.t. the smoothed price.
-  optional float limit_sell_margin = 3;
 }

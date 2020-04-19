@@ -1,8 +1,8 @@
 //  Copyright © 2020 Peter Cerno. All rights reserved.
 
-#include "trader_eval.h"
+#include "lib/trader_eval.h"
 
-#include "util_time.h"
+#include "util/util_time.h"
 
 namespace trader {
 namespace {

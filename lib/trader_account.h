@@ -1,11 +1,11 @@
 // Copyright © 2020 Peter Cerno. All rights reserved.
 
-#ifndef TRADER_ACCOUNT_H
-#define TRADER_ACCOUNT_H
+#ifndef LIB_TRADER_ACCOUNT_H
+#define LIB_TRADER_ACCOUNT_H
 
 #include <limits>
 
-#include "trader.pb.h"
+#include "lib/trader.pb.h"
 
 namespace trader {
 
@@ -205,4 +205,4 @@ struct TraderAccount {
 
 }  // namespace trader
 
-#endif  // TRADER_ACCOUNT_H
+#endif  // LIB_TRADER_ACCOUNT_H

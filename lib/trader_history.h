@@ -1,9 +1,9 @@
 // Copyright © 2020 Peter Cerno. All rights reserved.
 
-#ifndef TRADER_UTIL_H
-#define TRADER_UTIL_H
+#ifndef LIB_TRADER_HISTORY_H
+#define LIB_TRADER_HISTORY_H
 
-#include "trader_base.h"
+#include "lib/trader_base.h"
 
 namespace trader {
 
@@ -43,4 +43,4 @@ OhlcHistory Resample(PriceHistory::const_iterator begin,
 
 }  // namespace trader
 
-#endif  // TRADER_UTIL_H
+#endif  // LIB_TRADER_HISTORY_H

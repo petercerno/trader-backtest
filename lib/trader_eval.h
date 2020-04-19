@@ -1,10 +1,10 @@
 //  Copyright © 2020 Peter Cerno. All rights reserved.
 
-#ifndef TRADER_EVAL_H
-#define TRADER_EVAL_H
+#ifndef LIB_TRADER_EVAL_H
+#define LIB_TRADER_EVAL_H
 
-#include "trader_account.h"
-#include "trader_base.h"
+#include "lib/trader_account.h"
+#include "lib/trader_base.h"
 
 namespace trader {
 
@@ -47,4 +47,4 @@ std::vector<TraderEvaluationResult> EvaluateBatchOfTraders(
 
 }  // namespace trader
 
-#endif  // TRADER_EVAL_H
+#endif  // LIB_TRADER_EVAL_H

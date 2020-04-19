@@ -1,12 +1,12 @@
 // Copyright © 2020 Peter Cerno. All rights reserved.
 
-#include "trader_eval.h"
+#include "lib/trader_eval.h"
 
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/util/message_differencer.h>
 
 #include "gtest/gtest.h"
-#include "util_time.h"
+#include "util/util_time.h"
 
 namespace trader {
 namespace {

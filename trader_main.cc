@@ -2,33 +2,25 @@
 
 #include <gflags/gflags.h>
 
-#include "limit_trader.h"
-#include "stop_trader.h"
-#include "trader_base.h"
-#include "trader_eval.h"
-#include "trader_io.h"
-#include "trader_util.h"
-#include "util_proto.h"
-#include "util_time.h"
+#include "lib/trader_base.h"
+#include "lib/trader_eval.h"
+#include "util/util_proto.h"
+#include "util/util_time.h"
+#include "traders/limit_trader.h"
+#include "traders/stop_trader.h"
 
-DEFINE_string(input_price_history_delimited_proto_file, "",
-              "Input file containing the delimited PriceRecord protos.");
 DEFINE_string(input_ohlc_history_delimited_proto_file, "",
               "Input file containing the delimited OhlcRecord protos.");
-
-DEFINE_string(trader, "limit", "Trader to be executed. [limit, stop].");
 DEFINE_string(output_exchange_log_file, "",
               "Output CSV file containing the exchange log.");
 DEFINE_string(output_trader_log_file, "",
               "Output file containing the trader-dependent log.");
+DEFINE_string(trader, "limit", "Trader to be executed. [limit, stop].");
 
 DEFINE_string(start_date_utc, "2016-01-01",
               "Start date YYYY-MM-DD in UTC (included).");
 DEFINE_string(end_date_utc, "2017-01-01",
               "End date YYYY-MM-DD in UTC (excluded).");
-DEFINE_double(max_price_deviation_per_min, 0.05,
-              "Maximum allowed price deviation per minute.");
-DEFINE_int32(sampling_rate_sec, 300, "Sampling rate in seconds.");
 DEFINE_int32(evaluation_period_months, 6, "Evaluation period in months.");
 
 DEFINE_double(start_security_balance, 1.0, "Starting security amount.");
@@ -43,8 +35,8 @@ DEFINE_bool(evaluate_batch, false, "Batch evaluation.");
 using namespace trader;
 
 namespace {
-const char kStopTraderName[] = "stop";
-const char kLimitTraderName[] = "limit";
+static constexpr char kLimitTraderName[] = "limit";
+static constexpr char kStopTraderName[] = "stop";
 
 // Returns the TraderAccountConfig based on the flags (and default values).
 TraderAccountConfig GetTraderAccountConfig() {
@@ -67,6 +59,24 @@ TraderAccountConfig GetTraderAccountConfig() {
   return config;
 }
 
+// Returns the default limit trader factory.
+std::unique_ptr<TraderFactoryInterface> GetDefaultLimitTraderFactory() {
+  LimitTraderConfig config;
+  config.set_alpha_per_hour(0.03f);
+  config.set_limit_buy_margin(0.01f);
+  config.set_limit_sell_margin(0.01f);
+  return std::unique_ptr<TraderFactoryInterface>(
+      new LimitTraderFactory(config));
+}
+
+// Returns the default batch of limit traders.
+std::vector<std::unique_ptr<TraderFactoryInterface>> GetBatchOfLimitTraders() {
+  return LimitTraderFactory::GetBatchOfTraders(
+      /* alphas_per_hour = */ {0.01f, 0.02f, 0.03f},
+      /* limit_buy_margins = */ {0.005f, 0.01f, 0.015f},
+      /* limit_sell_margins = */ {0.005f, 0.01f, 0.015f});
+}
+
 // Returns the default stop trader factory.
 std::unique_ptr<TraderFactoryInterface> GetDefaultStopTraderFactory() {
   StopTraderConfig config;
@@ -86,42 +96,24 @@ std::vector<std::unique_ptr<TraderFactoryInterface>> GetBatchOfStopTraders() {
       /* stop_order_decreases_per_day = */ {0.1, 0.15, 0.2, 0.25});
 }
 
-// Returns the default limit trader factory.
-std::unique_ptr<TraderFactoryInterface> GetDefaultLimitTraderFactory() {
-  LimitTraderConfig config;
-  config.set_alpha_per_hour(0.03f);
-  config.set_limit_buy_margin(0.01f);
-  config.set_limit_sell_margin(0.01f);
-  return std::unique_ptr<TraderFactoryInterface>(
-      new LimitTraderFactory(config));
-}
-
-// Returns the default batch of limit traders.
-std::vector<std::unique_ptr<TraderFactoryInterface>> GetBatchOfLimitTraders() {
-  return LimitTraderFactory::GetBatchOfTraders(
-      /* alphas_per_hour = */ {0.01f, 0.02f, 0.03f},
-      /* limit_buy_margins = */ {0.005f, 0.01f, 0.015f},
-      /* limit_sell_margins = */ {0.005f, 0.01f, 0.015f});
-}
-
 // Returns the default trader factory.
 std::unique_ptr<TraderFactoryInterface> GetDefaultTraderFactory() {
-  if (FLAGS_trader == kStopTraderName) {
-    return GetDefaultStopTraderFactory();
-  } else {
-    assert(FLAGS_trader == kLimitTraderName);
+  if (FLAGS_trader == kLimitTraderName) {
     return GetDefaultLimitTraderFactory();
+  } else {
+    assert(FLAGS_trader == kStopTraderName);
+    return GetDefaultStopTraderFactory();
   }
 }
 
 // Returns the default batch of traders.
 std::vector<std::unique_ptr<TraderFactoryInterface>>
 GetDefaultBatchOfTraders() {
-  if (FLAGS_trader == kStopTraderName) {
-    return GetBatchOfStopTraders();
-  } else {
-    assert(FLAGS_trader == kLimitTraderName);
+  if (FLAGS_trader == kLimitTraderName) {
     return GetBatchOfLimitTraders();
+  } else {
+    assert(FLAGS_trader == kStopTraderName);
+    return GetBatchOfStopTraders();
   }
 }
 
@@ -141,50 +133,9 @@ std::vector<T> ReadHistory(const std::string& file_name) {
 }
 
 // Gets the OHLC history based on flags.
-// TODO: Deduplicate this from csv_convert_main.cc.
 OhlcHistory GetOhlcHistoryFromFlags(long start_timestamp_sec,
                                     long end_timestamp_sec) {
-  if (!FLAGS_input_price_history_delimited_proto_file.empty() &&
-      FLAGS_sampling_rate_sec > 0) {
-    PriceHistory price_history = ReadHistory<PriceRecord>(
-        FLAGS_input_price_history_delimited_proto_file);
-    if (!CheckPriceHistoryTimestamps(price_history)) {
-      std::cerr << "Price history timestamps are not sorted" << std::endl;
-      return {};
-    }
-    const auto price_history_subset =
-        HistorySubset(price_history, start_timestamp_sec, end_timestamp_sec);
-    std::cout << "Selected "
-              << std::distance(price_history_subset.first,
-                               price_history_subset.second)
-              << " records within the period: "
-              << TimestampPeriodToString(start_timestamp_sec, end_timestamp_sec)
-              << std::endl;
-    std::cout << "Top 10 gaps:" << std::endl;
-    PrintPriceHistoryGaps(/* begin = */ price_history_subset.first,
-                          /* end = */ price_history_subset.second,
-                          start_timestamp_sec, end_timestamp_sec,
-                          /* top_n = */ 10);
-    std::vector<size_t> outlier_indices;
-    PriceHistory price_history_clean = RemoveOutliers(
-        /* begin = */ price_history_subset.first,
-        /* end = */ price_history_subset.second,
-        FLAGS_max_price_deviation_per_min, &outlier_indices);
-    std::cout << "Removed " << outlier_indices.size() << " outliers"
-              << std::endl;
-    std::cout << "Last 10 outliers:" << std::endl;
-    PrintOutliersWithContext(/* begin = */ price_history_subset.first,
-                             /* end = */ price_history_subset.second,
-                             outlier_indices,
-                             /* left_context_size = */ 5,
-                             /* right_context_size = */ 5, /* last_n = */ 10);
-    OhlcHistory ohlc_history =
-        Resample(price_history_clean.begin(), price_history_clean.end(),
-                 FLAGS_sampling_rate_sec);
-    std::cout << "Resampled " << price_history_clean.size() << " records to "
-              << ohlc_history.size() << " OHLC ticks" << std::endl;
-    return ohlc_history;
-  } else if (!FLAGS_input_ohlc_history_delimited_proto_file.empty()) {
+  if (!FLAGS_input_ohlc_history_delimited_proto_file.empty()) {
     OhlcHistory ohlc_history =
         ReadHistory<OhlcTick>(FLAGS_input_ohlc_history_delimited_proto_file);
     OhlcHistory ohlc_history_subset =
@@ -216,6 +167,19 @@ std::unique_ptr<std::ofstream> OpenLogFile(const std::string& log_filename) {
   }
   return log_stream;
 }
+
+// Prints top_n evaluation results.
+void PrintTraderEvalResults(
+    const std::vector<TraderEvaluationResult>& trader_eval_results,
+    size_t top_n) {
+  const size_t eval_count = std::min(top_n, trader_eval_results.size());
+  for (int eval_index = 0; eval_index < eval_count; ++eval_index) {
+    const TraderEvaluationResult& trader_eval_result =
+        trader_eval_results.at(eval_index);
+    std::cout << trader_eval_result.trader_name() << ": "
+              << trader_eval_result.score() << std::endl;
+  }
+}
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -238,9 +202,8 @@ int main(int argc, char* argv[]) {
   }
 
   TraderEvaluationConfig trader_eval_config;
-  trader_eval_config.set_start_timestamp_sec(
-      static_cast<int>(start_timestamp_sec));
-  trader_eval_config.set_end_timestamp_sec(static_cast<int>(end_timestamp_sec));
+  trader_eval_config.set_start_timestamp_sec(start_timestamp_sec);
+  trader_eval_config.set_end_timestamp_sec(end_timestamp_sec);
   trader_eval_config.set_evaluation_period_months(
       FLAGS_evaluation_period_months);
 

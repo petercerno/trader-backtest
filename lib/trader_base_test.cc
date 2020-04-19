@@ -1,6 +1,6 @@
 // Copyright © 2020 Peter Cerno. All rights reserved.
 
-#include "trader_base.h"
+#include "lib/trader_base.h"
 
 #include "gtest/gtest.h"
 

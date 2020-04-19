@@ -1,0 +1,25 @@
+syntax = "proto2";
+
+package trader;
+
+// Limit trader configuration.
+message LimitTraderConfig {
+  // Blending factor for the exponential price smoothing.
+  optional float alpha_per_hour = 1;
+  // Margin for placing the limit buy order price w.r.t. the smoothed price.
+  optional float limit_buy_margin = 2;
+  // Margin for placing the limit sell order price w.r.t. the smoothed price.
+  optional float limit_sell_margin = 3;
+}
+
+// Stop trader configuration.
+message StopTraderConfig {
+  // Margin for setting the stop order price w.r.t. the current price.
+  optional float stop_order_margin = 1;
+  // Margin for moving the stop order price w.r.t. the current price.
+  optional float stop_order_move_margin = 2;
+  // Maximum relative stop order price increase per day.
+  optional float stop_order_increase_per_day = 3;
+  // Maximum relative stop order price decrease per day.
+  optional float stop_order_decrease_per_day = 4;
+}
