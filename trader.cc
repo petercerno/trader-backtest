@@ -21,7 +21,7 @@ DEFINE_string(start_date_utc, "2016-01-01",
               "Start date YYYY-MM-DD in UTC (included).");
 DEFINE_string(end_date_utc, "2017-01-01",
               "End date YYYY-MM-DD in UTC (excluded).");
-DEFINE_int32(evaluation_period_months, 6, "Evaluation period in months.");
+DEFINE_int32(evaluation_period_months, 0, "Evaluation period in months.");
 
 DEFINE_double(start_security_balance, 1.0, "Starting security amount.");
 DEFINE_double(start_cash_balance, 0.0, "Starting cash amount.");
