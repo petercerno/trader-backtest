@@ -249,6 +249,13 @@ TraderExecutionResult ExecuteTrader(
         LogExchangeState(ohlc_tick, trader_account, order, exchange_os);
       }
     }
+    if (ohlc_tick.volume() == 0) {
+      // Zero volume OHLC tick indicates a gap in a price history. Such gap
+      // could have been caused by an unresponsive exchange (or its API).
+      // Therefore, we do not update the trader and simply keep the previously
+      // emitted orders.
+      continue;
+    }
     // Update the trader internal state on the current OHLC tick T[i].
     // Emit a new set of "trader_orders" for the next OHLC tick T[i+1].
     trader_orders.clear();
