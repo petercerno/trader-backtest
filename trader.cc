@@ -5,6 +5,7 @@
 #include "lib/trader_base.h"
 #include "lib/trader_eval.h"
 #include "traders/limit_trader.h"
+#include "traders/rebalancing_trader.h"
 #include "traders/stop_trader.h"
 #include "util/util_proto.h"
 #include "util/util_time.h"
@@ -15,7 +16,8 @@ DEFINE_string(output_exchange_log_file, "",
               "Output CSV file containing the exchange log.");
 DEFINE_string(output_trader_log_file, "",
               "Output file containing the trader-dependent log.");
-DEFINE_string(trader, "limit", "Trader to be executed. [limit, stop].");
+DEFINE_string(trader, "limit",
+              "Trader to be executed. [limit, rebalancing, stop].");
 
 DEFINE_string(start_date_utc, "2016-01-01",
               "Start date YYYY-MM-DD in UTC (included).");
@@ -36,6 +38,7 @@ using namespace trader;
 
 namespace {
 static constexpr char kLimitTraderName[] = "limit";
+static constexpr char kRebalancingTraderName[] = "rebalancing";
 static constexpr char kStopTraderName[] = "stop";
 
 // Returns the TraderAccountConfig based on the flags (and default values).
@@ -77,6 +80,24 @@ std::vector<std::unique_ptr<TraderFactoryInterface>> GetBatchOfLimitTraders() {
       /* limit_sell_margins = */ {0.005f, 0.01f, 0.015f});
 }
 
+// Returns the default rebalancing trader factory.
+std::unique_ptr<TraderFactoryInterface> GetDefaultRebalancingTraderFactory() {
+  RebalancingTraderConfig config;
+  config.set_alpha(0.9f);
+  config.set_upper_deviation(0.1f);
+  config.set_lower_deviation(0.1f);
+  return std::unique_ptr<TraderFactoryInterface>(
+      new RebalancingTraderFactory(config));
+}
+
+// Returns the default batch of rebalancing traders.
+std::vector<std::unique_ptr<TraderFactoryInterface>>
+GetBatchOfRebalancingTraders() {
+  return RebalancingTraderFactory::GetBatchOfTraders(
+      /* alphas = */ {0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 0.95f},
+      /* deviations = */ {0.01f, 0.05f, 0.1f, 0.2f});
+}
+
 // Returns the default stop trader factory.
 std::unique_ptr<TraderFactoryInterface> GetDefaultStopTraderFactory() {
   StopTraderConfig config;
@@ -100,6 +121,8 @@ std::vector<std::unique_ptr<TraderFactoryInterface>> GetBatchOfStopTraders() {
 std::unique_ptr<TraderFactoryInterface> GetDefaultTraderFactory() {
   if (FLAGS_trader == kLimitTraderName) {
     return GetDefaultLimitTraderFactory();
+  } else if (FLAGS_trader == kRebalancingTraderName) {
+    return GetDefaultRebalancingTraderFactory();
   } else {
     assert(FLAGS_trader == kStopTraderName);
     return GetDefaultStopTraderFactory();
@@ -111,6 +134,8 @@ std::vector<std::unique_ptr<TraderFactoryInterface>>
 GetDefaultBatchOfTraders() {
   if (FLAGS_trader == kLimitTraderName) {
     return GetBatchOfLimitTraders();
+  } else if (FLAGS_trader == kRebalancingTraderName) {
+    return GetBatchOfRebalancingTraders();
   } else {
     assert(FLAGS_trader == kStopTraderName);
     return GetBatchOfStopTraders();

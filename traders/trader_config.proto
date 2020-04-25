@@ -12,6 +12,22 @@ message LimitTraderConfig {
   optional float limit_sell_margin = 3;
 }
 
+// Rebalancing trader configuration.
+message RebalancingTraderConfig {
+  // Desired security (crypto currency) value to cash value ratio.
+  // For example, 0.8 means we want 80% of our portfolio to be in
+  // security (crypto currency).
+  optional float alpha = 1;
+  // Maximum allowed upper alpha deviation.
+  // For example, 0.1 means that the actual security (crypto currency) value to
+  // cash value ratio can be at most 1.10 * alpha.
+  optional float upper_deviation = 2;
+  // Maximum allowed lower alpha deviation.
+  // For example, 0.1 means that the actual security (crypto currency) value to
+  // cash value ratio must be at least 0.90 * alpha.
+  optional float lower_deviation = 3;
+}
+
 // Stop trader configuration.
 message StopTraderConfig {
   // Margin for setting the stop order price w.r.t. the current price.
