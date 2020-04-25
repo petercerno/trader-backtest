@@ -174,26 +174,24 @@ Trader evaluation:
 [2019-07-01 00:00:00 - 2020-01-01 00:00:00): 0.965082
 ```
 
-## Caveats
+## Warning
 
-Keep in mind that there are many risks associated with live trading, and backtesting itself does not guarantee the expected gains.
+Keep in mind that there are many risks associated with trading, and backtesting itself does not guarantee the expected gains.
 
-* The input price history might be damaged (it might contain gaps or wrong quotations).
-* There might be bugs in the backtesting algorithm / implementation.
+* The input price history might be damaged (it might contain gaps or wrong prices).
+* There might be subtle bugs in the backtesting algorithm (or implementation).
+* Exchanges might become unreliable or unresponsive. In the worst case they can go bust.
 
-In addition, it is not possible to perfectly simulate the trader over the past historical data, since the trader's actions might impact the market (price movements). We will discuss some caveats corresponding to different order types below.
+Note that it is also not possible to perfectly simulate the trader over the past historical data, since the trader's actions might potentially impact the market. In our examples we use historical prices based on historically executed orders (and their volumes), but we have no information about market depth. We will discuss some caveats corresponding to different order types below.
 
 ### Limit Order Caveats
 
-Limit order guarantees the trading price, but it does not guarantee its execution (nor the fill size). Imagine that you place a limit sell order of 10 BTC at 200 USD. Assume that the (historical) price jumps to 205 USD/BTC at some point, but the corresponding tick volume is only 5 BTC. It is clear that the order will be triggered, but it is not clear how much of the order size will be filled. For this reason, we have introduced a flag `limit_order_fill_volume_ratio` , which specifies the ratio of the (tick) volume used to fill the limit order. If it is set to 0.1 then only 0.5 BTC would be traded (and the remaining order would be canceled). If it is set to 0 then this problem is ignored, and the order would be fully filled.
+Limit order guarantees price, but it does not guarantee its (full) execution. Imagine that you place a limit sell order of 10 BTC at 200 USD. Assume that the (historical) price jumps to 205 USD/BTC at some point, but the corresponding (traded) volume is only 5 BTC. It is clear that the order will be triggered, but it is not clear how much of the order will be filled. For this reason, we have introduced `max_volume_ratio` , which specifies the ratio of the (OHLC tick) volume that will be used to fill the limit order. For example, if it is set to 0.1 then only 0.5 BTC would be traded (and the remaining order would be canceled).
 
 ### Stop and Market Order Caveats
 
-Stop order is not exactly a real order, as it is not present in the exchange order book. Rather, it is a promise by the exchange that it will execute the corresponding market order if the price jumps above (or drops below) the specified target. However, it is not clear when exactly will the exchange execute the stop order, so the trading price is also not guaranteed. Similarly, the trading price of the market order might be different from its target price (defined as the open price of a tick over which the market order is being executed). The reason is that there might not be enough liquidity at the market for executing the market order at its target price. Again, imagine that you place a stop buy order of 10 BTC at 200 USD. If the (historical) price jumps to 205 USD/BTC, the stop buy order will be executed fully, but it is not clear what would be the trading price. It can be anything between 200 and 205 USD/BTC. Therefore, we have introduced a flag `order_execution_accuracy` , which specifies the accuracy of executing market / stop orders at their target price. If it is 1.0, the market / stop order will be executed exactly at its target price (in our case 200 USD/BTC). If it is 0.0, the market / stop order will be executed at the worst possible price w.r.t.the given tick (in our case 205 USD/BTC). Any value between 0.0 and 1.0 can be used. The execution price will be then interpolated between the target price and the worst possible price.
-
-**Note**: Different transaction fees might apply to different types of orders. Transaction fees can be configured directly in the source code.
+Stop order is a promise by the exchange that it will execute the corresponding market order if the price jumps above (or drops below) the specified target price. However, it is not clear when exactly that will happen so the trading price is not guaranteed. Similarly, the final price of the market order might be different from the current market price (which is defined in our algorithm as the opening price of the OHLC tick over which the market order is going to be executed). The reason is that there might not be enough liquidity at the market for executing the market order at its target price. Again, imagine that you place a stop buy order of 10 BTC at 200 USD. If the (historical) price jumps to 205 USD/BTC, the stop buy order will be executed fully, but it is not clear what would be the final price. It can be anything between 200 and 205 USD/BTC (or even more). Therefore, we have introduced `market_liquidity`, which specifies the accuracy of executing market / stop orders at their target price. If it is 1.0, the market / stop order will be executed exactly at its target price (in our case 200 USD/BTC). If it is 0.0, the market / stop order will be executed at the worst possible price w.r.t.the given OHLC tick (in our case 205 USD/BTC). Any value between 0.0 and 1.0 can be used. The execution price will be then interpolated between the target price and the worst possible price. Note that because we have no information about market depth we cannot really predict the final price of market / stop orders, especially for large volumes.
 
 ## Implementation Guidelines
 
 We follow the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html). All code must be [clang-formatted](https://clang.llvm.org/docs/ClangFormat.html) (with Google predefined style), unit-tested and peer-reviewed (if possible).
-
