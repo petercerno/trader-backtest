@@ -372,32 +372,36 @@ TEST(BuyTest, BuyWithoutFeeAndInfinitePrecision) {
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 1000.0f;
-  EXPECT_TRUE(trader_account.Buy(fee_config, /* price = */ 10.0f,
-                                 /* security_amount = */ 5.0f));
+  EXPECT_TRUE(trader_account.Buy(fee_config,
+                                 /* security_amount = */ 5.0f,
+                                 /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(15.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(950.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
-  EXPECT_TRUE(trader_account.Buy(fee_config, /* price = */ 10.0f,
-                                 /* security_amount = */ 10.0f));
+  EXPECT_TRUE(trader_account.Buy(fee_config,
+                                 /* security_amount = */ 10.0f,
+                                 /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(20.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 12.345f;
   trader_account.cash_balance = 123.456f;
-  EXPECT_TRUE(trader_account.Buy(fee_config, /* price = */ 5.5f,
-                                 /* security_amount = */ 12.345f));
+  EXPECT_TRUE(trader_account.Buy(fee_config,
+                                 /* security_amount = */ 12.345f,
+                                 /* price = */ 5.5f));
   EXPECT_FLOAT_EQ(24.69f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(55.5585f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
-  EXPECT_FALSE(trader_account.Buy(fee_config, /* price = */ 10.0f,
-                                  /* security_amount = */ 15.0f));
+  EXPECT_FALSE(trader_account.Buy(fee_config,
+                                  /* security_amount = */ 15.0f,
+                                  /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
@@ -412,32 +416,36 @@ TEST(BuyTest, BuyWithoutFeeAndLimitedPrecision) {
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 1000.0f;
-  EXPECT_TRUE(trader_account.Buy(fee_config, /* price = */ 10.0f,
-                                 /* security_amount = */ 5.0f));
+  EXPECT_TRUE(trader_account.Buy(fee_config,
+                                 /* security_amount = */ 5.0f,
+                                 /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(15.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(950.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
-  EXPECT_TRUE(trader_account.Buy(fee_config, /* price = */ 10.0f,
-                                 /* security_amount = */ 10.0f));
+  EXPECT_TRUE(trader_account.Buy(fee_config,
+                                 /* security_amount = */ 10.0f,
+                                 /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(20.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 12.3f;
   trader_account.cash_balance = 123.0f;
-  EXPECT_TRUE(trader_account.Buy(fee_config, /* price = */ 5.5f,
-                                 /* security_amount = */ 12.345f));
+  EXPECT_TRUE(trader_account.Buy(fee_config,
+                                 /* security_amount = */ 12.345f,
+                                 /* price = */ 5.5f));
   EXPECT_FLOAT_EQ(24.6f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(55.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
-  EXPECT_FALSE(trader_account.Buy(fee_config, /* price = */ 10.0f,
-                                  /* security_amount = */ 15.0f));
+  EXPECT_FALSE(trader_account.Buy(fee_config,
+                                  /* security_amount = */ 15.0f,
+                                  /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
@@ -457,8 +465,9 @@ TEST(BuyTest, BuyWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 1000.0f;
   trader_account.total_fee = 0.0f;
-  EXPECT_TRUE(trader_account.Buy(fee_config, /* price = */ 10.0f,
-                                 /* security_amount = */ 5.0f));
+  EXPECT_TRUE(trader_account.Buy(fee_config,
+                                 /* security_amount = */ 5.0f,
+                                 /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(15.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(944.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(6.0f, trader_account.total_fee);
@@ -466,8 +475,9 @@ TEST(BuyTest, BuyWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 111.0f;
   trader_account.total_fee = 10.0f;
-  EXPECT_TRUE(trader_account.Buy(fee_config, /* price = */ 10.0f,
-                                 /* security_amount = */ 10.0f));
+  EXPECT_TRUE(trader_account.Buy(fee_config,
+                                 /* security_amount = */ 10.0f,
+                                 /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(20.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(21.0f, trader_account.total_fee);
@@ -475,8 +485,9 @@ TEST(BuyTest, BuyWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 12.3f;
   trader_account.cash_balance = 123.0f;
   trader_account.total_fee = 0.0f;
-  EXPECT_TRUE(trader_account.Buy(fee_config, /* price = */ 5.5f,
-                                 /* security_amount = */ 12.345f));
+  EXPECT_TRUE(trader_account.Buy(fee_config,
+                                 /* security_amount = */ 12.345f,
+                                 /* price = */ 5.5f));
   EXPECT_FLOAT_EQ(24.6f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(47.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(8.0f, trader_account.total_fee);
@@ -484,8 +495,9 @@ TEST(BuyTest, BuyWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
   trader_account.total_fee = 10.0f;
-  EXPECT_FALSE(trader_account.Buy(fee_config, /* price = */ 10.0f,
-                                  /* security_amount = */ 15.0f));
+  EXPECT_FALSE(trader_account.Buy(fee_config,
+                                  /* security_amount = */ 15.0f,
+                                  /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(10.0f, trader_account.total_fee);
@@ -497,16 +509,18 @@ TEST(BuyTest, BuyAtCashWithoutFeeAndInfinitePrecision) {
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 1000.0f;
-  EXPECT_TRUE(trader_account.BuyAtCash(fee_config, /* price = */ 10.0f,
-                                       /* cash_amount = */ 50.0f));
+  EXPECT_TRUE(trader_account.BuyAtCash(fee_config,
+                                       /* cash_amount = */ 50.0f,
+                                       /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(15.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(950.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 1000.0f;
-  EXPECT_TRUE(trader_account.BuyAtCash(fee_config, /* price = */ 10.0f,
+  EXPECT_TRUE(trader_account.BuyAtCash(fee_config,
                                        /* cash_amount = */ 50.0f,
+                                       /* price = */ 10.0f,
                                        /* max_security_amount = */ 2.0f));
   EXPECT_FLOAT_EQ(12.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(980.0f, trader_account.cash_balance);
@@ -514,16 +528,18 @@ TEST(BuyTest, BuyAtCashWithoutFeeAndInfinitePrecision) {
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
-  EXPECT_TRUE(trader_account.BuyAtCash(fee_config, /* price = */ 10.0f,
-                                       /* cash_amount = */ 100.0f));
+  EXPECT_TRUE(trader_account.BuyAtCash(fee_config,
+                                       /* cash_amount = */ 100.0f,
+                                       /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(20.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
-  EXPECT_TRUE(trader_account.BuyAtCash(fee_config, /* price = */ 10.0f,
+  EXPECT_TRUE(trader_account.BuyAtCash(fee_config,
                                        /* cash_amount = */ 100.0f,
+                                       /* price = */ 10.0f,
                                        /* max_security_amount = */ 5.0f));
   EXPECT_FLOAT_EQ(15.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(50.0f, trader_account.cash_balance);
@@ -531,16 +547,18 @@ TEST(BuyTest, BuyAtCashWithoutFeeAndInfinitePrecision) {
 
   trader_account.security_balance = 12.345f;
   trader_account.cash_balance = 123.456f;
-  EXPECT_TRUE(trader_account.BuyAtCash(fee_config, /* price = */ 5.5f,
-                                       /* cash_amount = */ 67.8975f));
+  EXPECT_TRUE(trader_account.BuyAtCash(fee_config,
+                                       /* cash_amount = */ 67.8975f,
+                                       /* price = */ 5.5f));
   EXPECT_FLOAT_EQ(24.69f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(55.5585f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 12.345f;
   trader_account.cash_balance = 123.456f;
-  EXPECT_TRUE(trader_account.BuyAtCash(fee_config, /* price = */ 5.5f,
+  EXPECT_TRUE(trader_account.BuyAtCash(fee_config,
                                        /* cash_amount = */ 67.8975f,
+                                       /* price = */ 5.5f,
                                        /* max_security_amount = */ 5.0f));
   EXPECT_FLOAT_EQ(17.345f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(95.956f, trader_account.cash_balance);
@@ -548,16 +566,18 @@ TEST(BuyTest, BuyAtCashWithoutFeeAndInfinitePrecision) {
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
-  EXPECT_FALSE(trader_account.BuyAtCash(fee_config, /* price = */ 10.0f,
-                                        /* cash_amount = */ 1000.0f));
+  EXPECT_FALSE(trader_account.BuyAtCash(fee_config,
+                                        /* cash_amount = */ 1000.0f,
+                                        /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
-  EXPECT_FALSE(trader_account.BuyAtCash(fee_config, /* price = */ 10.0f,
+  EXPECT_FALSE(trader_account.BuyAtCash(fee_config,
                                         /* cash_amount = */ 1000.0f,
+                                        /* price = */ 10.0f,
                                         /* max_security_amount = */ 20.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
@@ -573,16 +593,18 @@ TEST(BuyTest, BuyAtCashWithoutFeeAndLimitedPrecision) {
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 1000.0f;
-  EXPECT_TRUE(trader_account.BuyAtCash(fee_config, /* price = */ 10.0f,
-                                       /* cash_amount = */ 50.0f));
+  EXPECT_TRUE(trader_account.BuyAtCash(fee_config,
+                                       /* cash_amount = */ 50.0f,
+                                       /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(15.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(950.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 1000.0f;
-  EXPECT_TRUE(trader_account.BuyAtCash(fee_config, /* price = */ 10.0f,
+  EXPECT_TRUE(trader_account.BuyAtCash(fee_config,
                                        /* cash_amount = */ 50.0f,
+                                       /* price = */ 10.0f,
                                        /* max_security_amount = */ 2.0f));
   EXPECT_FLOAT_EQ(12.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(980.0f, trader_account.cash_balance);
@@ -590,16 +612,18 @@ TEST(BuyTest, BuyAtCashWithoutFeeAndLimitedPrecision) {
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
-  EXPECT_TRUE(trader_account.BuyAtCash(fee_config, /* price = */ 10.0f,
-                                       /* cash_amount = */ 100.0f));
+  EXPECT_TRUE(trader_account.BuyAtCash(fee_config,
+                                       /* cash_amount = */ 100.0f,
+                                       /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(20.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
-  EXPECT_TRUE(trader_account.BuyAtCash(fee_config, /* price = */ 10.0f,
+  EXPECT_TRUE(trader_account.BuyAtCash(fee_config,
                                        /* cash_amount = */ 100.0f,
+                                       /* price = */ 10.0f,
                                        /* max_security_amount = */ 5.0f));
   EXPECT_FLOAT_EQ(15.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(50.0f, trader_account.cash_balance);
@@ -607,16 +631,18 @@ TEST(BuyTest, BuyAtCashWithoutFeeAndLimitedPrecision) {
 
   trader_account.security_balance = 12.3f;
   trader_account.cash_balance = 123.0f;
-  EXPECT_TRUE(trader_account.BuyAtCash(fee_config, /* price = */ 5.5f,
-                                       /* cash_amount = */ 67.8975f));
+  EXPECT_TRUE(trader_account.BuyAtCash(fee_config,
+                                       /* cash_amount = */ 67.8975f,
+                                       /* price = */ 5.5f));
   EXPECT_FLOAT_EQ(24.6f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(55.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 12.3f;
   trader_account.cash_balance = 123.0f;
-  EXPECT_TRUE(trader_account.BuyAtCash(fee_config, /* price = */ 5.5f,
+  EXPECT_TRUE(trader_account.BuyAtCash(fee_config,
                                        /* cash_amount = */ 67.8975f,
+                                       /* price = */ 5.5f,
                                        /* max_security_amount = */ 5.0f));
   EXPECT_FLOAT_EQ(17.3f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(95.0f, trader_account.cash_balance);
@@ -624,16 +650,18 @@ TEST(BuyTest, BuyAtCashWithoutFeeAndLimitedPrecision) {
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
-  EXPECT_FALSE(trader_account.BuyAtCash(fee_config, /* price = */ 10.0f,
-                                        /* cash_amount = */ 1000.0f));
+  EXPECT_FALSE(trader_account.BuyAtCash(fee_config,
+                                        /* cash_amount = */ 1000.0f,
+                                        /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
-  EXPECT_FALSE(trader_account.BuyAtCash(fee_config, /* price = */ 10.0f,
+  EXPECT_FALSE(trader_account.BuyAtCash(fee_config,
                                         /* cash_amount = */ 1000.0f,
+                                        /* price = */ 10.0f,
                                         /* max_security_amount = */ 20.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
@@ -654,8 +682,9 @@ TEST(BuyTest, BuyAtCashWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 1000.0f;
   trader_account.total_fee = 0.0f;
-  EXPECT_TRUE(trader_account.BuyAtCash(fee_config, /* price = */ 10.0f,
-                                       /* cash_amount = */ 57.0f));
+  EXPECT_TRUE(trader_account.BuyAtCash(fee_config,
+                                       /* cash_amount = */ 57.0f,
+                                       /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(15.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(944.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(6.0f, trader_account.total_fee);
@@ -663,8 +692,9 @@ TEST(BuyTest, BuyAtCashWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 1000.0f;
   trader_account.total_fee = 0.0f;
-  EXPECT_TRUE(trader_account.BuyAtCash(fee_config, /* price = */ 10.0f,
+  EXPECT_TRUE(trader_account.BuyAtCash(fee_config,
                                        /* cash_amount = */ 57.0f,
+                                       /* price = */ 10.0f,
                                        /* max_security_amount = */ 2.0f));
   EXPECT_FLOAT_EQ(12.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(977.0f, trader_account.cash_balance);
@@ -673,8 +703,9 @@ TEST(BuyTest, BuyAtCashWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 111.0f;
   trader_account.total_fee = 10.0f;
-  EXPECT_TRUE(trader_account.BuyAtCash(fee_config, /* price = */ 10.0f,
-                                       /* cash_amount = */ 111.0f));
+  EXPECT_TRUE(trader_account.BuyAtCash(fee_config,
+                                       /* cash_amount = */ 111.0f,
+                                       /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(19.8f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(2.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(21.0f, trader_account.total_fee);
@@ -682,8 +713,9 @@ TEST(BuyTest, BuyAtCashWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 111.0f;
   trader_account.total_fee = 10.0f;
-  EXPECT_TRUE(trader_account.BuyAtCash(fee_config, /* price = */ 10.0f,
+  EXPECT_TRUE(trader_account.BuyAtCash(fee_config,
                                        /* cash_amount = */ 111.0f,
+                                       /* price = */ 10.0f,
                                        /* max_security_amount = */ 5.0f));
   EXPECT_FLOAT_EQ(15.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(55.0f, trader_account.cash_balance);
@@ -692,8 +724,9 @@ TEST(BuyTest, BuyAtCashWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 12.3f;
   trader_account.cash_balance = 123.0f;
   trader_account.total_fee = 0.0f;
-  EXPECT_TRUE(trader_account.BuyAtCash(fee_config, /* price = */ 5.5f,
-                                       /* cash_amount = */ 76.123f));
+  EXPECT_TRUE(trader_account.BuyAtCash(fee_config,
+                                       /* cash_amount = */ 76.123f,
+                                       /* price = */ 5.5f));
   EXPECT_FLOAT_EQ(24.4f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(48.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(8.0f, trader_account.total_fee);
@@ -701,8 +734,9 @@ TEST(BuyTest, BuyAtCashWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 12.3f;
   trader_account.cash_balance = 123.0f;
   trader_account.total_fee = 0.0f;
-  EXPECT_TRUE(trader_account.BuyAtCash(fee_config, /* price = */ 5.5f,
+  EXPECT_TRUE(trader_account.BuyAtCash(fee_config,
                                        /* cash_amount = */ 76.123f,
+                                       /* price = */ 5.5f,
                                        /* max_security_amount = */ 5.0f));
   EXPECT_FLOAT_EQ(17.3f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(91.0f, trader_account.cash_balance);
@@ -711,8 +745,9 @@ TEST(BuyTest, BuyAtCashWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
   trader_account.total_fee = 10.0f;
-  EXPECT_FALSE(trader_account.BuyAtCash(fee_config, /* price = */ 10.0f,
-                                        /* cash_amount = */ 1000.0f));
+  EXPECT_FALSE(trader_account.BuyAtCash(fee_config,
+                                        /* cash_amount = */ 1000.0f,
+                                        /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(10.0f, trader_account.total_fee);
@@ -720,8 +755,9 @@ TEST(BuyTest, BuyAtCashWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
   trader_account.total_fee = 10.0f;
-  EXPECT_FALSE(trader_account.BuyAtCash(fee_config, /* price = */ 10.0f,
+  EXPECT_FALSE(trader_account.BuyAtCash(fee_config,
                                         /* cash_amount = */ 1000.0f,
+                                        /* price = */ 10.0f,
                                         /* max_security_amount = */ 5.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
@@ -734,32 +770,36 @@ TEST(SellTest, SellWithoutFeeAndInfinitePrecision) {
 
   trader_account.security_balance = 15.0f;
   trader_account.cash_balance = 950.0f;
-  EXPECT_TRUE(trader_account.Sell(fee_config, /* price = */ 10.0f,
-                                  /* security_amount = */ 5.0f));
+  EXPECT_TRUE(trader_account.Sell(fee_config,
+                                  /* security_amount = */ 5.0f,
+                                  /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(1000.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 20.0f;
   trader_account.cash_balance = 0.0f;
-  EXPECT_TRUE(trader_account.Sell(fee_config, /* price = */ 10.0f,
-                                  /* security_amount = */ 10.0f));
+  EXPECT_TRUE(trader_account.Sell(fee_config,
+                                  /* security_amount = */ 10.0f,
+                                  /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 24.69f;
   trader_account.cash_balance = 55.5585f;
-  EXPECT_TRUE(trader_account.Sell(fee_config, /* price = */ 5.5f,
-                                  /* security_amount = */ 12.345f));
+  EXPECT_TRUE(trader_account.Sell(fee_config,
+                                  /* security_amount = */ 12.345f,
+                                  /* price = */ 5.5f));
   EXPECT_FLOAT_EQ(12.345f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(123.456f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
-  EXPECT_FALSE(trader_account.Sell(fee_config, /* price = */ 10.0f,
-                                   /* security_amount = */ 15.0f));
+  EXPECT_FALSE(trader_account.Sell(fee_config,
+                                   /* security_amount = */ 15.0f,
+                                   /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
@@ -774,32 +814,36 @@ TEST(SellTest, SellWithoutFeeAndLimitedPrecision) {
 
   trader_account.security_balance = 15.0f;
   trader_account.cash_balance = 950.0f;
-  EXPECT_TRUE(trader_account.Sell(fee_config, /* price = */ 10.0f,
-                                  /* security_amount = */ 5.0f));
+  EXPECT_TRUE(trader_account.Sell(fee_config,
+                                  /* security_amount = */ 5.0f,
+                                  /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(1000.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 20.0f;
   trader_account.cash_balance = 0.0f;
-  EXPECT_TRUE(trader_account.Sell(fee_config, /* price = */ 10.0f,
-                                  /* security_amount = */ 10.0f));
+  EXPECT_TRUE(trader_account.Sell(fee_config,
+                                  /* security_amount = */ 10.0f,
+                                  /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 24.6f;
   trader_account.cash_balance = 55.0f;
-  EXPECT_TRUE(trader_account.Sell(fee_config, /* price = */ 5.5f,
-                                  /* security_amount = */ 12.345f));
+  EXPECT_TRUE(trader_account.Sell(fee_config,
+                                  /* security_amount = */ 12.345f,
+                                  /* price = */ 5.5f));
   EXPECT_FLOAT_EQ(12.3f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(122.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
-  EXPECT_FALSE(trader_account.Sell(fee_config, /* price = */ 10.0f,
-                                   /* security_amount = */ 15.0f));
+  EXPECT_FALSE(trader_account.Sell(fee_config,
+                                   /* security_amount = */ 15.0f,
+                                   /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
@@ -819,8 +863,9 @@ TEST(SellTest, SellWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 15.0f;
   trader_account.cash_balance = 950.0f;
   trader_account.total_fee = 0.0f;
-  EXPECT_TRUE(trader_account.Sell(fee_config, /* price = */ 10.0f,
-                                  /* security_amount = */ 5.0f));
+  EXPECT_TRUE(trader_account.Sell(fee_config,
+                                  /* security_amount = */ 5.0f,
+                                  /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(994.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(6.0f, trader_account.total_fee);
@@ -828,8 +873,9 @@ TEST(SellTest, SellWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 20.0f;
   trader_account.cash_balance = 0.0f;
   trader_account.total_fee = 10.0f;
-  EXPECT_TRUE(trader_account.Sell(fee_config, /* price = */ 10.0f,
-                                  /* security_amount = */ 10.0f));
+  EXPECT_TRUE(trader_account.Sell(fee_config,
+                                  /* security_amount = */ 10.0f,
+                                  /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(89.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(21.0f, trader_account.total_fee);
@@ -837,8 +883,9 @@ TEST(SellTest, SellWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 24.6f;
   trader_account.cash_balance = 47.0f;
   trader_account.total_fee = 0.0f;
-  EXPECT_TRUE(trader_account.Sell(fee_config, /* price = */ 5.5f,
-                                  /* security_amount = */ 12.345f));
+  EXPECT_TRUE(trader_account.Sell(fee_config,
+                                  /* security_amount = */ 12.345f,
+                                  /* price = */ 5.5f));
   EXPECT_FLOAT_EQ(12.3f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(106.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(8.0f, trader_account.total_fee);
@@ -846,8 +893,9 @@ TEST(SellTest, SellWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
   trader_account.total_fee = 10.0f;
-  EXPECT_FALSE(trader_account.Sell(fee_config, /* price = */ 10.0f,
-                                   /* security_amount = */ 15.0f));
+  EXPECT_FALSE(trader_account.Sell(fee_config,
+                                   /* security_amount = */ 15.0f,
+                                   /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(10.0f, trader_account.total_fee);
@@ -859,16 +907,18 @@ TEST(SellTest, SellAtCashWithoutFeeAndInfinitePrecision) {
 
   trader_account.security_balance = 15.0f;
   trader_account.cash_balance = 950.0f;
-  EXPECT_TRUE(trader_account.SellAtCash(fee_config, /* price = */ 10.0f,
-                                        /* cash_amount = */ 50.0f));
+  EXPECT_TRUE(trader_account.SellAtCash(fee_config,
+                                        /* cash_amount = */ 50.0f,
+                                        /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(1000.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 15.0f;
   trader_account.cash_balance = 950.0f;
-  EXPECT_TRUE(trader_account.SellAtCash(fee_config, /* price = */ 10.0f,
+  EXPECT_TRUE(trader_account.SellAtCash(fee_config,
                                         /* cash_amount = */ 50.0f,
+                                        /* price = */ 10.0f,
                                         /* max_security_amount = */ 2.0f));
   EXPECT_FLOAT_EQ(13.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(970.0f, trader_account.cash_balance);
@@ -876,16 +926,18 @@ TEST(SellTest, SellAtCashWithoutFeeAndInfinitePrecision) {
 
   trader_account.security_balance = 20.0f;
   trader_account.cash_balance = 0.0f;
-  EXPECT_TRUE(trader_account.SellAtCash(fee_config, /* price = */ 10.0f,
-                                        /* cash_amount = */ 100.0f));
+  EXPECT_TRUE(trader_account.SellAtCash(fee_config,
+                                        /* cash_amount = */ 100.0f,
+                                        /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 15.0f;
   trader_account.cash_balance = 50.0f;
-  EXPECT_TRUE(trader_account.SellAtCash(fee_config, /* price = */ 10.0f,
+  EXPECT_TRUE(trader_account.SellAtCash(fee_config,
                                         /* cash_amount = */ 100.0f,
+                                        /* price = */ 10.0f,
                                         /* max_security_amount = */ 5.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
@@ -893,16 +945,18 @@ TEST(SellTest, SellAtCashWithoutFeeAndInfinitePrecision) {
 
   trader_account.security_balance = 24.69f;
   trader_account.cash_balance = 55.5585f;
-  EXPECT_TRUE(trader_account.SellAtCash(fee_config, /* price = */ 5.5f,
-                                        /* cash_amount = */ 67.8975f));
+  EXPECT_TRUE(trader_account.SellAtCash(fee_config,
+                                        /* cash_amount = */ 67.8975f,
+                                        /* price = */ 5.5f));
   EXPECT_FLOAT_EQ(12.345f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(123.456f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 17.345f;
   trader_account.cash_balance = 95.956f;
-  EXPECT_TRUE(trader_account.SellAtCash(fee_config, /* price = */ 5.5f,
+  EXPECT_TRUE(trader_account.SellAtCash(fee_config,
                                         /* cash_amount = */ 67.8975f,
+                                        /* price = */ 5.5f,
                                         /* max_security_amount = */ 5.0f));
   EXPECT_FLOAT_EQ(12.345f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(123.456f, trader_account.cash_balance);
@@ -910,16 +964,18 @@ TEST(SellTest, SellAtCashWithoutFeeAndInfinitePrecision) {
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
-  EXPECT_FALSE(trader_account.SellAtCash(fee_config, /* price = */ 10.0f,
-                                         /* cash_amount = */ 1000.0f));
+  EXPECT_FALSE(trader_account.SellAtCash(fee_config,
+                                         /* cash_amount = */ 1000.0f,
+                                         /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
-  EXPECT_FALSE(trader_account.SellAtCash(fee_config, /* price = */ 10.0f,
+  EXPECT_FALSE(trader_account.SellAtCash(fee_config,
                                          /* cash_amount = */ 1000.0f,
+                                         /* price = */ 10.0f,
                                          /* max_security_amount = */ 20.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
@@ -935,16 +991,18 @@ TEST(SellTest, SellAtCashWithoutFeeAndLimitedPrecision) {
 
   trader_account.security_balance = 15.0f;
   trader_account.cash_balance = 950.0f;
-  EXPECT_TRUE(trader_account.SellAtCash(fee_config, /* price = */ 10.0f,
-                                        /* cash_amount = */ 50.0f));
+  EXPECT_TRUE(trader_account.SellAtCash(fee_config,
+                                        /* cash_amount = */ 50.0f,
+                                        /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(1000.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 12.0f;
   trader_account.cash_balance = 980.0f;
-  EXPECT_TRUE(trader_account.SellAtCash(fee_config, /* price = */ 10.0f,
+  EXPECT_TRUE(trader_account.SellAtCash(fee_config,
                                         /* cash_amount = */ 50.0f,
+                                        /* price = */ 10.0f,
                                         /* max_security_amount = */ 2.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(1000.0f, trader_account.cash_balance);
@@ -952,16 +1010,18 @@ TEST(SellTest, SellAtCashWithoutFeeAndLimitedPrecision) {
 
   trader_account.security_balance = 20.0f;
   trader_account.cash_balance = 0.0f;
-  EXPECT_TRUE(trader_account.SellAtCash(fee_config, /* price = */ 10.0f,
-                                        /* cash_amount = */ 100.0f));
+  EXPECT_TRUE(trader_account.SellAtCash(fee_config,
+                                        /* cash_amount = */ 100.0f,
+                                        /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 15.0f;
   trader_account.cash_balance = 50.0f;
-  EXPECT_TRUE(trader_account.SellAtCash(fee_config, /* price = */ 10.0f,
+  EXPECT_TRUE(trader_account.SellAtCash(fee_config,
                                         /* cash_amount = */ 100.0f,
+                                        /* price = */ 10.0f,
                                         /* max_security_amount = */ 5.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
@@ -969,16 +1029,18 @@ TEST(SellTest, SellAtCashWithoutFeeAndLimitedPrecision) {
 
   trader_account.security_balance = 24.6f;
   trader_account.cash_balance = 55.0f;
-  EXPECT_TRUE(trader_account.SellAtCash(fee_config, /* price = */ 5.5f,
-                                        /* cash_amount = */ 67.8975f));
+  EXPECT_TRUE(trader_account.SellAtCash(fee_config,
+                                        /* cash_amount = */ 67.8975f,
+                                        /* price = */ 5.5f));
   EXPECT_FLOAT_EQ(12.3f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(122.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 17.3f;
   trader_account.cash_balance = 95.0f;
-  EXPECT_TRUE(trader_account.SellAtCash(fee_config, /* price = */ 5.5f,
+  EXPECT_TRUE(trader_account.SellAtCash(fee_config,
                                         /* cash_amount = */ 67.8975f,
+                                        /* price = */ 5.5f,
                                         /* max_security_amount = */ 5.0f));
   EXPECT_FLOAT_EQ(12.3f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(122.0f, trader_account.cash_balance);
@@ -986,16 +1048,18 @@ TEST(SellTest, SellAtCashWithoutFeeAndLimitedPrecision) {
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
-  EXPECT_FALSE(trader_account.SellAtCash(fee_config, /* price = */ 10.0f,
-                                         /* cash_amount = */ 1000.0f));
+  EXPECT_FALSE(trader_account.SellAtCash(fee_config,
+                                         /* cash_amount = */ 1000.0f,
+                                         /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(0.0f, trader_account.total_fee);
 
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
-  EXPECT_FALSE(trader_account.SellAtCash(fee_config, /* price = */ 10.0f,
+  EXPECT_FALSE(trader_account.SellAtCash(fee_config,
                                          /* cash_amount = */ 1000.0f,
+                                         /* price = */ 10.0f,
                                          /* max_security_amount = */ 20.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
@@ -1016,8 +1080,9 @@ TEST(SellTest, SellAtCashWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 15.0f;
   trader_account.cash_balance = 950.0f;
   trader_account.total_fee = 0.0f;
-  EXPECT_TRUE(trader_account.SellAtCash(fee_config, /* price = */ 10.0f,
-                                        /* cash_amount = */ 50.0f));
+  EXPECT_TRUE(trader_account.SellAtCash(fee_config,
+                                        /* cash_amount = */ 50.0f,
+                                        /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(9.4f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(999.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(7.0f, trader_account.total_fee);
@@ -1025,8 +1090,9 @@ TEST(SellTest, SellAtCashWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 12.0f;
   trader_account.cash_balance = 980.0f;
   trader_account.total_fee = 0.0f;
-  EXPECT_TRUE(trader_account.SellAtCash(fee_config, /* price = */ 10.0f,
+  EXPECT_TRUE(trader_account.SellAtCash(fee_config,
                                         /* cash_amount = */ 50.0f,
+                                        /* price = */ 10.0f,
                                         /* max_security_amount = */ 2.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(997.0f, trader_account.cash_balance);
@@ -1035,8 +1101,9 @@ TEST(SellTest, SellAtCashWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 20.0f;
   trader_account.cash_balance = 0.0f;
   trader_account.total_fee = 10.0f;
-  EXPECT_TRUE(trader_account.SellAtCash(fee_config, /* price = */ 10.0f,
-                                        /* cash_amount = */ 100.0f));
+  EXPECT_TRUE(trader_account.SellAtCash(fee_config,
+                                        /* cash_amount = */ 100.0f,
+                                        /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(8.9f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(98.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(23.0f, trader_account.total_fee);
@@ -1044,8 +1111,9 @@ TEST(SellTest, SellAtCashWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 15.0f;
   trader_account.cash_balance = 50.0f;
   trader_account.total_fee = 10.0f;
-  EXPECT_TRUE(trader_account.SellAtCash(fee_config, /* price = */ 10.0f,
+  EXPECT_TRUE(trader_account.SellAtCash(fee_config,
                                         /* cash_amount = */ 100.0f,
+                                        /* price = */ 10.0f,
                                         /* max_security_amount = */ 5.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(94.0f, trader_account.cash_balance);
@@ -1054,8 +1122,9 @@ TEST(SellTest, SellAtCashWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 24.6f;
   trader_account.cash_balance = 55.0f;
   trader_account.total_fee = 0.0f;
-  EXPECT_TRUE(trader_account.SellAtCash(fee_config, /* price = */ 5.5f,
-                                        /* cash_amount = */ 67.8975f));
+  EXPECT_TRUE(trader_account.SellAtCash(fee_config,
+                                        /* cash_amount = */ 67.8975f,
+                                        /* price = */ 5.5f));
   EXPECT_FLOAT_EQ(10.8f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(121.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(9.0f, trader_account.total_fee);
@@ -1063,8 +1132,9 @@ TEST(SellTest, SellAtCashWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 17.3f;
   trader_account.cash_balance = 95.0f;
   trader_account.total_fee = 0.0f;
-  EXPECT_TRUE(trader_account.SellAtCash(fee_config, /* price = */ 5.5f,
+  EXPECT_TRUE(trader_account.SellAtCash(fee_config,
                                         /* cash_amount = */ 67.8975f,
+                                        /* price = */ 5.5f,
                                         /* max_security_amount = */ 5.0f));
   EXPECT_FLOAT_EQ(12.3f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(118.0f, trader_account.cash_balance);
@@ -1073,8 +1143,9 @@ TEST(SellTest, SellAtCashWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
   trader_account.total_fee = 10.0f;
-  EXPECT_FALSE(trader_account.SellAtCash(fee_config, /* price = */ 10.0f,
-                                         /* cash_amount = */ 1000.0f));
+  EXPECT_FALSE(trader_account.SellAtCash(fee_config,
+                                         /* cash_amount = */ 1000.0f,
+                                         /* price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(10.0f, trader_account.total_fee);
@@ -1082,8 +1153,9 @@ TEST(SellTest, SellAtCashWithFeeAndLimitedPrecision) {
   trader_account.security_balance = 10.0f;
   trader_account.cash_balance = 100.0f;
   trader_account.total_fee = 10.0f;
-  EXPECT_FALSE(trader_account.SellAtCash(fee_config, /* price = */ 10.0f,
+  EXPECT_FALSE(trader_account.SellAtCash(fee_config,
                                          /* cash_amount = */ 1000.0f,
+                                         /* price = */ 10.0f,
                                          /* max_security_amount = */ 20.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(100.0f, trader_account.cash_balance);
@@ -1232,12 +1304,12 @@ TEST(BuyTest, StopBuyWithFeeAndLimitedPrecision) {
   // Stop price 25.0 is above the OHLC tick high price 20.0.
   // Therefore, the order cannot be executed.
   EXPECT_FALSE(trader_account.StopBuy(fee_config, ohlc_tick,
-                                      /* stop_price = */ 25.0f,
-                                      /* security_amount = */ 10.0f));
+                                      /* security_amount = */ 10.0f,
+                                      /* stop_price = */ 25.0f));
   // Stop price 15.0 is below the OHLC tick high price 20.0. Order is executed.
   EXPECT_TRUE(trader_account.StopBuy(fee_config, ohlc_tick,
-                                     /* stop_price = */ 15.0f,
-                                     /* security_amount = */ 10.0f));
+                                     /* security_amount = */ 10.0f,
+                                     /* stop_price = */ 15.0f));
   EXPECT_FLOAT_EQ(20.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(806.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(19.0f, trader_account.total_fee);
@@ -1269,12 +1341,12 @@ TEST(BuyTest, StopBuyAtCashWithFeeAndLimitedPrecision) {
   // Stop price 25.0 is above the OHLC tick high price 20.0.
   // Therefore, the order cannot be executed.
   EXPECT_FALSE(trader_account.StopBuyAtCash(fee_config, ohlc_tick,
-                                            /* stop_price = */ 25.0f,
-                                            /* cash_amount = */ 197.0f));
+                                            /* cash_amount = */ 197.0f,
+                                            /* stop_price = */ 25.0f));
   // Stop price 15.0 is below the OHLC tick high price 20.0. Order is executed.
   EXPECT_TRUE(trader_account.StopBuyAtCash(fee_config, ohlc_tick,
-                                           /* stop_price = */ 15.0f,
-                                           /* cash_amount = */ 197.0f));
+                                           /* cash_amount = */ 197.0f,
+                                           /* stop_price = */ 15.0f));
   EXPECT_FLOAT_EQ(20.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(806.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(19.0f, trader_account.total_fee);
@@ -1306,12 +1378,12 @@ TEST(SellTest, StopSellWithFeeAndLimitedPrecision) {
   // Stop price 1.0 is below the OHLC tick low price 2.0.
   // Therefore, the order cannot be executed.
   EXPECT_FALSE(trader_account.StopSell(fee_config, ohlc_tick,
-                                       /* stop_price = */ 1.0f,
-                                       /* security_amount = */ 5.0f));
+                                       /* security_amount = */ 5.0f,
+                                       /* stop_price = */ 1.0f));
   // Stop price 5.0 is below the OHLC tick low price 2.0. Order is executed.
   EXPECT_TRUE(trader_account.StopSell(fee_config, ohlc_tick,
-                                      /* stop_price = */ 5.0f,
-                                      /* security_amount = */ 5.0f));
+                                      /* security_amount = */ 5.0f,
+                                      /* stop_price = */ 5.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(971.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(4.0f, trader_account.total_fee);
@@ -1343,12 +1415,12 @@ TEST(SellTest, StopSellAtCashWithFeeAndLimitedPrecision) {
   // Stop price 1.0 is below the OHLC tick low price 2.0.
   // Therefore, the order cannot be executed.
   EXPECT_FALSE(trader_account.StopSellAtCash(fee_config, ohlc_tick,
-                                             /* stop_price = */ 1.0f,
-                                             /* cash_amount = */ 50.0f));
+                                             /* cash_amount = */ 50.0f,
+                                             /* stop_price = */ 1.0f));
   // Stop price 5.0 is above the OHLC tick low price 2.0. Order is executed.
   EXPECT_TRUE(trader_account.StopSellAtCash(fee_config, ohlc_tick,
-                                            /* stop_price = */ 5.0f,
-                                            /* cash_amount = */ 50.0f));
+                                            /* cash_amount = */ 50.0f,
+                                            /* stop_price = */ 5.0f));
   EXPECT_FLOAT_EQ(3.8f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(999.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(7.0f, trader_account.total_fee);
@@ -1379,12 +1451,12 @@ TEST(BuyTest, LimitBuyWithFeeAndLimitedPrecision) {
   // Limit price 1.0 is below the OHLC tick low price 2.0.
   // Therefore, the order cannot be executed.
   EXPECT_FALSE(trader_account.LimitBuy(fee_config, ohlc_tick,
-                                       /* limit_price = */ 1.0f,
-                                       /* security_amount = */ 10.0f));
+                                       /* security_amount = */ 10.0f,
+                                       /* limit_price = */ 1.0f));
   // Limit price 5.0 is above the OHLC tick low price 2.0. Order is executed.
   EXPECT_TRUE(trader_account.LimitBuy(fee_config, ohlc_tick,
-                                      /* limit_price = */ 5.0f,
-                                      /* security_amount = */ 10.0f));
+                                      /* security_amount = */ 10.0f,
+                                      /* limit_price = */ 5.0f));
   EXPECT_FLOAT_EQ(20.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(944.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(6.0f, trader_account.total_fee);
@@ -1416,12 +1488,12 @@ TEST(BuyTest, LimitBuyWithFeeAndLimitedPrecisionExceedsMaxAmount) {
   // Limit price 1.0 is below the OHLC tick low price 2.0.
   // Therefore, the order cannot be executed.
   EXPECT_FALSE(trader_account.LimitBuy(fee_config, ohlc_tick,
-                                       /* limit_price = */ 1.0f,
-                                       /* security_amount = */ 10.0f));
+                                       /* security_amount = */ 10.0f,
+                                       /* limit_price = */ 1.0f));
   // Limit price 5.0 is above the OHLC tick low price 2.0. Order is executed.
   EXPECT_TRUE(trader_account.LimitBuy(fee_config, ohlc_tick,
-                                      /* limit_price = */ 5.0f,
-                                      /* security_amount = */ 10.0f));
+                                      /* security_amount = */ 10.0f,
+                                      /* limit_price = */ 5.0f));
   EXPECT_FLOAT_EQ(11.2f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(992.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(2.0f, trader_account.total_fee);
@@ -1452,12 +1524,12 @@ TEST(BuyTest, LimitBuyAtCashWithFeeAndLimitedPrecision) {
   // Limit price 1.0 is below the OHLC tick low price 2.0.
   // Therefore, the order cannot be executed.
   EXPECT_FALSE(trader_account.LimitBuyAtCash(fee_config, ohlc_tick,
-                                             /* limit_price = */ 1.0f,
-                                             /* cash_amount = */ 57.0f));
+                                             /* cash_amount = */ 57.0f,
+                                             /* limit_price = */ 1.0f));
   // Limit price 5.0 is above the OHLC tick low price 2.0. Order is executed.
   EXPECT_TRUE(trader_account.LimitBuyAtCash(fee_config, ohlc_tick,
-                                            /* limit_price = */ 5.0f,
-                                            /* cash_amount = */ 57.0f));
+                                            /* cash_amount = */ 57.0f,
+                                            /* limit_price = */ 5.0f));
   EXPECT_FLOAT_EQ(20.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(944.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(6.0f, trader_account.total_fee);
@@ -1489,12 +1561,12 @@ TEST(BuyTest, LimitBuyAtCashWithFeeAndLimitedPrecisionExceedsMaxAmount) {
   // Limit price 1.0 is below the OHLC tick low price 2.0.
   // Therefore, the order cannot be executed.
   EXPECT_FALSE(trader_account.LimitBuyAtCash(fee_config, ohlc_tick,
-                                             /* limit_price = */ 1.0f,
-                                             /* cash_amount = */ 57.0f));
+                                             /* cash_amount = */ 57.0f,
+                                             /* limit_price = */ 1.0f));
   // Limit price 5.0 is above the OHLC tick low price 2.0. Order is executed.
   EXPECT_TRUE(trader_account.LimitBuyAtCash(fee_config, ohlc_tick,
-                                            /* limit_price = */ 5.0f,
-                                            /* cash_amount = */ 57.0f));
+                                            /* cash_amount = */ 57.0f,
+                                            /* limit_price = */ 5.0f));
   EXPECT_FLOAT_EQ(11.2f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(992.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(2.0f, trader_account.total_fee);
@@ -1525,12 +1597,12 @@ TEST(SellTest, LimitSellWithFeeAndLimitedPrecision) {
   // Limit price 25.0 is above the OHLC tick high price 20.0.
   // Therefore, the order cannot be executed.
   EXPECT_FALSE(trader_account.LimitSell(fee_config, ohlc_tick,
-                                        /* limit_price = */ 25.0f,
-                                        /* security_amount = */ 5.0f));
+                                        /* security_amount = */ 5.0f,
+                                        /* limit_price = */ 25.0f));
   // Limit price 10.0 is below the OHLC tick high price 20.0. Order is executed.
   EXPECT_TRUE(trader_account.LimitSell(fee_config, ohlc_tick,
-                                       /* limit_price = */ 10.0f,
-                                       /* security_amount = */ 5.0f));
+                                       /* security_amount = */ 5.0f,
+                                       /* limit_price = */ 10.0f));
   EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(994.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(6.0f, trader_account.total_fee);
@@ -1562,12 +1634,12 @@ TEST(SellTest, LimitSellWithFeeAndLimitedPrecisionExceedsMaxAmount) {
   // Limit price 25.0 is above the OHLC tick high price 20.0.
   // Therefore, the order cannot be executed.
   EXPECT_FALSE(trader_account.LimitSell(fee_config, ohlc_tick,
-                                        /* limit_price = */ 25.0f,
-                                        /* security_amount = */ 5.0f));
+                                        /* security_amount = */ 5.0f,
+                                        /* limit_price = */ 25.0f));
   // Limit price 10.0 is below the OHLC tick high price 20.0. Order is executed.
   EXPECT_TRUE(trader_account.LimitSell(fee_config, ohlc_tick,
-                                       /* limit_price = */ 10.0f,
-                                       /* security_amount = */ 5.0f));
+                                       /* security_amount = */ 5.0f,
+                                       /* limit_price = */ 10.0f));
   EXPECT_FLOAT_EQ(13.8f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(959.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(3.0f, trader_account.total_fee);
@@ -1598,12 +1670,12 @@ TEST(SellTest, LimitSellAtCashWithFeeAndLimitedPrecision) {
   // Limit price 25.0 is above the OHLC tick high price 20.0.
   // Therefore, the order cannot be executed.
   EXPECT_FALSE(trader_account.LimitSellAtCash(fee_config, ohlc_tick,
-                                              /* limit_price = */ 25.0f,
-                                              /* cash_amount = */ 50.0f));
+                                              /* cash_amount = */ 50.0f,
+                                              /* limit_price = */ 25.0f));
   // Limit price 10.0 is below the OHLC tick high price 20.0. Order is executed.
   EXPECT_TRUE(trader_account.LimitSellAtCash(fee_config, ohlc_tick,
-                                             /* limit_price = */ 10.0f,
-                                             /* cash_amount = */ 50.0f));
+                                             /* cash_amount = */ 50.0f,
+                                             /* limit_price = */ 10.0f));
   EXPECT_FLOAT_EQ(9.4f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(999.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(7.0f, trader_account.total_fee);
@@ -1635,12 +1707,12 @@ TEST(SellTest, LimitSellAtCashWithFeeAndLimitedPrecisionExceedsMaxAmount) {
   // Limit price 25.0 is above the OHLC tick high price 20.0.
   // Therefore, the order cannot be executed.
   EXPECT_FALSE(trader_account.LimitSellAtCash(fee_config, ohlc_tick,
-                                              /* limit_price = */ 25.0f,
-                                              /* cash_amount = */ 50.0f));
+                                              /* cash_amount = */ 50.0f,
+                                              /* limit_price = */ 25.0f));
   // Limit price 10.0 is below the OHLC tick high price 20.0. Order is executed.
   EXPECT_TRUE(trader_account.LimitSellAtCash(fee_config, ohlc_tick,
-                                             /* limit_price = */ 10.0f,
-                                             /* cash_amount = */ 50.0f));
+                                             /* cash_amount = */ 50.0f,
+                                             /* limit_price = */ 10.0f));
   EXPECT_FLOAT_EQ(13.8f, trader_account.security_balance);
   EXPECT_FLOAT_EQ(959.0f, trader_account.cash_balance);
   EXPECT_FLOAT_EQ(3.0f, trader_account.total_fee);

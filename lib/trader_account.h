@@ -65,20 +65,20 @@ struct TraderAccount {
   // Transaction fee is estimated based on the provided fee_config and the total
   // cash amount (in base currency) involved in the transaction.
   // Returns true iff the order was executed successfully.
-  bool Buy(const FeeConfig& fee_config, float price, float security_amount);
+  bool Buy(const FeeConfig& fee_config, float security_amount, float price);
   // Buys as much security (crypto currency) as possible at the given price,
   // spending at most cash_amount cash (in base currency), and buying at most
   // max_security_amount security (crypto currency).
   // Transaction fee is estimated based on the provided fee_config and the total
   // cash amount (in base currency) involved in the transaction.
   // Returns true iff the order was executed successfully.
-  bool BuyAtCash(const FeeConfig& fee_config, float price, float cash_amount,
+  bool BuyAtCash(const FeeConfig& fee_config, float cash_amount, float price,
                  float max_security_amount = std::numeric_limits<float>::max());
   // Sells the specified amount of security (crypto currency) at the given
   // price. Transaction fee is estimated based on the provided fee_config and
   // the total cash amount (in base currency) involved in the transaction.
   // Returns true iff the order was executed successfully.
-  bool Sell(const FeeConfig& fee_config, float price, float security_amount);
+  bool Sell(const FeeConfig& fee_config, float security_amount, float price);
   // Sells as much security (crypto currency) as possible at the given price,
   // receiving at most cash_amount cash (in base currency), and selling at most
   // max_security_amount security (crypto currency).
@@ -86,7 +86,7 @@ struct TraderAccount {
   // cash amount (in base currency) involved in the transaction.
   // Returns true iff the order was executed successfully.
   bool SellAtCash(
-      const FeeConfig& fee_config, float price, float cash_amount,
+      const FeeConfig& fee_config, float cash_amount, float price,
       float max_security_amount = std::numeric_limits<float>::max());
 
   // MARKET ORDERS
@@ -127,7 +127,7 @@ struct TraderAccount {
   // higher than or equal to the stop order price.
   // Returns true iff the order was executed successfully.
   bool StopBuy(const FeeConfig& fee_config, const OhlcTick& ohlc_tick,
-               float stop_price, float security_amount);
+               float security_amount, float stop_price);
   // Executes stop buy order for the specified amount of cash (in base
   // currency) and at the specified stop order price.
   // Transaction fee is estimated based on the provided fee_config and the total
@@ -137,7 +137,7 @@ struct TraderAccount {
   // higher than or equal to the stop order price.
   // Returns true iff the order was executed successfully.
   bool StopBuyAtCash(const FeeConfig& fee_config, const OhlcTick& ohlc_tick,
-                     float stop_price, float cash_amount);
+                     float cash_amount, float stop_price);
   // Executes stop sell order for the specified amount of security (crypto
   // currency) and at the specified stop order price.
   // Transaction fee is estimated based on the provided fee_config and the total
@@ -147,7 +147,7 @@ struct TraderAccount {
   // lower than or equal to the stop order price.
   // Returns true iff the order was executed successfully.
   bool StopSell(const FeeConfig& fee_config, const OhlcTick& ohlc_tick,
-                float stop_price, float security_amount);
+                float security_amount, float stop_price);
   // Executes stop sell order for the specified amount of cash (in base
   // currency) and at the specified stop order price.
   // Transaction fee is estimated based on the provided fee_config and the total
@@ -157,7 +157,7 @@ struct TraderAccount {
   // lower than or equal to the stop order price.
   // Returns true iff the order was executed successfully.
   bool StopSellAtCash(const FeeConfig& fee_config, const OhlcTick& ohlc_tick,
-                      float stop_price, float cash_amount);
+                      float cash_amount, float stop_price);
 
   // LIMIT ORDERS
 
@@ -170,7 +170,7 @@ struct TraderAccount {
   // lower than or equal to the limit order price.
   // Returns true iff the order was executed successfully.
   bool LimitBuy(const FeeConfig& fee_config, const OhlcTick& ohlc_tick,
-                float limit_price, float security_amount);
+                float security_amount, float limit_price);
   // Executes limit buy order for the specified amount of cash (in base
   // currency) and at the specified limit order price.
   // Transaction fee is estimated based on the provided fee_config and the total
@@ -180,7 +180,7 @@ struct TraderAccount {
   // lower than or equal to the limit order price.
   // Returns true iff the order was executed successfully.
   bool LimitBuyAtCash(const FeeConfig& fee_config, const OhlcTick& ohlc_tick,
-                      float limit_price, float cash_amount);
+                      float cash_amount, float limit_price);
   // Executes limit sell order for the specified amount of security (crypto
   // currency) and at the specified limit order price.
   // Transaction fee is estimated based on the provided fee_config and the total
@@ -190,7 +190,7 @@ struct TraderAccount {
   // higher than or equal to the limit order price.
   // Returns true iff the order was executed successfully.
   bool LimitSell(const FeeConfig& fee_config, const OhlcTick& ohlc_tick,
-                 float limit_price, float security_amount);
+                 float security_amount, float limit_price);
   // Executes limit sell order for the specified amount of cash (in base
   // currency) and at the specified limit order price.
   // Transaction fee is estimated based on the provided fee_config and the total
@@ -200,7 +200,7 @@ struct TraderAccount {
   // higher than or equal to the limit order price.
   // Returns true iff the order was executed successfully.
   bool LimitSellAtCash(const FeeConfig& fee_config, const OhlcTick& ohlc_tick,
-                       float limit_price, float cash_amount);
+                       float cash_amount, float limit_price);
 };
 
 }  // namespace trader

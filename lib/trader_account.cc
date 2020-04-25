@@ -57,8 +57,8 @@ float TraderAccount::GetMaxSecurityAmount(const OhlcTick& ohlc_tick) const {
              : std::numeric_limits<float>::max();
 }
 
-bool TraderAccount::Buy(const FeeConfig& fee_config, float price,
-                        float security_amount) {
+bool TraderAccount::Buy(const FeeConfig& fee_config, float security_amount,
+                        float price) {
   assert(price > 0);
   assert(security_amount >= 0);
   security_amount = Round(security_amount, security_unit);
@@ -77,8 +77,8 @@ bool TraderAccount::Buy(const FeeConfig& fee_config, float price,
   return true;
 }
 
-bool TraderAccount::BuyAtCash(const FeeConfig& fee_config, float price,
-                              float cash_amount, float max_security_amount) {
+bool TraderAccount::BuyAtCash(const FeeConfig& fee_config, float cash_amount,
+                              float price, float max_security_amount) {
   assert(price > 0);
   assert(cash_amount >= 0);
   cash_amount = Round(cash_amount, cash_unit);
@@ -95,11 +95,11 @@ bool TraderAccount::BuyAtCash(const FeeConfig& fee_config, float price,
   if (security_amount < security_unit) {
     return false;
   }
-  return Buy(fee_config, price, security_amount);
+  return Buy(fee_config, security_amount, price);
 }
 
-bool TraderAccount::Sell(const FeeConfig& fee_config, float price,
-                         float security_amount) {
+bool TraderAccount::Sell(const FeeConfig& fee_config, float security_amount,
+                         float price) {
   assert(price > 0);
   assert(security_amount >= 0);
   security_amount = Round(security_amount, security_unit);
@@ -118,8 +118,8 @@ bool TraderAccount::Sell(const FeeConfig& fee_config, float price,
   return true;
 }
 
-bool TraderAccount::SellAtCash(const FeeConfig& fee_config, float price,
-                               float cash_amount, float max_security_amount) {
+bool TraderAccount::SellAtCash(const FeeConfig& fee_config, float cash_amount,
+                               float price, float max_security_amount) {
   assert(price > 0);
   assert(cash_amount >= 0);
   cash_amount = Round(cash_amount, cash_unit);
@@ -137,40 +137,40 @@ bool TraderAccount::SellAtCash(const FeeConfig& fee_config, float price,
   //   (cash_amount + cash_fee) - GetFee(cash_amount + cash_fee) cash.
   // Since GetFee(cash_amount) <= GetFee(cash_amount + cash_fee),
   // We receive at most cash_amount cash.
-  return Sell(fee_config, price, security_amount);
+  return Sell(fee_config, security_amount, price);
 }
 
 bool TraderAccount::MarketBuy(const FeeConfig& fee_config,
                               const OhlcTick& ohlc_tick,
                               float security_amount) {
   const float price = GetMarketBuyPrice(ohlc_tick);
-  return Buy(fee_config, price, security_amount);
+  return Buy(fee_config, security_amount, price);
 }
 
 bool TraderAccount::MarketBuyAtCash(const FeeConfig& fee_config,
                                     const OhlcTick& ohlc_tick,
                                     float cash_amount) {
   const float price = GetMarketBuyPrice(ohlc_tick);
-  return BuyAtCash(fee_config, price, cash_amount);
+  return BuyAtCash(fee_config, cash_amount, price);
 }
 
 bool TraderAccount::MarketSell(const FeeConfig& fee_config,
                                const OhlcTick& ohlc_tick,
                                float security_amount) {
   const float price = GetMarketSellPrice(ohlc_tick);
-  return Sell(fee_config, price, security_amount);
+  return Sell(fee_config, security_amount, price);
 }
 
 bool TraderAccount::MarketSellAtCash(const FeeConfig& fee_config,
                                      const OhlcTick& ohlc_tick,
                                      float cash_amount) {
   const float price = GetMarketSellPrice(ohlc_tick);
-  return SellAtCash(fee_config, price, cash_amount);
+  return SellAtCash(fee_config, cash_amount, price);
 }
 
 bool TraderAccount::StopBuy(const FeeConfig& fee_config,
-                            const OhlcTick& ohlc_tick, float stop_price,
-                            float security_amount) {
+                            const OhlcTick& ohlc_tick, float security_amount,
+                            float stop_price) {
   assert(stop_price > 0);
   assert(security_amount >= 0);
   // Stop buy order can be executed only if the actual price jumps above
@@ -179,12 +179,12 @@ bool TraderAccount::StopBuy(const FeeConfig& fee_config,
     return false;
   }
   const float price = GetStopBuyPrice(ohlc_tick, stop_price);
-  return Buy(fee_config, price, security_amount);
+  return Buy(fee_config, security_amount, price);
 }
 
 bool TraderAccount::StopBuyAtCash(const FeeConfig& fee_config,
-                                  const OhlcTick& ohlc_tick, float stop_price,
-                                  float cash_amount) {
+                                  const OhlcTick& ohlc_tick, float cash_amount,
+                                  float stop_price) {
   assert(stop_price > 0);
   assert(cash_amount >= 0);
   // Stop buy order can be executed only if the actual price jumps above
@@ -193,12 +193,12 @@ bool TraderAccount::StopBuyAtCash(const FeeConfig& fee_config,
     return false;
   }
   const float price = GetStopBuyPrice(ohlc_tick, stop_price);
-  return BuyAtCash(fee_config, price, cash_amount);
+  return BuyAtCash(fee_config, cash_amount, price);
 }
 
 bool TraderAccount::StopSell(const FeeConfig& fee_config,
-                             const OhlcTick& ohlc_tick, float stop_price,
-                             float security_amount) {
+                             const OhlcTick& ohlc_tick, float security_amount,
+                             float stop_price) {
   assert(stop_price > 0);
   assert(security_amount >= 0);
   // Stop sell order can be executed only if the actual price drops below
@@ -207,12 +207,12 @@ bool TraderAccount::StopSell(const FeeConfig& fee_config,
     return false;
   }
   const float price = GetStopSellPrice(ohlc_tick, stop_price);
-  return Sell(fee_config, price, security_amount);
+  return Sell(fee_config, security_amount, price);
 }
 
 bool TraderAccount::StopSellAtCash(const FeeConfig& fee_config,
-                                   const OhlcTick& ohlc_tick, float stop_price,
-                                   float cash_amount) {
+                                   const OhlcTick& ohlc_tick, float cash_amount,
+                                   float stop_price) {
   assert(stop_price > 0);
   assert(cash_amount >= 0);
   // Stop sell order can be executed only if the actual price drops below
@@ -221,12 +221,12 @@ bool TraderAccount::StopSellAtCash(const FeeConfig& fee_config,
     return false;
   }
   const float price = GetStopSellPrice(ohlc_tick, stop_price);
-  return SellAtCash(fee_config, price, cash_amount);
+  return SellAtCash(fee_config, cash_amount, price);
 }
 
 bool TraderAccount::LimitBuy(const FeeConfig& fee_config,
-                             const OhlcTick& ohlc_tick, float limit_price,
-                             float security_amount) {
+                             const OhlcTick& ohlc_tick, float security_amount,
+                             float limit_price) {
   assert(limit_price > 0);
   assert(security_amount >= 0);
   // Limit buy order can be executed only if the actual price drops below
@@ -235,12 +235,12 @@ bool TraderAccount::LimitBuy(const FeeConfig& fee_config,
     return false;
   }
   security_amount = std::min(security_amount, GetMaxSecurityAmount(ohlc_tick));
-  return Buy(fee_config, limit_price, security_amount);
+  return Buy(fee_config, security_amount, limit_price);
 }
 
 bool TraderAccount::LimitBuyAtCash(const FeeConfig& fee_config,
-                                   const OhlcTick& ohlc_tick, float limit_price,
-                                   float cash_amount) {
+                                   const OhlcTick& ohlc_tick, float cash_amount,
+                                   float limit_price) {
   assert(limit_price > 0);
   assert(cash_amount >= 0);
   // Limit buy order can be executed only if the actual price drops below
@@ -249,12 +249,12 @@ bool TraderAccount::LimitBuyAtCash(const FeeConfig& fee_config,
     return false;
   }
   const float max_security_amount = GetMaxSecurityAmount(ohlc_tick);
-  return BuyAtCash(fee_config, limit_price, cash_amount, max_security_amount);
+  return BuyAtCash(fee_config, cash_amount, limit_price, max_security_amount);
 }
 
 bool TraderAccount::LimitSell(const FeeConfig& fee_config,
-                              const OhlcTick& ohlc_tick, float limit_price,
-                              float security_amount) {
+                              const OhlcTick& ohlc_tick, float security_amount,
+                              float limit_price) {
   assert(limit_price > 0);
   assert(security_amount >= 0);
   // Limit sell order can be executed only if the actual price jumps above
@@ -263,12 +263,12 @@ bool TraderAccount::LimitSell(const FeeConfig& fee_config,
     return false;
   }
   security_amount = std::min(security_amount, GetMaxSecurityAmount(ohlc_tick));
-  return Sell(fee_config, limit_price, security_amount);
+  return Sell(fee_config, security_amount, limit_price);
 }
 
 bool TraderAccount::LimitSellAtCash(const FeeConfig& fee_config,
                                     const OhlcTick& ohlc_tick,
-                                    float limit_price, float cash_amount) {
+                                    float cash_amount, float limit_price) {
   assert(limit_price > 0);
   assert(cash_amount >= 0);
   // Limit sell order can be executed only if the actual price jumps above
@@ -277,7 +277,7 @@ bool TraderAccount::LimitSellAtCash(const FeeConfig& fee_config,
     return false;
   }
   const float max_security_amount = GetMaxSecurityAmount(ohlc_tick);
-  return SellAtCash(fee_config, limit_price, cash_amount, max_security_amount);
+  return SellAtCash(fee_config, cash_amount, limit_price, max_security_amount);
 }
 
 }  // namespace trader

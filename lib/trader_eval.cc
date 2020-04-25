@@ -167,24 +167,24 @@ bool ExecuteOrder(const TraderAccountConfig& trader_account_config,
         if (order.oneof_amount_case() == Order::kSecurityAmount) {
           return trader_account->StopBuy(
               trader_account_config.stop_order_fee_config(), ohlc_tick,
-              order.price(), order.security_amount());
+              order.security_amount(), order.price());
         } else {
           assert(order.oneof_amount_case() == Order::kCashAmount);
           return trader_account->StopBuyAtCash(
               trader_account_config.stop_order_fee_config(), ohlc_tick,
-              order.price(), order.cash_amount());
+              order.cash_amount(), order.price());
         }
       } else {
         assert(order.side() == Order::SELL);
         if (order.oneof_amount_case() == Order::kSecurityAmount) {
           return trader_account->StopSell(
               trader_account_config.stop_order_fee_config(), ohlc_tick,
-              order.price(), order.security_amount());
+              order.security_amount(), order.price());
         } else {
           assert(order.oneof_amount_case() == Order::kCashAmount);
           return trader_account->StopSellAtCash(
               trader_account_config.stop_order_fee_config(), ohlc_tick,
-              order.price(), order.cash_amount());
+              order.cash_amount(), order.price());
         }
       }
     case Order::LIMIT:
@@ -192,24 +192,24 @@ bool ExecuteOrder(const TraderAccountConfig& trader_account_config,
         if (order.oneof_amount_case() == Order::kSecurityAmount) {
           return trader_account->LimitBuy(
               trader_account_config.limit_order_fee_config(), ohlc_tick,
-              order.price(), order.security_amount());
+              order.security_amount(), order.price());
         } else {
           assert(order.oneof_amount_case() == Order::kCashAmount);
           return trader_account->LimitBuyAtCash(
               trader_account_config.limit_order_fee_config(), ohlc_tick,
-              order.price(), order.cash_amount());
+              order.cash_amount(), order.price());
         }
       } else {
         assert(order.side() == Order::SELL);
         if (order.oneof_amount_case() == Order::kSecurityAmount) {
           return trader_account->LimitSell(
               trader_account_config.limit_order_fee_config(), ohlc_tick,
-              order.price(), order.security_amount());
+              order.security_amount(), order.price());
         } else {
           assert(order.oneof_amount_case() == Order::kCashAmount);
           return trader_account->LimitSellAtCash(
               trader_account_config.limit_order_fee_config(), ohlc_tick,
-              order.price(), order.cash_amount());
+              order.cash_amount(), order.price());
         }
       }
     default:
