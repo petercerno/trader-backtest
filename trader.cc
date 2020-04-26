@@ -83,9 +83,9 @@ std::vector<std::unique_ptr<TraderFactoryInterface>> GetBatchOfLimitTraders() {
 // Returns the default rebalancing trader factory.
 std::unique_ptr<TraderFactoryInterface> GetDefaultRebalancingTraderFactory() {
   RebalancingTraderConfig config;
-  config.set_alpha(0.9f);
-  config.set_upper_deviation(0.1f);
-  config.set_lower_deviation(0.1f);
+  config.set_alpha(4.0f);
+  config.set_upper_deviation(0.2f);
+  config.set_lower_deviation(0.2f);
   return std::unique_ptr<TraderFactoryInterface>(
       new RebalancingTraderFactory(config));
 }
@@ -94,8 +94,8 @@ std::unique_ptr<TraderFactoryInterface> GetDefaultRebalancingTraderFactory() {
 std::vector<std::unique_ptr<TraderFactoryInterface>>
 GetBatchOfRebalancingTraders() {
   return RebalancingTraderFactory::GetBatchOfTraders(
-      /* alphas = */ {0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 0.95f},
-      /* deviations = */ {0.01f, 0.05f, 0.1f, 0.2f});
+      /* alphas = */ {0.5f, 1.0f, 2.0f, 4.0f, 9.0f},
+      /* deviations = */ {0.1f, 0.2f, 0.3f, 0.4f});
 }
 
 // Returns the default stop trader factory.
