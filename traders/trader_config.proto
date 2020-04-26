@@ -15,8 +15,8 @@ message LimitTraderConfig {
 // Rebalancing trader configuration.
 message RebalancingTraderConfig {
   // Desired security (crypto currency) value to cash value ratio.
-  // For example, 0.8 means we want 80% of our portfolio to be in
-  // security (crypto currency).
+  // For example, 1.0 means we want 50% of our portfolio to be in
+  // security (crypto currency) and 50% of our portfolio to be in cash.
   optional float alpha = 1;
   // Maximum allowed upper alpha deviation.
   // For example, 0.1 means that the actual security (crypto currency) value to
