@@ -86,16 +86,16 @@ void LogOrder(const Order& order, std::ostream* os) {
   *os << Order::Type_Name(order.type()) << ","  // nowrap
       << Order::Side_Name(order.side()) << ","  // nowrap
       << std::fixed << std::setprecision(3);
-  if (order.has_price() && order.price() > 0) {
-    *os << order.price();
-  }
-  *os << ",";
   if (order.oneof_amount_case() == Order::kSecurityAmount) {
     *os << order.security_amount();
   }
   *os << ",";
   if (order.oneof_amount_case() == Order::kCashAmount) {
     *os << order.cash_amount();
+  }
+  *os << ",";
+  if (order.has_price() && order.price() > 0) {
+    *os << order.price();
   }
 }
 
