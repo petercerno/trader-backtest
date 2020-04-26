@@ -1,5 +1,6 @@
 data/*
 bazel-*
+*-checkpoint.ipynb
 *.json
 *.pb.h
 *.pb.cc
