@@ -84,6 +84,7 @@ std::vector<std::unique_ptr<TraderFactoryInterface>> GetBatchOfLimitTraders() {
 std::unique_ptr<TraderFactoryInterface> GetDefaultRebalancingTraderFactory() {
   RebalancingTraderConfig config;
   config.set_alpha(4.0f);
+  config.set_beta(0.1f);
   config.set_upper_deviation(0.2f);
   config.set_lower_deviation(0.2f);
   return std::unique_ptr<TraderFactoryInterface>(

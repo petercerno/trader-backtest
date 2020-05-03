@@ -18,14 +18,19 @@ message RebalancingTraderConfig {
   // For example, 1.0 means we want 50% of our portfolio to be in
   // security (crypto currency) and 50% of our portfolio to be in cash.
   optional float alpha = 1;
+  // Minimum ratio of the total portfolio value to be traded per order.
+  // Orders with lower ratios are not allowed.
+  // For example, 0.1 means that every order needs to trade at least 10%
+  // of the total portfolio value. This parameter prevents small oders.
+  optional float beta = 2;
   // Maximum allowed upper alpha deviation.
   // For example, 0.1 means that the actual security (crypto currency) value to
   // cash value ratio can be at most 1.10 * alpha.
-  optional float upper_deviation = 2;
+  optional float upper_deviation = 3;
   // Maximum allowed lower alpha deviation.
   // For example, 0.1 means that the actual security (crypto currency) value to
   // cash value ratio must be at least 0.90 * alpha.
-  optional float lower_deviation = 3;
+  optional float lower_deviation = 4;
 }
 
 // Stop trader configuration.
