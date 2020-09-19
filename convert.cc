@@ -43,8 +43,8 @@ bool ReadPriceHistoryFromCsvFile(const std::string& file_name,
                                  long end_timestamp_sec,
                                  PriceHistory* price_history) {
   assert(price_history != nullptr);
-  std::cout << "Reading price history from CSV file: " << file_name
-            << std::endl;
+  std::cout << "Reading price history from CSV file: " << file_name << std::endl
+            << std::flush;
   auto start = std::chrono::high_resolution_clock::now();
   std::ifstream infile(file_name);
   if (!infile.is_open()) {
@@ -91,10 +91,11 @@ bool ReadPriceHistoryFromCsvFile(const std::string& file_name,
     price_history->back().set_price(price);
     price_history->back().set_volume(volume);
   }
-  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+  const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::high_resolution_clock::now() - start);
   std::cout << "Loaded " << price_history->size() << " records in "
-            << duration.count() / 1000.0 << " seconds" << std::endl;
+            << duration.count() / 1000.0 << " seconds" << std::endl
+            << std::flush;
   return true;
 }
 
@@ -105,7 +106,8 @@ bool ReadOhlcHistoryFromCsvFile(const std::string& file_name,
                                 long end_timestamp_sec,
                                 OhlcHistory* ohlc_history) {
   assert(ohlc_history != nullptr);
-  std::cout << "Reading OHLC history from CSV file: " << file_name << std::endl;
+  std::cout << "Reading OHLC history from CSV file: " << file_name << std::endl
+            << std::flush;
   auto start = std::chrono::high_resolution_clock::now();
   std::ifstream infile(file_name);
   if (!infile.is_open()) {
@@ -160,10 +162,11 @@ bool ReadOhlcHistoryFromCsvFile(const std::string& file_name,
     ohlc_history->back().set_close(close);
     ohlc_history->back().set_volume(volume);
   }
-  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+  const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::high_resolution_clock::now() - start);
   std::cout << "Loaded " << ohlc_history->size() << " OHLC ticks in "
-            << duration.count() / 1000.0 << " seconds" << std::endl;
+            << duration.count() / 1000.0 << " seconds" << std::endl
+            << std::flush;
   return true;
 }
 
@@ -175,7 +178,8 @@ bool ReadHistoryFromDelimitedProtoFile(
     std::vector<T>* history) {
   assert(history != nullptr);
   std::cout << "Reading history from delimited proto file: " << file_name
-            << std::endl;
+            << std::endl
+            << std::flush;
   auto start = std::chrono::high_resolution_clock::now();
   int record_index = 0;
   int timestamp_sec_prev = 0;
@@ -210,10 +214,11 @@ bool ReadHistoryFromDelimitedProtoFile(
           })) {
     return false;
   }
-  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+  const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::high_resolution_clock::now() - start);
   std::cout << "Loaded " << history->size() << " records in "
-            << duration.count() / 1000.0 << " seconds" << std::endl;
+            << duration.count() / 1000.0 << " seconds" << std::endl
+            << std::flush;
   return true;
 }
 
@@ -283,6 +288,7 @@ void PrintPriceHistoryGaps(const PriceHistory& price_history, size_t top_n) {
               << ConvertTimestampSecToDateTimeUTC(history_gap.second)
               << "]: " << DurationToString(gap_duration_sec) << std::endl;
   }
+  std::cout << std::flush;
 }
 
 // Prints a subset of the given price history that covers the last_n outliers.
@@ -318,6 +324,7 @@ void PrintOutliersWithContext(PriceHistory::const_iterator begin,
               << std::endl;
     index_prev = index;
   }
+  std::cout << std::flush;
 }
 
 // Removes outliers and resamples the price history into OHLC history.
@@ -361,7 +368,8 @@ bool WriteHistoryToDelimitedProtoFile(
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::high_resolution_clock::now() - start);
   std::cout << "Finished in " << duration.count() / 1000.0 << " seconds"
-            << std::endl;
+            << std::endl
+            << std::flush;
   return true;
 }
 }  // namespace
