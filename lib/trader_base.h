@@ -59,8 +59,8 @@ using OhlcHistory = std::vector<OhlcTick>;
 // not assume anything about how often and when exactly they are called. One
 // reason for that is that the exchanges (or their APIs) sometimes become
 // unresponsive for random periods of time (and we see that e.g. in the gaps
-// in the historical price histories). Therefore, we encourage to test the
-// traders on OHLC histories with various sampling rates and gaps.
+// in the price histories). Therefore, we encourage to test the traders on OHLC
+// histories with various sampling rates and gaps.
 class TraderInterface {
  public:
   TraderInterface() {}

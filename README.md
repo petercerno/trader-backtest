@@ -1,6 +1,6 @@
 # Trader Backtest
 
-High-performance backtesting engine written in C++ for evaluating trading strategies (restricted to a single trading pair, e.g. BTC/USD) and finding their optimal hyper-parameters. Arbitrage and margin trading are not supported. Licensed under [MIT](http://opensource.org/licenses/MIT)
+High-performance backtesting engine written in C++ for evaluating trading strategies (restricted to a single trading pair, e.g. BTC/USD) and finding their optimal hyper-parameters. Arbitrage and margin trading are not supported. Licensed under [MIT](http://opensource.org/licenses/MIT).
 
 THIS SOFTWARE IS FOR RESEARCH PURPOSES ONLY.
 
@@ -58,25 +58,25 @@ The trader is executed as follows:
 
 Note that at every step every order gets either executed or canceled by the exchange. This is a design simplification so that there are no active orders that the trader needs to maintain over time. In practice, however, we would not cancel orders if they would be re-emitted again. We would simply modify the existing orders (from the previous iteration) based on the updated state.
 
-Also note that the OHLC history sampling rate defines the frequency at which the trader is updated and emits orders. Traders should be designed in a frequency-agnostic way. In other words, they should have similar behavior and performance regardless of how frequently they are called. Traders should not assume anything about how often and when exactly they are called. One reason for that is that the exchanges (or their APIs) sometimes become unresponsive for random periods of time (and we see that e.g. in the gaps in the historical price histories). Therefore, we encourage to test the traders on OHLC histories with various sampling rates and gaps.
+Also note that the OHLC history sampling rate defines the frequency at which the trader is updated and emits orders. Traders should be designed in a frequency-agnostic way. In other words, they should have similar behavior and performance regardless of how frequently they are called. Traders should not assume anything about how often and when exactly they are called. One reason for that is that the exchanges (or their APIs) sometimes become unresponsive for random periods of time (and we see that e.g. in the gaps in the price histories). Therefore, we encourage to test the traders on OHLC histories with various sampling rates and gaps.
 
 ## Trader Evaluation
 
 When evaluating the trader performance, we compare it to the following benchmark:
 
-* **Buy and hold**: Invest everything in the security (crypto-currency) and hold.
+* **Buy and hold**: Invest everything in the security (crypto-currency) and hold it.
 
 The *buy and hold* strategy is surprisingly hard to beat.
 
 There are several options how to evaluate a trader:
 
-* Evaluate a trader over a single time period. This is useful as we can log the exchange state and or trader's internal state into a CSV file and later analyze it e.g. using [JupyterLab](http://jupyter.org/index.html).
+* Evaluate a trader over a single time period. This is useful as we can log the exchange state and/or trader's internal state into a CSV file and later analyze it e.g. using [JupyterLab](http://jupyter.org/index.html).
 * Evaluate a trader over multiple time periods within a longer time period. This is useful as we can see the trader's performance across many different time periods. Here, however, we do not log anything.
 * Evaluate a batch of traders over a single or multiple time periods (in parallel). This is useful to find optimal trader hyper-parameters.
 
 ## Example
 
-Download some Bitcoin (BTC/USD) historical prices from [bitcoincharts](http://bitcoincharts.com/):
+Download some BTC/USD historical prices from [bitcoincharts](http://bitcoincharts.com/):
 
 ``` 
 mkdir -p data
@@ -90,21 +90,21 @@ Convert the `bitstampUSD.csv` file into a more compact (delimited protocol buffe
 ``` 
 bazel run :convert -- \
   --input_price_history_csv_file="/$(pwd)/data/bitstampUSD.csv" \
-  --output_price_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_2017_2019.dpb" \
+  --output_price_history_delimited_proto_file="/$(pwd)/data/bitstampUSD.dpb" \
   --start_date_utc="2017-01-01" \
-  --end_date_utc="2020-01-01"
+  --end_date_utc="2020-09-01"
 ```
 
 The `start_date_utc` and `end_date_utc` dates are optional. We use them to make the output smaller.
 
-For trader evaluation we will need an OHLC history. It is possible to re-sample the original CSV file, but the delimited protocol buffer file will be much faster to read:
+For a trader evaluation we need an OHLC history. It is possible to re-sample the original CSV file, but the delimited protocol buffer file will be much faster to read:
 
 ```
 bazel run :convert -- \
-  --input_price_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_2017_2019.dpb" \
-  --output_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_2017_2019_5min_ohlc.dpb" \
+  --input_price_history_delimited_proto_file="/$(pwd)/data/bitstampUSD.dpb" \
+  --output_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_5min.dpb" \
   --start_date_utc="2017-01-01" \
-  --end_date_utc="2020-01-01" \
+  --end_date_utc="2020-09-01" \
   --sampling_rate_sec=300
 ```
 
@@ -112,12 +112,12 @@ Now we can evaluate a simple *stop trader* over a single time period and log its
 
 ``` 
 bazel run :trader -- \
-  --input_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_2017_2019_5min_ohlc.dpb" \
+  --input_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_5min.dpb" \
   --trader="stop" \
   --output_exchange_log_file="/tmp/bitstampUSD.out.csv" \
   --output_trader_log_file="/tmp/stop_trader_log.csv" \
   --start_date_utc="2017-01-01" \
-  --end_date_utc="2020-01-01" \
+  --end_date_utc="2020-09-01" \
   --start_security_balance=1.0 \
   --start_cash_balance=0.0
 ```
@@ -125,11 +125,11 @@ bazel run :trader -- \
 The output:
 
 ```
-Loaded 315360 records in 0.475 seconds
-Selected 315360 OHLC ticks within the period: [2017-01-01 00:00:00 - 2020-01-01 00:00:00)
+Loaded 385632 records in 0.502 seconds
+Selected 385632 OHLC ticks within the period: [2017-01-01 00:00:00 - 2020-09-01 00:00:00)
 
 Trader evaluation:
-[2017-01-01 00:00:00 - 2020-01-01 00:00:00): 0.424425
+[2017-01-01 00:00:00 - 2020-09-01 00:00:00): 0.246285
 ```
 
 The evaluation output is the ratio of the trader's performance and the performance of the *buy and hold* strategy. As you can see, the trader significantly under-performs the *buy and hold* strategy.
@@ -138,10 +138,10 @@ It is more useful to evaluate the trader over multiple time periods:
 
 ```
 bazel run :trader -- \
-  --input_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_2017_2019_5min_ohlc.dpb" \
+  --input_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_5min.dpb" \
   --trader="stop" \
   --start_date_utc="2017-01-01" \
-  --end_date_utc="2020-01-01" \
+  --end_date_utc="2020-09-01" \
   --evaluation_period_months=6 \
   --start_security_balance=1.0 \
   --start_cash_balance=0.0
@@ -159,32 +159,12 @@ Trader evaluation:
 [2017-03-01 00:00:00 - 2017-09-01 00:00:00): 0.348312
 [2017-04-01 00:00:00 - 2017-10-01 00:00:00): 0.492166
 [2017-05-01 00:00:00 - 2017-11-01 00:00:00): 0.401846
-[2017-06-01 00:00:00 - 2017-12-01 00:00:00): 0.762503
-[2017-07-01 00:00:00 - 2018-01-01 00:00:00): 0.608762
-[2017-08-01 00:00:00 - 2018-02-01 00:00:00): 0.826681
-[2017-09-01 00:00:00 - 2018-03-01 00:00:00): 1.03835
-[2017-10-01 00:00:00 - 2018-04-01 00:00:00): 1.28888
-[2017-11-01 00:00:00 - 2018-05-01 00:00:00): 1.31269
-[2017-12-01 00:00:00 - 2018-06-01 00:00:00): 1.50861
-[2018-01-01 00:00:00 - 2018-07-01 00:00:00): 2.02192
-[2018-02-01 00:00:00 - 2018-08-01 00:00:00): 1.16942
-[2018-03-01 00:00:00 - 2018-09-01 00:00:00): 1.53868
-[2018-04-01 00:00:00 - 2018-10-01 00:00:00): 1.17569
-[2018-05-01 00:00:00 - 2018-11-01 00:00:00): 1.47733
-[2018-06-01 00:00:00 - 2018-12-01 00:00:00): 1.51434
-[2018-07-01 00:00:00 - 2019-01-01 00:00:00): 1.32682
-[2018-08-01 00:00:00 - 2019-02-01 00:00:00): 1.46367
-[2018-09-01 00:00:00 - 2019-03-01 00:00:00): 1.26095
-[2018-10-01 00:00:00 - 2019-04-01 00:00:00): 1.04631
-[2018-11-01 00:00:00 - 2019-05-01 00:00:00): 0.983815
-[2018-12-01 00:00:00 - 2019-06-01 00:00:00): 0.547442
-[2019-01-01 00:00:00 - 2019-07-01 00:00:00): 0.616196
-[2019-02-01 00:00:00 - 2019-08-01 00:00:00): 0.617309
-[2019-03-01 00:00:00 - 2019-09-01 00:00:00): 0.695815
-[2019-04-01 00:00:00 - 2019-10-01 00:00:00): 0.755909
-[2019-05-01 00:00:00 - 2019-11-01 00:00:00): 0.758907
-[2019-06-01 00:00:00 - 2019-12-01 00:00:00): 1.10488
-[2019-07-01 00:00:00 - 2020-01-01 00:00:00): 0.965082
+...
+[2019-11-01 00:00:00 - 2020-05-01 00:00:00): 1.01544
+[2019-12-01 00:00:00 - 2020-06-01 00:00:00): 0.726885
+[2020-01-01 00:00:00 - 2020-07-01 00:00:00): 0.868395
+[2020-02-01 00:00:00 - 2020-08-01 00:00:00): 0.87377
+[2020-03-01 00:00:00 - 2020-09-01 00:00:00): 0.630758
 ```
 
 ## Warning
@@ -192,7 +172,7 @@ Trader evaluation:
 Keep in mind that there are many risks associated with trading, and backtesting itself does not guarantee the expected gains.
 
 * The input price history might be damaged (it might contain gaps or wrong prices).
-* There might be subtle bugs in the backtesting algorithm (or implementation).
+* There might be subtle bugs in the backtesting algorithm (or its implementation).
 * Exchanges might become unreliable or unresponsive. In the worst case they can go bust.
 
 Note that it is also not possible to perfectly simulate the trader over the past historical data, since the trader's actions might potentially impact the market. In our examples we use historical prices based on historically executed orders (and their volumes), but we have no information about market depth. We will discuss some caveats corresponding to different order types below.
