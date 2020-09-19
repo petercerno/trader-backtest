@@ -32,13 +32,12 @@ using PriceHistory = std::vector<PriceRecord>;
 // Historical OHLC ticks over time.
 using OhlcHistory = std::vector<OhlcTick>;
 
-// The trader execution model works as follows:
-// - At every step the trader receives the latest OHLC tick T[i], the current
+// The trader is executed as follows:
+// - At every step the trader receives the latest OHLC tick `T[i]`, current
 //   account balances, and updates its internal state. The current time is at
-//   the end of the OHLC tick `T[i]` time period. (Note that the trader is not
-//   updated on OHLC ticks with zero volume. Such OHLC ticks indicate a gap in
-//   a price history, which could have been caused by an unresponsive exchange
-//   or its API.)
+//   the end of the OHLC tick `T[i]` time period. (The trader is not updated on
+//   zero volume OHLC ticks. These OHLC ticks indicate a gap in a price history,
+//   which could have been caused by an unresponsive exchange or its API.)
 // - Then the trader needs to decide what orders to emit. There are no other
 //   active orders on the exchange at this moment (see the explanation below).
 // - Once the trader decides what orders to emit, the exchange will execute

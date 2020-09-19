@@ -1,11 +1,17 @@
 # Trader Backtest
 
-High-performance backtesting engine (written in C++) for evaluating trading strategies and finding their optimal hyper-parameters.
+High-performance backtesting engine written in C++ for evaluating trading strategies (restricted to a single trading pair, e.g. BTC/USD) and finding their optimal hyper-parameters. Arbitrage and margin trading are not supported. Licensed under [MIT](http://opensource.org/licenses/MIT)
 
- * **Dependencies**: [Protocol Buffers](https://github.com/google/protobuf), [GFlags](https://github.com/gflags/gflags), [Google Test](https://github.com/google/googletest), [Bazel](https://bazel.build/).
- * **Data Analysis Tools**: [Python3](https://www.python.org/), [Jupyter](http://jupyter.org/index.html), [matplotlib](https://matplotlib.org/), [NumPy](http://www.numpy.org/), [Pandas](http://pandas.pydata.org/).
+THIS SOFTWARE IS FOR RESEARCH PURPOSES ONLY.
 
-This project was tested on [Mac OS X](https://www.apple.com/macos/) and [Ubuntu](https://www.ubuntu.com/download/desktop).
+**DISCLAIMER**: WE DO NOT PROVIDE ANY FINANCIAL, INVESTMENT, LEGAL, TAX OR ANY OTHER PROFESSIONAL ADVICE. WE ARE NOT A BROKER, FINANCIAL ADVISOR, INVESTMENT ADVISOR, PORTFOLIO MANAGER OR TAX ADVISOR. YOU ACKNOWLEDGE AND AGREE THAT ONLY YOU ARE RESPONSIBLE FOR YOUR USE OF ANY INFORMATION THAT YOU OBTAIN FROM THIS REPOSITORY OR SOFTWARE. YOUR DECISIONS MADE IN RELIANCE ON THE SOFTWARE OR YOUR INTERPRETATIONS OF THE DATA ARE YOUR OWN FOR WHICH YOU HAVE FULL RESPONSIBILITY. YOU EXPRESSLY AGREE THAT YOUR USE OF THE SOFTWARE IS AT YOUR SOLE RISK.
+
+This software might be useful for people who want both high performance and also full control over all low-level operations when backtesting their trading strategies. (If you are instead looking for an easy-to-use trading systems with some pre-defined strategies then take a look at this [video](https://www.youtube.com/watch?v=9Hv0BQwYlPw) from [Coin Bureau](https://www.youtube.com/channel/UCqK_GSMbpiV8spgD3ZGloSw).)
+
+This software has the following dependencies:
+
+ * **Dependencies**: [Protocol Buffers](https://github.com/protocolbuffers/protobuf), [GFlags](https://github.com/gflags/gflags), [Google Test](https://github.com/google/googletest), [Bazel](https://bazel.build/).
+ * **Data Analysis Tools**: [Python3](https://www.python.org/), [Jupyter](https://jupyter.org/), [matplotlib](https://matplotlib.org/), [NumPy](http://www.numpy.org/), [Pandas](http://pandas.pydata.org/).
 
 ## Installation
 
@@ -21,31 +27,38 @@ Test everything by running:
 bazel test ... 
 ```
 
+If you have [Protocol Buffers](https://developers.google.com/protocol-buffers) installed, you can (optionally) compile the `.proto` files as follows:
+
+```
+protoc -I lib/ --cpp_out=lib/ trader.proto
+protoc -I traders/ --cpp_out=traders/ trader_config.proto
+```
+
 ## Project Structure
 
 There are two main binaries you can run:
 
-* `convert.cc` : Converts a CSV file into more compact delimited protocol buffer file. Allows re-sampling price history into OHLC (Open High Low Close) history with fixed sampling rate.
+* `convert.cc` : Converts a CSV file into a more compact delimited protocol buffer file. Allows re-sampling price history into OHLC (Open High Low Close) history with fixed sampling rate.
 * `trader.cc` : Loads OHLC history (in delimited protocol buffer file format) and evaluates one or more traders over it.
 
 The source code is structured as follows:
 
-* `lib/` : Basic trader data structures, interfaces, trader execution and evaluation logic.
+* `lib/` : Core trader data structures, interfaces, trader execution and evaluation logic.
 * `traders/` : Concrete trader implementations.
 * `util/` : General utilities (not necessarily related to trading).
 
 ## Trader Execution
 
-The trader execution model works as follows:
+The trader is executed as follows:
 
-* At every step the trader receives the latest OHLC tick `T[i]` , current account balances, and updates its internal state. The current time is at the end of the OHLC tick `T[i]` time period.(Note that the trader is not updated on OHLC ticks with zero volume. Such OHLC ticks indicate a gap in a price history, which could have been caused by an unresponsive exchange or its API.)
+* At every step the trader receives the latest OHLC tick `T[i]`, current account balances, and updates its internal state. The current time is at the end of the OHLC tick `T[i]` time period. (The trader is not updated on zero volume OHLC ticks. These OHLC ticks indicate a gap in a price history, which could have been caused by an unresponsive exchange or its API.)
 * Then the trader needs to decide what orders to emit. There are no other active orders on the exchange at this moment (see the explanation below).
 * Once the trader decides what orders to emit, the exchange will execute (or cancel) all these orders on the follow-up OHLC tick `T[i+1]` . The trader does not see the follow-up OHLC tick `T[i+1]` , so there is no peeking into the future.
 * Once all orders are executed (or canceled) by the exchange, the trader receives the follow-up OHLC tick `T[i+1]` and the whole process repeats.
 
 Note that at every step every order gets either executed or canceled by the exchange. This is a design simplification so that there are no active orders that the trader needs to maintain over time. In practice, however, we would not cancel orders if they would be re-emitted again. We would simply modify the existing orders (from the previous iteration) based on the updated state.
 
-Also note that the OHLC history sampling rate defines the frequency at which the trader is updated and emits orders. Traders should be designed in a frequency-agnostic way. In other words, they should have similar behavior and performance regardless of how frequently they are called. Traders should not assume anything about how often and when exactly they are called. One reason for that is that the exchanges (or their APIs) sometimes become unresponsive for random periods of time (and we see that e.g.in the gaps in the historical price histories). Therefore, we encourage to test the traders on OHLC histories with various sampling rates and gaps.
+Also note that the OHLC history sampling rate defines the frequency at which the trader is updated and emits orders. Traders should be designed in a frequency-agnostic way. In other words, they should have similar behavior and performance regardless of how frequently they are called. Traders should not assume anything about how often and when exactly they are called. One reason for that is that the exchanges (or their APIs) sometimes become unresponsive for random periods of time (and we see that e.g. in the gaps in the historical price histories). Therefore, we encourage to test the traders on OHLC histories with various sampling rates and gaps.
 
 ## Trader Evaluation
 
