@@ -1,5 +1,6 @@
 package(default_visibility = [
     "//:__pkg__",
+    "//indicators:__pkg__",
     "//traders:__pkg__",
 ])
 
@@ -47,12 +48,18 @@ cc_test(
 )
 
 cc_library(
+    name = "trader_interface",
+    hdrs = ["trader_interface.h"],
+    deps = [":trader_base"],
+)
+
+cc_library(
     name = "trader_eval",
     srcs = ["trader_eval.cc"],
     hdrs = ["trader_eval.h"],
     deps = [
         ":trader_account",
-        ":trader_base",
+        ":trader_interface",
         "//util:util_time",
     ],
 )

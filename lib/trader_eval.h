@@ -4,7 +4,7 @@
 #define LIB_TRADER_EVAL_H
 
 #include "lib/trader_account.h"
-#include "lib/trader_base.h"
+#include "lib/trader_interface.h"
 
 namespace trader {
 

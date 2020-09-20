@@ -6,7 +6,6 @@ namespace trader {
 
 void LimitTrader::Update(const OhlcTick& ohlc_tick, float security_balance,
                          float cash_balance, std::vector<Order>* orders) {
-  static constexpr int kSecondsPerHour = 60 * 60;
   assert(orders != nullptr);
   const int timestamp_sec = ohlc_tick.timestamp_sec();
   const float price = ohlc_tick.close();

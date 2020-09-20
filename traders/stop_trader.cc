@@ -36,7 +36,6 @@ void StopTrader::Update(const OhlcTick& ohlc_tick, float security_balance,
 
 void StopTrader::UpdateStopOrderPrice(Mode mode, int timestamp_sec,
                                       float price) {
-  static constexpr int kSecondsPerDay = 24 * 60 * 60;
   const float sampling_rate_sec =
       std::min(kSecondsPerDay, timestamp_sec - last_timestamp_sec_);
   const float ticks_per_day = kSecondsPerDay / sampling_rate_sec;

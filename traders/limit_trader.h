@@ -3,7 +3,7 @@
 #ifndef TRADERS_LIMIT_TRADER_H
 #define TRADERS_LIMIT_TRADER_H
 
-#include "lib/trader_base.h"
+#include "lib/trader_interface.h"
 #include "traders/trader_config.pb.h"
 
 namespace trader {
