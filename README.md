@@ -32,6 +32,7 @@ If you have [Protocol Buffers](https://developers.google.com/protocol-buffers) i
 ```
 protoc -I lib/ --cpp_out=lib/ trader.proto
 protoc -I traders/ --cpp_out=traders/ trader_config.proto
+protoc -I util/ --cpp_out=util/ example.proto
 ```
 
 ## Project Structure
