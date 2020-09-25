@@ -2,9 +2,6 @@
 
 #include "indicators/last_n_ohlc_ticks.h"
 
-#include <google/protobuf/text_format.h>
-#include <google/protobuf/util/message_differencer.h>
-
 #include "gtest/gtest.h"
 
 namespace trader {
