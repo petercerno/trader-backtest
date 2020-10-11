@@ -37,12 +37,12 @@ class StopTrader : public TraderInterface {
   float last_close_ = 0.0f;
   // Last trader mode.
   Mode mode_ = Mode::NONE;
-  // Last security (crypto currency) price for stop orders.
+  // Last security (crypto currency) price for the stop order.
   float stop_order_price_ = 0;
 
   // Maximum allowed timestamp gap (in seconds).
   // When we encounter such gap, we re-initialize the trader.
-  int max_allowed_gap_sec_ = 10 * 24 * 60 * 60;  // 10 days.
+  int max_allowed_gap_sec_ = 1 * 60 * 60;  // 1 hour.
 
   // Updates the trader stop order price.
   void UpdateStopOrderPrice(Mode mode, int timestamp_sec, float price);

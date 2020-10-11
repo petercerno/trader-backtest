@@ -46,7 +46,7 @@ TraderAccountConfig GetTraderAccountConfig() {
   TraderAccountConfig config;
   config.set_start_security_balance(FLAGS_start_security_balance);
   config.set_start_cash_balance(FLAGS_start_cash_balance);
-  config.set_security_unit(0.01f);
+  config.set_security_unit(0.00001f);
   config.set_cash_unit(0.01f);
   config.mutable_market_order_fee_config()->set_relative_fee(0.005f);
   config.mutable_market_order_fee_config()->set_fixed_fee(0);
@@ -102,20 +102,20 @@ GetBatchOfRebalancingTraders() {
 // Returns the default stop trader factory.
 std::unique_ptr<TraderFactoryInterface> GetDefaultStopTraderFactory() {
   StopTraderConfig config;
-  config.set_stop_order_margin(0.2f);
+  config.set_stop_order_margin(0.1f);
   config.set_stop_order_move_margin(0.1f);
-  config.set_stop_order_increase_per_day(0.2f);
-  config.set_stop_order_decrease_per_day(0.2f);
+  config.set_stop_order_increase_per_day(0.01f);
+  config.set_stop_order_decrease_per_day(0.1f);
   return std::unique_ptr<TraderFactoryInterface>(new StopTraderFactory(config));
 }
 
 // Returns the default batch of stop traders.
 std::vector<std::unique_ptr<TraderFactoryInterface>> GetBatchOfStopTraders() {
   return StopTraderFactory::GetBatchOfTraders(
-      /* stop_order_margins = */ {0.15, 0.2, 0.25, 0.3},
-      /* stop_order_move_margins = */ {0.05, 0.08, 0.1, 0.12},
-      /* stop_order_increases_per_day = */ {0.1, 0.15, 0.2, 0.25},
-      /* stop_order_decreases_per_day = */ {0.1, 0.15, 0.2, 0.25});
+      /* stop_order_margins = */ {0.05, 0.1, 0.15, 0.2},
+      /* stop_order_move_margins = */ {0.05, 0.1, 0.15, 0.2},
+      /* stop_order_increases_per_day = */ {0.01, 0.05, 0.1},
+      /* stop_order_decreases_per_day = */ {0.01, 0.05, 0.1});
 }
 
 // Returns the default trader factory.

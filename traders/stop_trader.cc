@@ -41,26 +41,30 @@ void StopTrader::UpdateStopOrderPrice(Mode mode, int timestamp_sec,
   const float ticks_per_day = kSecondsPerDay / sampling_rate_sec;
   if (mode == Mode::IN_LONG) {
     const float stop_order_increase_threshold =
-        (1 + trader_config_.stop_order_move_margin()) * stop_order_price_;
-    if (price > stop_order_increase_threshold) {
+        (1 - trader_config_.stop_order_move_margin()) * price;
+    if (stop_order_price_ <= stop_order_increase_threshold) {
       const float stop_order_increase_per_tick =
           std::exp(std::log(1 + trader_config_.stop_order_increase_per_day()) /
                    ticks_per_day) -
           1;
-      stop_order_price_ = std::min(
-          price, (1 + stop_order_increase_per_tick) * stop_order_price_);
+      stop_order_price_ = std::max(
+          stop_order_price_,
+          std::min(stop_order_increase_threshold,
+                   (1 + stop_order_increase_per_tick) * stop_order_price_));
     }
   } else {
     assert(mode == Mode::IN_CASH);
     const float stop_order_decrease_threshold =
-        (1 - trader_config_.stop_order_move_margin()) * stop_order_price_;
-    if (price < stop_order_decrease_threshold) {
+        (1 + trader_config_.stop_order_move_margin()) * price;
+    if (stop_order_price_ >= stop_order_decrease_threshold) {
       const float stop_order_decrease_per_tick =
           1 -
           std::exp(std::log(1 - trader_config_.stop_order_decrease_per_day()) /
                    ticks_per_day);
-      stop_order_price_ = std::max(
-          price, (1 - stop_order_decrease_per_tick) * stop_order_price_);
+      stop_order_price_ = std::min(
+          stop_order_price_,
+          std::max(stop_order_decrease_threshold,
+                   (1 - stop_order_decrease_per_tick) * stop_order_price_));
     }
   }
 }
@@ -93,8 +97,9 @@ void StopTrader::LogInternalState(std::ostream* os) const {
   }
   *os << std::fixed << std::setprecision(0)  // nowrap
       << last_timestamp_sec_ << ","          // nowrap
-      << std::setprecision(3)                // nowrap
+      << std::setprecision(5)                // nowrap
       << last_security_balance_ << ","       // nowrap
+      << std::setprecision(2)                // nowrap
       << last_cash_balance_ << ","           // nowrap
       << last_close_ << ","                  // nowrap
       << mode << ","                         // nowrap
