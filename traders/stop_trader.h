@@ -15,29 +15,29 @@ class StopTrader : public TraderInterface {
       : trader_config_(trader_config) {}
   virtual ~StopTrader() {}
 
-  void Update(const OhlcTick& ohlc_tick, float security_balance,
-              float cash_balance, std::vector<Order>* orders) override;
+  void Update(const OhlcTick& ohlc_tick, float base_balance,
+              float quote_balance, std::vector<Order>* orders) override;
   void LogInternalState(std::ostream* os) const override;
 
  private:
   // Enumeration of possible trader modes.
   enum class Mode {
     NONE,     // Undefined.
-    IN_LONG,  // Trader holds most of its assets in security (crypto currency).
+    IN_LONG,  // Trader holds most of its assets in base (crypto) currency.
     IN_CASH   // Trader holds most of its assets in base currency.
   };
 
   StopTraderConfig trader_config_;
   // Last seen trader account balance.
-  float last_security_balance_ = 0.0f;
-  float last_cash_balance_ = 0.0f;
+  float last_base_balance_ = 0.0f;
+  float last_quote_balance_ = 0.0f;
   // Last seen UNIX timestamp (in seconds).
   int last_timestamp_sec_ = 0;
   // Last seen close price.
   float last_close_ = 0.0f;
   // Last trader mode.
   Mode mode_ = Mode::NONE;
-  // Last security (crypto currency) price for the stop order.
+  // Last base (crypto) currency price for the stop order.
   float stop_order_price_ = 0;
 
   // Maximum allowed timestamp gap (in seconds).

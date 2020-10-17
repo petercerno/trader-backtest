@@ -25,8 +25,8 @@ DEFINE_string(end_date_utc, "2017-01-01",
               "End date YYYY-MM-DD in UTC (excluded).");
 DEFINE_int32(evaluation_period_months, 0, "Evaluation period in months.");
 
-DEFINE_double(start_security_balance, 1.0, "Starting security amount.");
-DEFINE_double(start_cash_balance, 0.0, "Starting cash amount.");
+DEFINE_double(start_base_balance, 1.0, "Starting base amount.");
+DEFINE_double(start_quote_balance, 0.0, "Starting quote amount.");
 
 DEFINE_double(market_liquidity, 0.5,
               "Liquidity for executing market (stop) orders.");
@@ -44,10 +44,10 @@ static constexpr char kStopTraderName[] = "stop";
 // Returns the TraderAccountConfig based on the flags (and default values).
 TraderAccountConfig GetTraderAccountConfig() {
   TraderAccountConfig config;
-  config.set_start_security_balance(FLAGS_start_security_balance);
-  config.set_start_cash_balance(FLAGS_start_cash_balance);
-  config.set_security_unit(0.00001f);
-  config.set_cash_unit(0.01f);
+  config.set_start_base_balance(FLAGS_start_base_balance);
+  config.set_start_quote_balance(FLAGS_start_quote_balance);
+  config.set_base_unit(0.00001f);
+  config.set_quote_unit(0.01f);
   config.mutable_market_order_fee_config()->set_relative_fee(0.005f);
   config.mutable_market_order_fee_config()->set_fixed_fee(0);
   config.mutable_market_order_fee_config()->set_minimum_fee(0);
@@ -273,7 +273,7 @@ int main(int argc, char* argv[]) {
                 << " - "
                 << ConvertTimestampSecToDateTimeUTC(period.end_timestamp_sec())
                 << "): "
-                << period.trader_final_gain() / period.base_final_gain()
+                << period.trader_final_gain() / period.baseline_final_gain()
                 << std::endl;
     }
   }

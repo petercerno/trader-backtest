@@ -8,7 +8,7 @@
 
 namespace trader {
 
-// RebalancingTrader keeps the security (crypto currency) value to cash value
+// RebalancingTrader keeps the base (crypto) currency value to quote value
 // ratio constant.
 class RebalancingTrader : public TraderInterface {
  public:
@@ -16,15 +16,15 @@ class RebalancingTrader : public TraderInterface {
       : trader_config_(trader_config) {}
   virtual ~RebalancingTrader() {}
 
-  void Update(const OhlcTick& ohlc_tick, float security_balance,
-              float cash_balance, std::vector<Order>* orders) override;
+  void Update(const OhlcTick& ohlc_tick, float base_balance,
+              float quote_balance, std::vector<Order>* orders) override;
   void LogInternalState(std::ostream* os) const override;
 
  private:
   RebalancingTraderConfig trader_config_;
   // Last seen trader account balance.
-  float last_security_balance_ = 0.0f;
-  float last_cash_balance_ = 0.0f;
+  float last_base_balance_ = 0.0f;
+  float last_quote_balance_ = 0.0f;
   // Last seen UNIX timestamp (in seconds).
   int last_timestamp_sec_ = 0;
   // Last seen close price.

@@ -1,14 +1,16 @@
+// Copyright © 2020 Peter Cerno. All rights reserved.
+
 syntax = "proto2";
 
 package trader;
 
-// Security (crypto currency) price at a specific time.
+// Base (crypto) currency price at a specific time.
 message PriceRecord {
   // UNIX timestamp (in seconds).
   optional int32 timestamp_sec = 1;
-  // Security (crypto currency) price (e.g. BTC/USD).
+  // Base (crypto) currency price (e.g. BTC/USD price).
   optional float price = 2;
-  // Traded security (crypto currency) volume.
+  // Traded base (crypto) currency volume.
   optional float volume = 3;
 }
 
@@ -17,13 +19,13 @@ message PriceRecord {
 message OhlcTick {
   // UNIX timestamp (in seconds) of the start of the time interval.
   optional int32 timestamp_sec = 1;
-  // Opening security (crypto currency) price at the start of the time interval.
+  // Opening base (crypto) currency price at the start of the time interval.
   optional float open = 2;
-  // Highest security (crypto currency) price during the time interval.
+  // Highest base (crypto) currency price during the time interval.
   optional float high = 3;
-  // Lowest security (crypto currency) price during the time interval.
+  // Lowest base (crypto) currency price during the time interval.
   optional float low = 4;
-  // Closing security (crypto currency) price at the end of the time interval.
+  // Closing base (crypto) currency price at the end of the time interval.
   optional float close = 5;
   // Total traded volume during the time interval.
   optional float volume = 6;

@@ -4,42 +4,41 @@
 
 namespace trader {
 
-void RebalancingTrader::Update(const OhlcTick& ohlc_tick,
-                               float security_balance, float cash_balance,
+void RebalancingTrader::Update(const OhlcTick& ohlc_tick, float base_balance,
+                               float quote_balance,
                                std::vector<Order>* orders) {
   assert(orders != nullptr);
   const int timestamp_sec = ohlc_tick.timestamp_sec();
   const float price = ohlc_tick.close();
   assert(timestamp_sec > last_timestamp_sec_);
   assert(price > 0);
-  assert(security_balance > 0 || cash_balance > 0);
-  const float portfolio_value = security_balance * price + cash_balance;
+  assert(base_balance > 0 || quote_balance > 0);
+  const float portfolio_value = base_balance * price + quote_balance;
   const float alpha = trader_config_.alpha();
   const float beta = trader_config_.beta();
   float upper_deviation = trader_config_.upper_deviation();
   float lower_deviation = trader_config_.lower_deviation();
-  const float market_sell_security_amount =
-      security_balance / (1.0f + alpha) -
-      alpha / (1.0f + alpha) * cash_balance / price;
-  const float market_buy_security_amount =
-      alpha / (1.0f + alpha) * cash_balance / price -
-      security_balance / (1.0f + alpha);
-  if (security_balance * price >
-          alpha * (1.0f + upper_deviation) * cash_balance &&
-      market_sell_security_amount * price >= beta * portfolio_value) {
+  const float market_sell_base_amount =
+      base_balance / (1.0f + alpha) -
+      alpha / (1.0f + alpha) * quote_balance / price;
+  const float market_buy_base_amount =
+      alpha / (1.0f + alpha) * quote_balance / price -
+      base_balance / (1.0f + alpha);
+  if (base_balance * price > alpha * (1.0f + upper_deviation) * quote_balance &&
+      market_sell_base_amount * price >= beta * portfolio_value) {
     orders->emplace_back();
     Order* order = &orders->back();
     order->set_type(Order_Type_MARKET);
     order->set_side(Order_Side_SELL);
-    order->set_security_amount(market_sell_security_amount);
-  } else if (security_balance * price <
-                 alpha * (1.0f - lower_deviation) * cash_balance &&
-             market_buy_security_amount * price >= beta * portfolio_value) {
+    order->set_base_amount(market_sell_base_amount);
+  } else if (base_balance * price <
+                 alpha * (1.0f - lower_deviation) * quote_balance &&
+             market_buy_base_amount * price >= beta * portfolio_value) {
     orders->emplace_back();
     Order* order = &orders->back();
     order->set_type(Order_Type_MARKET);
     order->set_side(Order_Side_BUY);
-    order->set_security_amount(market_buy_security_amount);
+    order->set_base_amount(market_buy_base_amount);
   } else {
     bool allow_limit_sell = true;
     if (1.0f - (1.0f + alpha) * beta < 0.2) {
@@ -63,38 +62,36 @@ void RebalancingTrader::Update(const OhlcTick& ohlc_tick,
       lower_deviation = min_lower_deviation;
     }
     if (allow_limit_sell) {
-      const float sell_security_amount = security_balance / (1.0f + alpha) *
-                                         upper_deviation /
-                                         (1.0f + upper_deviation);
+      const float sell_base_amount = base_balance / (1.0f + alpha) *
+                                     upper_deviation / (1.0f + upper_deviation);
       const float sell_price =
-          alpha * (1.0f + upper_deviation) * cash_balance / security_balance;
-      assert(sell_security_amount * sell_price >=
-             0.99f * beta * (security_balance * sell_price + cash_balance));
+          alpha * (1.0f + upper_deviation) * quote_balance / base_balance;
+      assert(sell_base_amount * sell_price >=
+             0.99f * beta * (base_balance * sell_price + quote_balance));
       orders->emplace_back();
       Order* sell_order = &orders->back();
       sell_order->set_type(Order_Type_LIMIT);
       sell_order->set_side(Order_Side_SELL);
-      sell_order->set_security_amount(sell_security_amount);
+      sell_order->set_base_amount(sell_base_amount);
       sell_order->set_price(sell_price);
     }
     if (allow_limit_buy) {
-      const float buy_security_amount = security_balance / (1.0f + alpha) *
-                                        lower_deviation /
-                                        (1.0f - lower_deviation);
+      const float buy_base_amount = base_balance / (1.0f + alpha) *
+                                    lower_deviation / (1.0f - lower_deviation);
       const float buy_price =
-          alpha * (1.0f - lower_deviation) * cash_balance / security_balance;
-      assert(buy_security_amount * buy_price >=
-             0.99f * beta * (security_balance * buy_price + cash_balance));
+          alpha * (1.0f - lower_deviation) * quote_balance / base_balance;
+      assert(buy_base_amount * buy_price >=
+             0.99f * beta * (base_balance * buy_price + quote_balance));
       orders->emplace_back();
       Order* buy_order = &orders->back();
       buy_order->set_type(Order_Type_LIMIT);
       buy_order->set_side(Order_Side_BUY);
-      buy_order->set_security_amount(buy_security_amount);
+      buy_order->set_base_amount(buy_base_amount);
       buy_order->set_price(buy_price);
     }
   }
-  last_security_balance_ = security_balance;
-  last_cash_balance_ = cash_balance;
+  last_base_balance_ = base_balance;
+  last_quote_balance_ = quote_balance;
   last_timestamp_sec_ = timestamp_sec;
   last_close_ = price;
 }
@@ -106,8 +103,8 @@ void RebalancingTrader::LogInternalState(std::ostream* os) const {
   *os << std::fixed << std::setprecision(0)  // nowrap
       << last_timestamp_sec_ << ","          // nowrap
       << std::setprecision(3)                // nowrap
-      << last_security_balance_ << ","       // nowrap
-      << last_cash_balance_ << ","           // nowrap
+      << last_base_balance_ << ","           // nowrap
+      << last_quote_balance_ << ","          // nowrap
       << last_close_ << std::endl;           // nowrap
 }
 

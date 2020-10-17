@@ -170,8 +170,8 @@ bazel run :trader -- \
   --output_trader_log_file="/$(pwd)/data/stop_trader_log.csv" \
   --start_date_utc="2017-01-01" \
   --end_date_utc="2020-10-01" \
-  --start_security_balance=1.0 \
-  --start_cash_balance=0.0
+  --start_base_balance=1.0 \
+  --start_quote_balance=0.0
 ```
 
 The output:
@@ -195,8 +195,8 @@ bazel run :trader -- \
   --start_date_utc="2017-01-01" \
   --end_date_utc="2020-10-01" \
   --evaluation_period_months=6 \
-  --start_security_balance=1.0 \
-  --start_cash_balance=0.0
+  --start_base_balance=1.0 \
+  --start_quote_balance=0.0
 ```
 
 The output:
@@ -228,8 +228,8 @@ bazel run :trader -- \
   --start_date_utc="2017-01-01" \
   --end_date_utc="2020-10-01" \
   --evaluation_period_months=6 \
-  --start_security_balance=1.0 \
-  --start_cash_balance=0.0 \
+  --start_base_balance=1.0 \
+  --start_quote_balance=0.0 \
   --evaluate_batch=true
 ```
 

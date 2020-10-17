@@ -30,28 +30,28 @@ TEST(ExecuteOrderTest, MarketBuyWithFeeAndLimitedPrecision) {
   Order order;
   order.set_type(Order::Type::Order_Type_MARKET);
   order.set_side(Order::Side::Order_Side_BUY);
-  order.set_security_amount(10.0f);
+  order.set_base_amount(10.0f);
 
   OhlcTick ohlc_tick;
   SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.market_liquidity = 0.5f;
-  trader_account.security_unit = 0.1f;
-  trader_account.cash_unit = 1.0f;
-  trader_account.security_balance = 10.0f;
-  trader_account.cash_balance = 1000.0f;
+  trader_account.base_unit = 0.1f;
+  trader_account.quote_unit = 1.0f;
+  trader_account.base_balance = 10.0f;
+  trader_account.quote_balance = 1000.0f;
   trader_account.total_fee = 0.0f;
 
-  // We want to buy 10.0 units of security (crypto currency).
+  // We want to buy 10.0 units of base (crypto) currency.
   ASSERT_TRUE(
       ExecuteOrder(trader_account_config, order, ohlc_tick, &trader_account));
-  EXPECT_FLOAT_EQ(20.0f, trader_account.security_balance);
-  EXPECT_FLOAT_EQ(834.0f, trader_account.cash_balance);
+  EXPECT_FLOAT_EQ(20.0f, trader_account.base_balance);
+  EXPECT_FLOAT_EQ(834.0f, trader_account.quote_balance);
   EXPECT_FLOAT_EQ(16.0f, trader_account.total_fee);
 }
 
-TEST(ExecuteOrderTest, MarketBuyAtCashWithFeeAndLimitedPrecision) {
+TEST(ExecuteOrderTest, MarketBuyAtQuoteWithFeeAndLimitedPrecision) {
   TraderAccountConfig trader_account_config;
   FeeConfig* fee_config =
       trader_account_config.mutable_market_order_fee_config();
@@ -62,24 +62,24 @@ TEST(ExecuteOrderTest, MarketBuyAtCashWithFeeAndLimitedPrecision) {
   Order order;
   order.set_type(Order::Type::Order_Type_MARKET);
   order.set_side(Order::Side::Order_Side_BUY);
-  order.set_cash_amount(169.0f);
+  order.set_quote_amount(169.0f);
 
   OhlcTick ohlc_tick;
   SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.market_liquidity = 0.5f;
-  trader_account.security_unit = 0.1f;
-  trader_account.cash_unit = 1.0f;
-  trader_account.security_balance = 10.0f;
-  trader_account.cash_balance = 1000.0f;
+  trader_account.base_unit = 0.1f;
+  trader_account.quote_unit = 1.0f;
+  trader_account.base_balance = 10.0f;
+  trader_account.quote_balance = 1000.0f;
   trader_account.total_fee = 0.0f;
 
-  // We want to buy security (crypto currency) with up to 169.0 units in cash.
+  // We want to buy base currency with up to 169.0 units in quote currency.
   ASSERT_TRUE(
       ExecuteOrder(trader_account_config, order, ohlc_tick, &trader_account));
-  EXPECT_FLOAT_EQ(20.0f, trader_account.security_balance);
-  EXPECT_FLOAT_EQ(834.0f, trader_account.cash_balance);
+  EXPECT_FLOAT_EQ(20.0f, trader_account.base_balance);
+  EXPECT_FLOAT_EQ(834.0f, trader_account.quote_balance);
   EXPECT_FLOAT_EQ(16.0f, trader_account.total_fee);
 }
 
@@ -94,28 +94,28 @@ TEST(ExecuteOrderTest, MarketSellWithFeeAndLimitedPrecision) {
   Order order;
   order.set_type(Order::Type::Order_Type_MARKET);
   order.set_side(Order::Side::Order_Side_SELL);
-  order.set_security_amount(5.0f);
+  order.set_base_amount(5.0f);
 
   OhlcTick ohlc_tick;
   SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.market_liquidity = 1.0f;
-  trader_account.security_unit = 0.1f;
-  trader_account.cash_unit = 1.0f;
-  trader_account.security_balance = 15.0f;
-  trader_account.cash_balance = 950.0f;
+  trader_account.base_unit = 0.1f;
+  trader_account.quote_unit = 1.0f;
+  trader_account.base_balance = 15.0f;
+  trader_account.quote_balance = 950.0f;
   trader_account.total_fee = 0.0f;
 
-  // We want to sell 5.0 units of security (crypto currency).
+  // We want to sell 5.0 units of base (crypto) currency.
   ASSERT_TRUE(
       ExecuteOrder(trader_account_config, order, ohlc_tick, &trader_account));
-  EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
-  EXPECT_FLOAT_EQ(994.0f, trader_account.cash_balance);
+  EXPECT_FLOAT_EQ(10.0f, trader_account.base_balance);
+  EXPECT_FLOAT_EQ(994.0f, trader_account.quote_balance);
   EXPECT_FLOAT_EQ(6.0f, trader_account.total_fee);
 }
 
-TEST(ExecuteOrderTest, MarketSellAtCashWithFeeAndLimitedPrecision) {
+TEST(ExecuteOrderTest, MarketSellAtQuoteWithFeeAndLimitedPrecision) {
   TraderAccountConfig trader_account_config;
   FeeConfig* fee_config =
       trader_account_config.mutable_market_order_fee_config();
@@ -126,24 +126,24 @@ TEST(ExecuteOrderTest, MarketSellAtCashWithFeeAndLimitedPrecision) {
   Order order;
   order.set_type(Order::Type::Order_Type_MARKET);
   order.set_side(Order::Side::Order_Side_SELL);
-  order.set_cash_amount(50.0f);
+  order.set_quote_amount(50.0f);
 
   OhlcTick ohlc_tick;
   SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.market_liquidity = 1.0f;
-  trader_account.security_unit = 0.1f;
-  trader_account.cash_unit = 1.0f;
-  trader_account.security_balance = 15.0f;
-  trader_account.cash_balance = 950.0f;
+  trader_account.base_unit = 0.1f;
+  trader_account.quote_unit = 1.0f;
+  trader_account.base_balance = 15.0f;
+  trader_account.quote_balance = 950.0f;
   trader_account.total_fee = 0.0f;
 
-  // We want to sell security (crypto currency) to get up to 50.0 units in cash.
+  // We want to sell base currency to get up to 50.0 units in quote currency.
   ASSERT_TRUE(
       ExecuteOrder(trader_account_config, order, ohlc_tick, &trader_account));
-  EXPECT_FLOAT_EQ(9.4f, trader_account.security_balance);
-  EXPECT_FLOAT_EQ(999.0f, trader_account.cash_balance);
+  EXPECT_FLOAT_EQ(9.4f, trader_account.base_balance);
+  EXPECT_FLOAT_EQ(999.0f, trader_account.quote_balance);
   EXPECT_FLOAT_EQ(7.0f, trader_account.total_fee);
 }
 
@@ -157,20 +157,20 @@ TEST(ExecuteOrderTest, StopBuyWithFeeAndLimitedPrecision) {
   Order order;
   order.set_type(Order::Type::Order_Type_STOP);
   order.set_side(Order::Side::Order_Side_BUY);
-  order.set_security_amount(10.0f);
+  order.set_base_amount(10.0f);
 
   OhlcTick ohlc_tick;
   SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.market_liquidity = 0.5f;
-  trader_account.security_unit = 0.1f;
-  trader_account.cash_unit = 1.0f;
-  trader_account.security_balance = 10.0f;
-  trader_account.cash_balance = 1000.0f;
+  trader_account.base_unit = 0.1f;
+  trader_account.quote_unit = 1.0f;
+  trader_account.base_balance = 10.0f;
+  trader_account.quote_balance = 1000.0f;
   trader_account.total_fee = 0.0f;
 
-  // We want to buy 10.0 units of security (crypto currency).
+  // We want to buy 10.0 units of base (crypto) currency.
   // Stop price 25.0 is above the OHLC tick high price 20.0.
   // Therefore, the order cannot be executed.
   order.set_price(25.0f);
@@ -180,12 +180,12 @@ TEST(ExecuteOrderTest, StopBuyWithFeeAndLimitedPrecision) {
   order.set_price(15.0f);
   ASSERT_TRUE(
       ExecuteOrder(trader_account_config, order, ohlc_tick, &trader_account));
-  EXPECT_FLOAT_EQ(20.0f, trader_account.security_balance);
-  EXPECT_FLOAT_EQ(806.0f, trader_account.cash_balance);
+  EXPECT_FLOAT_EQ(20.0f, trader_account.base_balance);
+  EXPECT_FLOAT_EQ(806.0f, trader_account.quote_balance);
   EXPECT_FLOAT_EQ(19.0f, trader_account.total_fee);
 }
 
-TEST(ExecuteOrderTest, StopBuyAtCashWithFeeAndLimitedPrecision) {
+TEST(ExecuteOrderTest, StopBuyAtQuoteWithFeeAndLimitedPrecision) {
   TraderAccountConfig trader_account_config;
   FeeConfig* fee_config = trader_account_config.mutable_stop_order_fee_config();
   fee_config->set_relative_fee(0.1f);
@@ -195,20 +195,20 @@ TEST(ExecuteOrderTest, StopBuyAtCashWithFeeAndLimitedPrecision) {
   Order order;
   order.set_type(Order::Type::Order_Type_STOP);
   order.set_side(Order::Side::Order_Side_BUY);
-  order.set_cash_amount(197.0f);
+  order.set_quote_amount(197.0f);
 
   OhlcTick ohlc_tick;
   SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.market_liquidity = 0.5f;
-  trader_account.security_unit = 0.1f;
-  trader_account.cash_unit = 1.0f;
-  trader_account.security_balance = 10.0f;
-  trader_account.cash_balance = 1000.0f;
+  trader_account.base_unit = 0.1f;
+  trader_account.quote_unit = 1.0f;
+  trader_account.base_balance = 10.0f;
+  trader_account.quote_balance = 1000.0f;
   trader_account.total_fee = 0.0f;
 
-  // We want to buy security (crypto currency) with up to 197.0 units in cash.
+  // We want to buy base currency with up to 197.0 units in quote currency.
   // Stop price 25.0 is above the OHLC tick high price 20.0.
   // Therefore, the order cannot be executed.
   order.set_price(25.0f);
@@ -218,8 +218,8 @@ TEST(ExecuteOrderTest, StopBuyAtCashWithFeeAndLimitedPrecision) {
   order.set_price(15.0f);
   ASSERT_TRUE(
       ExecuteOrder(trader_account_config, order, ohlc_tick, &trader_account));
-  EXPECT_FLOAT_EQ(20.0f, trader_account.security_balance);
-  EXPECT_FLOAT_EQ(806.0f, trader_account.cash_balance);
+  EXPECT_FLOAT_EQ(20.0f, trader_account.base_balance);
+  EXPECT_FLOAT_EQ(806.0f, trader_account.quote_balance);
   EXPECT_FLOAT_EQ(19.0f, trader_account.total_fee);
 }
 
@@ -233,20 +233,20 @@ TEST(ExecuteOrderTest, StopSellWithFeeAndLimitedPrecision) {
   Order order;
   order.set_type(Order::Type::Order_Type_STOP);
   order.set_side(Order::Side::Order_Side_SELL);
-  order.set_security_amount(5.0f);
+  order.set_base_amount(5.0f);
 
   OhlcTick ohlc_tick;
   SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.market_liquidity = 1.0f;
-  trader_account.security_unit = 0.1f;
-  trader_account.cash_unit = 1.0f;
-  trader_account.security_balance = 15.0f;
-  trader_account.cash_balance = 950.0f;
+  trader_account.base_unit = 0.1f;
+  trader_account.quote_unit = 1.0f;
+  trader_account.base_balance = 15.0f;
+  trader_account.quote_balance = 950.0f;
   trader_account.total_fee = 0.0f;
 
-  // We want to sell 5.0 units of security (crypto currency).
+  // We want to sell 5.0 units of base (crypto) currency.
   // Stop price 1.0 is below the OHLC tick low price 2.0.
   // Therefore, the order cannot be executed.
   order.set_price(1.0f);
@@ -256,12 +256,12 @@ TEST(ExecuteOrderTest, StopSellWithFeeAndLimitedPrecision) {
   order.set_price(5.0f);
   ASSERT_TRUE(
       ExecuteOrder(trader_account_config, order, ohlc_tick, &trader_account));
-  EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
-  EXPECT_FLOAT_EQ(971.0f, trader_account.cash_balance);
+  EXPECT_FLOAT_EQ(10.0f, trader_account.base_balance);
+  EXPECT_FLOAT_EQ(971.0f, trader_account.quote_balance);
   EXPECT_FLOAT_EQ(4.0f, trader_account.total_fee);
 }
 
-TEST(ExecuteOrderTest, StopSellAtCashWithFeeAndLimitedPrecision) {
+TEST(ExecuteOrderTest, StopSellAtQuoteWithFeeAndLimitedPrecision) {
   TraderAccountConfig trader_account_config;
   FeeConfig* fee_config = trader_account_config.mutable_stop_order_fee_config();
   fee_config->set_relative_fee(0.1f);
@@ -271,20 +271,20 @@ TEST(ExecuteOrderTest, StopSellAtCashWithFeeAndLimitedPrecision) {
   Order order;
   order.set_type(Order::Type::Order_Type_STOP);
   order.set_side(Order::Side::Order_Side_SELL);
-  order.set_cash_amount(50.0f);
+  order.set_quote_amount(50.0f);
 
   OhlcTick ohlc_tick;
   SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.market_liquidity = 1.0f;
-  trader_account.security_unit = 0.1f;
-  trader_account.cash_unit = 1.0f;
-  trader_account.security_balance = 15.0f;
-  trader_account.cash_balance = 950.0f;
+  trader_account.base_unit = 0.1f;
+  trader_account.quote_unit = 1.0f;
+  trader_account.base_balance = 15.0f;
+  trader_account.quote_balance = 950.0f;
   trader_account.total_fee = 0.0f;
 
-  // We want to sell security (crypto currency) to get up to 50.0 units in cash.
+  // We want to sell base currency to get up to 50.0 units in quote currency.
   // Stop price 1.0 is below the OHLC tick low price 2.0.
   // Therefore, the order cannot be executed.
   order.set_price(1.0f);
@@ -294,8 +294,8 @@ TEST(ExecuteOrderTest, StopSellAtCashWithFeeAndLimitedPrecision) {
   order.set_price(5.0f);
   ASSERT_TRUE(
       ExecuteOrder(trader_account_config, order, ohlc_tick, &trader_account));
-  EXPECT_FLOAT_EQ(3.8f, trader_account.security_balance);
-  EXPECT_FLOAT_EQ(999.0f, trader_account.cash_balance);
+  EXPECT_FLOAT_EQ(3.8f, trader_account.base_balance);
+  EXPECT_FLOAT_EQ(999.0f, trader_account.quote_balance);
   EXPECT_FLOAT_EQ(7.0f, trader_account.total_fee);
 }
 
@@ -310,20 +310,20 @@ TEST(ExecuteOrderTest, LimitBuyWithFeeAndLimitedPrecision) {
   Order order;
   order.set_type(Order::Type::Order_Type_LIMIT);
   order.set_side(Order::Side::Order_Side_BUY);
-  order.set_security_amount(10.0f);
+  order.set_base_amount(10.0f);
 
   OhlcTick ohlc_tick;
   SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.max_volume_ratio = 0.1;
-  trader_account.security_unit = 0.1f;
-  trader_account.cash_unit = 1.0f;
-  trader_account.security_balance = 10.0f;
-  trader_account.cash_balance = 1000.0f;
+  trader_account.base_unit = 0.1f;
+  trader_account.quote_unit = 1.0f;
+  trader_account.base_balance = 10.0f;
+  trader_account.quote_balance = 1000.0f;
   trader_account.total_fee = 0.0f;
 
-  // We want to buy 10.0 units of security (crypto currency).
+  // We want to buy 10.0 units of base (crypto) currency.
   // Limit price 1.0 is below the OHLC tick low price 2.0.
   // Therefore, the order cannot be executed.
   order.set_price(1.0f);
@@ -333,12 +333,12 @@ TEST(ExecuteOrderTest, LimitBuyWithFeeAndLimitedPrecision) {
   order.set_price(5.0f);
   ASSERT_TRUE(
       ExecuteOrder(trader_account_config, order, ohlc_tick, &trader_account));
-  EXPECT_FLOAT_EQ(20.0f, trader_account.security_balance);
-  EXPECT_FLOAT_EQ(944.0f, trader_account.cash_balance);
+  EXPECT_FLOAT_EQ(20.0f, trader_account.base_balance);
+  EXPECT_FLOAT_EQ(944.0f, trader_account.quote_balance);
   EXPECT_FLOAT_EQ(6.0f, trader_account.total_fee);
 }
 
-TEST(ExecuteOrderTest, LimitBuyAtCashWithFeeAndLimitedPrecision) {
+TEST(ExecuteOrderTest, LimitBuyAtQuoteWithFeeAndLimitedPrecision) {
   TraderAccountConfig trader_account_config;
   FeeConfig* fee_config =
       trader_account_config.mutable_limit_order_fee_config();
@@ -349,20 +349,20 @@ TEST(ExecuteOrderTest, LimitBuyAtCashWithFeeAndLimitedPrecision) {
   Order order;
   order.set_type(Order::Type::Order_Type_LIMIT);
   order.set_side(Order::Side::Order_Side_BUY);
-  order.set_cash_amount(57.0f);
+  order.set_quote_amount(57.0f);
 
   OhlcTick ohlc_tick;
   SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.max_volume_ratio = 0.1;
-  trader_account.security_unit = 0.1f;
-  trader_account.cash_unit = 1.0f;
-  trader_account.security_balance = 10.0f;
-  trader_account.cash_balance = 1000.0f;
+  trader_account.base_unit = 0.1f;
+  trader_account.quote_unit = 1.0f;
+  trader_account.base_balance = 10.0f;
+  trader_account.quote_balance = 1000.0f;
   trader_account.total_fee = 0.0f;
 
-  // We want to buy security (crypto currency) with up to 57.0 units in cash.
+  // We want to buy base currency with up to 57.0 units in quote currency.
   // Limit price 1.0 is below the OHLC tick low price 2.0.
   // Therefore, the order cannot be executed.
   order.set_price(1.0f);
@@ -372,8 +372,8 @@ TEST(ExecuteOrderTest, LimitBuyAtCashWithFeeAndLimitedPrecision) {
   order.set_price(5.0f);
   ASSERT_TRUE(
       ExecuteOrder(trader_account_config, order, ohlc_tick, &trader_account));
-  EXPECT_FLOAT_EQ(20.0f, trader_account.security_balance);
-  EXPECT_FLOAT_EQ(944.0f, trader_account.cash_balance);
+  EXPECT_FLOAT_EQ(20.0f, trader_account.base_balance);
+  EXPECT_FLOAT_EQ(944.0f, trader_account.quote_balance);
   EXPECT_FLOAT_EQ(6.0f, trader_account.total_fee);
 }
 
@@ -388,20 +388,20 @@ TEST(ExecuteOrderTest, LimitSellWithFeeAndLimitedPrecision) {
   Order order;
   order.set_type(Order::Type::Order_Type_LIMIT);
   order.set_side(Order::Side::Order_Side_SELL);
-  order.set_security_amount(5.0f);
+  order.set_base_amount(5.0f);
 
   OhlcTick ohlc_tick;
   SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.max_volume_ratio = 0.1;
-  trader_account.security_unit = 0.1f;
-  trader_account.cash_unit = 1.0f;
-  trader_account.security_balance = 15.0f;
-  trader_account.cash_balance = 950.0f;
+  trader_account.base_unit = 0.1f;
+  trader_account.quote_unit = 1.0f;
+  trader_account.base_balance = 15.0f;
+  trader_account.quote_balance = 950.0f;
   trader_account.total_fee = 0.0f;
 
-  // We want to sell 5.0 units of security (crypto currency).
+  // We want to sell 5.0 units of base (crypto) currency.
   // Limit price 25.0 is above the OHLC tick high price 20.0.
   // Therefore, the order cannot be executed.
   order.set_price(25.0f);
@@ -411,12 +411,12 @@ TEST(ExecuteOrderTest, LimitSellWithFeeAndLimitedPrecision) {
   order.set_price(10.0f);
   ASSERT_TRUE(
       ExecuteOrder(trader_account_config, order, ohlc_tick, &trader_account));
-  EXPECT_FLOAT_EQ(10.0f, trader_account.security_balance);
-  EXPECT_FLOAT_EQ(994.0f, trader_account.cash_balance);
+  EXPECT_FLOAT_EQ(10.0f, trader_account.base_balance);
+  EXPECT_FLOAT_EQ(994.0f, trader_account.quote_balance);
   EXPECT_FLOAT_EQ(6.0f, trader_account.total_fee);
 }
 
-TEST(ExecuteOrderTest, LimitSellAtCashWithFeeAndLimitedPrecision) {
+TEST(ExecuteOrderTest, LimitSellAtQuoteWithFeeAndLimitedPrecision) {
   TraderAccountConfig trader_account_config;
   FeeConfig* fee_config =
       trader_account_config.mutable_limit_order_fee_config();
@@ -427,20 +427,20 @@ TEST(ExecuteOrderTest, LimitSellAtCashWithFeeAndLimitedPrecision) {
   Order order;
   order.set_type(Order::Type::Order_Type_LIMIT);
   order.set_side(Order::Side::Order_Side_SELL);
-  order.set_cash_amount(50.0f);
+  order.set_quote_amount(50.0f);
 
   OhlcTick ohlc_tick;
   SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.max_volume_ratio = 0.1;
-  trader_account.security_unit = 0.1f;
-  trader_account.cash_unit = 1.0f;
-  trader_account.security_balance = 15.0f;
-  trader_account.cash_balance = 950.0f;
+  trader_account.base_unit = 0.1f;
+  trader_account.quote_unit = 1.0f;
+  trader_account.base_balance = 15.0f;
+  trader_account.quote_balance = 950.0f;
   trader_account.total_fee = 0.0f;
 
-  // We want to sell security (crypto currency) to get up to 50.0 units in cash.
+  // We want to sell base currency to get up to 50.0 units in quote currency.
   // Limit price 25.0 is above the OHLC tick high price 20.0.
   // Therefore, the order cannot be executed.
   order.set_price(25.0f);
@@ -450,8 +450,8 @@ TEST(ExecuteOrderTest, LimitSellAtCashWithFeeAndLimitedPrecision) {
   order.set_price(10.0f);
   ASSERT_TRUE(
       ExecuteOrder(trader_account_config, order, ohlc_tick, &trader_account));
-  EXPECT_FLOAT_EQ(9.4f, trader_account.security_balance);
-  EXPECT_FLOAT_EQ(999.0f, trader_account.cash_balance);
+  EXPECT_FLOAT_EQ(9.4f, trader_account.base_balance);
+  EXPECT_FLOAT_EQ(999.0f, trader_account.quote_balance);
   EXPECT_FLOAT_EQ(7.0f, trader_account.total_fee);
 }
 
@@ -535,32 +535,32 @@ void SetupMonthlyOhlcHistory(OhlcHistory* ohlc_history) {
   AddMonthlyOhlcTick(650, 800, 600, 750, ohlc_history);  // 2017-12-01
 }
 
-// Trader that buys and sells the security (crypto currency) at fixed prices.
+// Trader that buys and sells the base (crypto) currency at fixed prices.
 class TestTrader : public TraderInterface {
  public:
   TestTrader(float buy_price, float sell_price)
       : buy_price_(buy_price), sell_price_(sell_price) {}
   virtual ~TestTrader() {}
 
-  void Update(const OhlcTick& ohlc_tick, float security_balance,
-              float cash_balance, std::vector<Order>* orders) override {
+  void Update(const OhlcTick& ohlc_tick, float base_balance,
+              float quote_balance, std::vector<Order>* orders) override {
     assert(orders != nullptr);
-    last_security_balance_ = security_balance;
-    last_cash_balance_ = cash_balance;
+    last_base_balance_ = base_balance;
+    last_quote_balance_ = quote_balance;
     last_timestamp_sec_ = ohlc_tick.timestamp_sec();
     last_close_ = ohlc_tick.close();
-    is_long_ = last_close_ * last_security_balance_ > last_cash_balance_;
+    is_long_ = last_close_ * last_base_balance_ > last_quote_balance_;
     orders->emplace_back();
     Order* order = &orders->back();
     if (is_long_) {
       order->set_type(Order_Type_LIMIT);
       order->set_side(Order_Side_SELL);
-      order->set_security_amount(last_security_balance_);
+      order->set_base_amount(last_base_balance_);
       order->set_price(sell_price_);
     } else {
       order->set_type(Order_Type_LIMIT);
       order->set_side(Order_Side_BUY);
-      order->set_cash_amount(last_cash_balance_);
+      order->set_quote_amount(last_quote_balance_);
       order->set_price(buy_price_);
     }
   }
@@ -572,8 +572,8 @@ class TestTrader : public TraderInterface {
     *os << std::fixed << std::setprecision(0)  // nowrap
         << last_timestamp_sec_ << ","          // nowrap
         << std::setprecision(3)                // nowrap
-        << last_security_balance_ << ","       // nowrap
-        << last_cash_balance_ << ","           // nowrap
+        << last_base_balance_ << ","           // nowrap
+        << last_quote_balance_ << ","          // nowrap
         << last_close_ << ",";                 // nowrap
     if (is_long_) {
       *os << "IN_LONG,LIMIT_SELL@"  // nowrap
@@ -586,18 +586,18 @@ class TestTrader : public TraderInterface {
   }
 
  private:
-  // Price at which we want to buy the security (crypto currency).
+  // Price at which we want to buy the base (crypto) currency.
   float buy_price_ = 0.0f;
-  // Price at which we want to sell the security (crypto currency).
+  // Price at which we want to sell the base (crypto) currency.
   float sell_price_ = 0.0f;
   // Last seen trader account balance.
-  float last_security_balance_ = 0.0f;
-  float last_cash_balance_ = 0.0f;
+  float last_base_balance_ = 0.0f;
+  float last_quote_balance_ = 0.0f;
   // Last seen UNIX timestamp (in seconds).
   int last_timestamp_sec_ = 0;
   // Last seen close price.
   float last_close_ = 0.0f;
-  // True iff most of the account value is in security (crypto currency).
+  // True iff most of the account value is in base (crypto) currency.
   bool is_long_ = false;
 };
 
@@ -621,9 +621,9 @@ class TestTraderFactory : public TraderFactoryInterface {
   }
 
  private:
-  // Price at which we want to buy the security (crypto currency).
+  // Price at which we want to buy the base (crypto) currency.
   float buy_price_ = 0.0f;
-  // Price at which we want to sell the security (crypto currency).
+  // Price at which we want to sell the base (crypto) currency.
   float sell_price_ = 0.0f;
 };
 }  // namespace
@@ -632,10 +632,10 @@ TEST(ExecuteTraderTest, LimitBuyAndSell) {
   TraderAccountConfig trader_account_config;
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
       R"(
-        start_security_balance: 10
-        start_cash_balance: 0
-        security_unit: 0.1
-        cash_unit: 1
+        start_base_balance: 10
+        start_quote_balance: 0
+        base_unit: 0.1
+        quote_unit: 1
         limit_order_fee_config {
             relative_fee: 0.1
             fixed_fee: 1
@@ -660,10 +660,10 @@ TEST(ExecuteTraderTest, LimitBuyAndSell) {
   TraderExecutionResult expected_result;
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
       R"(
-        start_security_balance: 10
-        start_cash_balance: 0
-        end_security_balance: 32.3
-        end_cash_balance: 21
+        start_base_balance: 10
+        start_quote_balance: 0
+        end_base_balance: 32.3
+        end_quote_balance: 21
         start_price: 120
         end_price: 50
         start_value: 1200
@@ -710,10 +710,10 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
   TraderAccountConfig trader_account_config;
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
       R"(
-        start_security_balance: 10
-        start_cash_balance: 0
-        security_unit: 0.1
-        cash_unit: 1
+        start_base_balance: 10
+        start_quote_balance: 0
+        base_unit: 0.1
+        quote_unit: 1
         limit_order_fee_config {
             relative_fee: 0.1
             fixed_fee: 1
@@ -751,10 +751,10 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
       R"(
         trader_account_config {
-            start_security_balance: 10
-            start_cash_balance: 0
-            security_unit: 0.1
-            cash_unit: 1
+            start_base_balance: 10
+            start_quote_balance: 0
+            base_unit: 0.1
+            quote_unit: 1
             limit_order_fee_config {
                 relative_fee: 0.1
                 fixed_fee: 1
@@ -773,10 +773,10 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1514764800
             result {
-                start_security_balance: 10
-                start_cash_balance: 0
-                end_security_balance: 0
-                end_cash_balance: 5834
+                start_base_balance: 10
+                start_quote_balance: 0
+                end_base_balance: 0
+                end_quote_balance: 5834
                 start_price: 120
                 end_price: 750
                 start_value: 1200
@@ -785,11 +785,11 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
                 total_fee: 1011
             }
             trader_final_gain: 4.86166668
-            base_final_gain: 6.25
+            baseline_final_gain: 6.25
         }
         score: 0.777866662
         avg_trader_gain: 4.86166668
-        avg_base_gain: 6.25
+        avg_baseline_gain: 6.25
         avg_total_executed_orders: 3
         avg_total_fee: 1011
         )",
@@ -856,10 +856,10 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
   TraderAccountConfig trader_account_config;
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
       R"(
-        start_security_balance: 10
-        start_cash_balance: 0
-        security_unit: 0.1
-        cash_unit: 1
+        start_base_balance: 10
+        start_quote_balance: 0
+        base_unit: 0.1
+        quote_unit: 1
         limit_order_fee_config {
             relative_fee: 0.1
             fixed_fee: 1
@@ -895,10 +895,10 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
       R"(
         trader_account_config {
-            start_security_balance: 10
-            start_cash_balance: 0
-            security_unit: 0.1
-            cash_unit: 1
+            start_base_balance: 10
+            start_quote_balance: 0
+            base_unit: 0.1
+            quote_unit: 1
             limit_order_fee_config {
                 relative_fee: 0.1
                 fixed_fee: 1
@@ -917,10 +917,10 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1498867200
             result {
-                start_security_balance: 10
-                start_cash_balance: 0
-                end_security_balance: 32.3
-                end_cash_balance: 21
+                start_base_balance: 10
+                start_quote_balance: 0
+                end_base_balance: 32.3
+                end_quote_balance: 21
                 start_price: 120
                 end_price: 80
                 start_value: 1200
@@ -929,16 +929,16 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 total_fee: 364
             }
             trader_final_gain: 2.17083335
-            base_final_gain: 0.666666687
+            baseline_final_gain: 0.666666687
         }
         period {
             start_timestamp_sec: 1485907200
             end_timestamp_sec: 1501545600
             result {
-                start_security_balance: 10
-                start_cash_balance: 0
-                end_security_balance: 32.3
-                end_cash_balance: 21
+                start_base_balance: 10
+                start_quote_balance: 0
+                end_base_balance: 32.3
+                end_quote_balance: 21
                 start_price: 150
                 end_price: 150
                 start_value: 1500
@@ -947,16 +947,16 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 total_fee: 364
             }
             trader_final_gain: 3.244
-            base_final_gain: 1
+            baseline_final_gain: 1
         }
         period {
             start_timestamp_sec: 1488326400
             end_timestamp_sec: 1504224000
             result {
-                start_security_balance: 10
-                start_cash_balance: 0
-                end_security_balance: 0
-                end_cash_balance: 1799
+                start_base_balance: 10
+                start_quote_balance: 0
+                end_base_balance: 0
+                end_quote_balance: 1799
                 start_price: 140
                 end_price: 240
                 start_value: 1400
@@ -965,16 +965,16 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 total_fee: 201
             }
             trader_final_gain: 1.285
-            base_final_gain: 1.71428573
+            baseline_final_gain: 1.71428573
         }
         period {
             start_timestamp_sec: 1491004800
             end_timestamp_sec: 1506816000
             result {
-                start_security_balance: 10
-                start_cash_balance: 0
-                end_security_balance: 0
-                end_cash_balance: 1799
+                start_base_balance: 10
+                start_quote_balance: 0
+                end_base_balance: 0
+                end_quote_balance: 1799
                 start_price: 100
                 end_price: 400
                 start_value: 1000
@@ -983,16 +983,16 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 total_fee: 201
             }
             trader_final_gain: 1.799
-            base_final_gain: 4
+            baseline_final_gain: 4
         }
         period {
             start_timestamp_sec: 1493596800
             end_timestamp_sec: 1509494400
             result {
-                start_security_balance: 10
-                start_cash_balance: 0
-                end_security_balance: 0
-                end_cash_balance: 1799
+                start_base_balance: 10
+                start_quote_balance: 0
+                end_base_balance: 0
+                end_quote_balance: 1799
                 start_price: 50
                 end_price: 300
                 start_value: 500
@@ -1001,16 +1001,16 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 total_fee: 201
             }
             trader_final_gain: 3.598
-            base_final_gain: 6
+            baseline_final_gain: 6
         }
         period {
             start_timestamp_sec: 1496275200
             end_timestamp_sec: 1512086400
             result {
-                start_security_balance: 10
-                start_cash_balance: 0
-                end_security_balance: 0
-                end_cash_balance: 1799
+                start_base_balance: 10
+                start_quote_balance: 0
+                end_base_balance: 0
+                end_quote_balance: 1799
                 start_price: 80
                 end_price: 650
                 start_value: 800
@@ -1019,16 +1019,16 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 total_fee: 201
             }
             trader_final_gain: 2.24875
-            base_final_gain: 8.125
+            baseline_final_gain: 8.125
         }
         period {
             start_timestamp_sec: 1498867200
             end_timestamp_sec: 1514764800
             result {
-                start_security_balance: 10
-                start_cash_balance: 0
-                end_security_balance: 0
-                end_cash_balance: 1799
+                start_base_balance: 10
+                start_quote_balance: 0
+                end_base_balance: 0
+                end_quote_balance: 1799
                 start_price: 150
                 end_price: 750
                 start_value: 1500
@@ -1037,11 +1037,11 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 total_fee: 201
             }
             trader_final_gain: 1.19933331
-            base_final_gain: 5
+            baseline_final_gain: 5
         }
         score: 0.75648129
         avg_trader_gain: 2.22070217
-        avg_base_gain: 3.78656459
+        avg_baseline_gain: 3.78656459
         avg_total_executed_orders: 1.28571427
         avg_total_fee: 247.571426
         )",
@@ -1053,10 +1053,10 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
   TraderAccountConfig trader_account_config;
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
       R"(
-        start_security_balance: 10
-        start_cash_balance: 0
-        security_unit: 0.1
-        cash_unit: 1
+        start_base_balance: 10
+        start_quote_balance: 0
+        base_unit: 0.1
+        quote_unit: 1
         limit_order_fee_config {
             relative_fee: 0.1
             fixed_fee: 1
@@ -1097,10 +1097,10 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
       R"(
         trader_account_config {
-            start_security_balance: 10
-            start_cash_balance: 0
-            security_unit: 0.1
-            cash_unit: 1
+            start_base_balance: 10
+            start_quote_balance: 0
+            base_unit: 0.1
+            quote_unit: 1
             limit_order_fee_config {
                 relative_fee: 0.1
                 fixed_fee: 1
@@ -1119,47 +1119,47 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1498867200
             trader_final_gain: 2.17083335
-            base_final_gain: 0.666666687
+            baseline_final_gain: 0.666666687
         }
         period {
             start_timestamp_sec: 1485907200
             end_timestamp_sec: 1501545600
             trader_final_gain: 3.244
-            base_final_gain: 1
+            baseline_final_gain: 1
         }
         period {
             start_timestamp_sec: 1488326400
             end_timestamp_sec: 1504224000
             trader_final_gain: 1.285
-            base_final_gain: 1.71428573
+            baseline_final_gain: 1.71428573
         }
         period {
             start_timestamp_sec: 1491004800
             end_timestamp_sec: 1506816000
             trader_final_gain: 1.799
-            base_final_gain: 4
+            baseline_final_gain: 4
         }
         period {
             start_timestamp_sec: 1493596800
             end_timestamp_sec: 1509494400
             trader_final_gain: 3.598
-            base_final_gain: 6
+            baseline_final_gain: 6
         }
         period {
             start_timestamp_sec: 1496275200
             end_timestamp_sec: 1512086400
             trader_final_gain: 2.24875
-            base_final_gain: 8.125
+            baseline_final_gain: 8.125
         }
         period {
             start_timestamp_sec: 1498867200
             end_timestamp_sec: 1514764800
             trader_final_gain: 1.19933331
-            base_final_gain: 5
+            baseline_final_gain: 5
         }
         score: 0.75648129
         avg_trader_gain: 2.22070217
-        avg_base_gain: 3.78656459
+        avg_baseline_gain: 3.78656459
         avg_total_executed_orders: 1.28571427
         avg_total_fee: 247.571426
         )",
@@ -1170,10 +1170,10 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
       R"(
         trader_account_config {
-            start_security_balance: 10
-            start_cash_balance: 0
-            security_unit: 0.1
-            cash_unit: 1
+            start_base_balance: 10
+            start_quote_balance: 0
+            base_unit: 0.1
+            quote_unit: 1
             limit_order_fee_config {
                 relative_fee: 0.1
                 fixed_fee: 1
@@ -1192,47 +1192,47 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1498867200
             trader_final_gain: 3.38833332
-            base_final_gain: 0.666666687
+            baseline_final_gain: 0.666666687
         }
         period {
             start_timestamp_sec: 1485907200
             end_timestamp_sec: 1501545600
             trader_final_gain: 5.06733322
-            base_final_gain: 1
+            baseline_final_gain: 1
         }
         period {
             start_timestamp_sec: 1488326400
             end_timestamp_sec: 1504224000
             trader_final_gain: 1.60642862
-            base_final_gain: 1.71428573
+            baseline_final_gain: 1.71428573
         }
         period {
             start_timestamp_sec: 1491004800
             end_timestamp_sec: 1506816000
             trader_final_gain: 2.249
-            base_final_gain: 4
+            baseline_final_gain: 4
         }
         period {
             start_timestamp_sec: 1493596800
             end_timestamp_sec: 1509494400
             trader_final_gain: 4.498
-            base_final_gain: 6
+            baseline_final_gain: 6
         }
         period {
             start_timestamp_sec: 1496275200
             end_timestamp_sec: 1512086400
             trader_final_gain: 2.81125
-            base_final_gain: 8.125
+            baseline_final_gain: 8.125
         }
         period {
             start_timestamp_sec: 1498867200
             end_timestamp_sec: 1514764800
             trader_final_gain: 1.49933338
-            base_final_gain: 5
+            baseline_final_gain: 5
         }
         score: 1.00773919
         avg_trader_gain: 3.01709747
-        avg_base_gain: 3.78656459
+        avg_baseline_gain: 3.78656459
         avg_total_executed_orders: 1.28571427
         avg_total_fee: 309
         )",
@@ -1243,10 +1243,10 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
       R"(
         trader_account_config {
-            start_security_balance: 10
-            start_cash_balance: 0
-            security_unit: 0.1
-            cash_unit: 1
+            start_base_balance: 10
+            start_quote_balance: 0
+            base_unit: 0.1
+            quote_unit: 1
             limit_order_fee_config {
                 relative_fee: 0.1
                 fixed_fee: 1
@@ -1265,47 +1265,47 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1498867200
             trader_final_gain: 0.666666687
-            base_final_gain: 0.666666687
+            baseline_final_gain: 0.666666687
         }
         period {
             start_timestamp_sec: 1485907200
             end_timestamp_sec: 1501545600
             trader_final_gain: 1
-            base_final_gain: 1
+            baseline_final_gain: 1
         }
         period {
             start_timestamp_sec: 1488326400
             end_timestamp_sec: 1504224000
             trader_final_gain: 1.71428573
-            base_final_gain: 1.71428573
+            baseline_final_gain: 1.71428573
         }
         period {
             start_timestamp_sec: 1491004800
             end_timestamp_sec: 1506816000
             trader_final_gain: 4
-            base_final_gain: 4
+            baseline_final_gain: 4
         }
         period {
             start_timestamp_sec: 1493596800
             end_timestamp_sec: 1509494400
             trader_final_gain: 6
-            base_final_gain: 6
+            baseline_final_gain: 6
         }
         period {
             start_timestamp_sec: 1496275200
             end_timestamp_sec: 1512086400
             trader_final_gain: 5.62375
-            base_final_gain: 8.125
+            baseline_final_gain: 8.125
         }
         period {
             start_timestamp_sec: 1498867200
             end_timestamp_sec: 1514764800
             trader_final_gain: 2.99933338
-            base_final_gain: 5
+            baseline_final_gain: 5
         }
         score: 0.881993413
         avg_trader_gain: 3.14343381
-        avg_base_gain: 3.78656459
+        avg_baseline_gain: 3.78656459
         avg_total_executed_orders: 0.285714298
         avg_total_fee: 143.142853
         )",

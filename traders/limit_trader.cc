@@ -4,14 +4,14 @@
 
 namespace trader {
 
-void LimitTrader::Update(const OhlcTick& ohlc_tick, float security_balance,
-                         float cash_balance, std::vector<Order>* orders) {
+void LimitTrader::Update(const OhlcTick& ohlc_tick, float base_balance,
+                         float quote_balance, std::vector<Order>* orders) {
   assert(orders != nullptr);
   const int timestamp_sec = ohlc_tick.timestamp_sec();
   const float price = ohlc_tick.close();
   assert(timestamp_sec > last_timestamp_sec_);
   assert(price > 0);
-  assert(security_balance > 0 || cash_balance > 0);
+  assert(base_balance > 0 || quote_balance > 0);
   if (timestamp_sec >= last_timestamp_sec_ + max_allowed_gap_sec_) {
     init_timestamp_sec_ = timestamp_sec;
     smoothed_price_ = price;
@@ -24,8 +24,8 @@ void LimitTrader::Update(const OhlcTick& ohlc_tick, float security_balance,
     smoothed_price_ =
         alpha_per_tick * smoothed_price_ + (1.0f - alpha_per_tick) * price;
   }
-  last_security_balance_ = security_balance;
-  last_cash_balance_ = cash_balance;
+  last_base_balance_ = base_balance;
+  last_quote_balance_ = quote_balance;
   last_timestamp_sec_ = timestamp_sec;
   last_close_ = price;
   EmitLimitOrders(orders);
@@ -35,7 +35,7 @@ void LimitTrader::EmitLimitOrders(std::vector<Order>* orders) const {
   if (last_timestamp_sec_ < init_timestamp_sec_ + warmup_period_sec_) {
     return;
   }
-  if (last_security_balance_ > 0) {
+  if (last_base_balance_ > 0) {
     orders->emplace_back();
     Order* sell_order = &orders->back();
     sell_order->set_type(Order_Type_LIMIT);
@@ -45,10 +45,10 @@ void LimitTrader::EmitLimitOrders(std::vector<Order>* orders) const {
     if (last_close_ > sell_price) {
       sell_price = 1.001f * last_close_;
     }
-    sell_order->set_security_amount(last_security_balance_);
+    sell_order->set_base_amount(last_base_balance_);
     sell_order->set_price(sell_price);
   }
-  if (last_cash_balance_ > 0) {
+  if (last_quote_balance_ > 0) {
     orders->emplace_back();
     Order* buy_order = &orders->back();
     buy_order->set_type(Order_Type_LIMIT);
@@ -58,7 +58,7 @@ void LimitTrader::EmitLimitOrders(std::vector<Order>* orders) const {
     if (last_close_ < buy_price) {
       buy_price = 0.999f * last_close_;
     }
-    buy_order->set_cash_amount(last_cash_balance_);
+    buy_order->set_quote_amount(last_quote_balance_);
     buy_order->set_price(buy_price);
   }
 }
@@ -70,8 +70,8 @@ void LimitTrader::LogInternalState(std::ostream* os) const {
   *os << std::fixed << std::setprecision(0)  // nowrap
       << last_timestamp_sec_ << ","          // nowrap
       << std::setprecision(3)                // nowrap
-      << last_security_balance_ << ","       // nowrap
-      << last_cash_balance_ << ","           // nowrap
+      << last_base_balance_ << ","           // nowrap
+      << last_quote_balance_ << ","          // nowrap
       << last_close_ << ","                  // nowrap
       << smoothed_price_ << std::endl;       // nowrap
 }

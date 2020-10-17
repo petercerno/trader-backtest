@@ -47,8 +47,8 @@ class TraderInterface {
   // Trader can assume that there are no active orders when this method is
   // called. The emitted orders will be either executed or cancelled by the
   // exchange at the next OHLC tick.
-  virtual void Update(const OhlcTick& ohlc_tick, float security_balance,
-                      float cash_balance, std::vector<Order>* orders) = 0;
+  virtual void Update(const OhlcTick& ohlc_tick, float base_balance,
+                      float quote_balance, std::vector<Order>* orders) = 0;
 
   // Outputs the internal trader state into the output stream "os".
   // Does nothing if "os" is nullptr.

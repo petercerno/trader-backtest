@@ -1,4 +1,4 @@
-//  Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2020 Peter Cerno. All rights reserved.
 
 #include "lib/trader_eval.h"
 
@@ -36,12 +36,11 @@ float GetGeometricAverage(const C& container, F selector) {
 // Initializes the trader account based on the trader account configuration.
 void InitTraderAccount(const TraderAccountConfig& trader_account_config,
                        TraderAccount* trader_account) {
-  trader_account->security_balance =
-      trader_account_config.start_security_balance();
-  trader_account->cash_balance = trader_account_config.start_cash_balance();
+  trader_account->base_balance = trader_account_config.start_base_balance();
+  trader_account->quote_balance = trader_account_config.start_quote_balance();
   trader_account->total_fee = 0;
-  trader_account->security_unit = trader_account_config.security_unit();
-  trader_account->cash_unit = trader_account_config.cash_unit();
+  trader_account->base_unit = trader_account_config.base_unit();
+  trader_account->quote_unit = trader_account_config.quote_unit();
   trader_account->market_liquidity = trader_account_config.market_liquidity();
   trader_account->max_volume_ratio = trader_account_config.max_volume_ratio();
 }
@@ -54,11 +53,11 @@ bool IsValidOrder(const Order& order) {
       (  // Positive price is required for non-market orders.
           order.type() == Order::MARKET ||
           (order.has_price() && order.price() > 0)) &&
-      (  // Every order must specify a positive security amount or cash amount.
-          (order.oneof_amount_case() == Order::kSecurityAmount &&
-           order.has_security_amount() && order.security_amount() > 0) ||
-          (order.oneof_amount_case() == Order::kCashAmount &&
-           order.has_cash_amount() && order.cash_amount() > 0));
+      (  // Every order must specify a positive base amount or quote amount.
+          (order.oneof_amount_case() == Order::kBaseAmount &&
+           order.has_base_amount() && order.base_amount() > 0) ||
+          (order.oneof_amount_case() == Order::kQuoteAmount &&
+           order.has_quote_amount() && order.quote_amount() > 0));
 }
 
 // Logs the "ohlc_tick" to the output stream "os".
@@ -75,9 +74,9 @@ void LogOhlcTick(const OhlcTick& ohlc_tick, std::ostream* os) {
 
 // Logs the "trader_account" balances to the output stream "os".
 void LogTraderAccount(const TraderAccount& trader_account, std::ostream* os) {
-  *os << std::fixed << std::setprecision(3)      // nowrap
-      << trader_account.security_balance << ","  // nowrap
-      << trader_account.cash_balance << ","      // nowrap
+  *os << std::fixed << std::setprecision(3)   // nowrap
+      << trader_account.base_balance << ","   // nowrap
+      << trader_account.quote_balance << ","  // nowrap
       << trader_account.total_fee;
 }
 
@@ -86,12 +85,12 @@ void LogOrder(const Order& order, std::ostream* os) {
   *os << Order::Type_Name(order.type()) << ","  // nowrap
       << Order::Side_Name(order.side()) << ","  // nowrap
       << std::fixed << std::setprecision(3);
-  if (order.oneof_amount_case() == Order::kSecurityAmount) {
-    *os << order.security_amount();
+  if (order.oneof_amount_case() == Order::kBaseAmount) {
+    *os << order.base_amount();
   }
   *os << ",";
-  if (order.oneof_amount_case() == Order::kCashAmount) {
-    *os << order.cash_amount();
+  if (order.oneof_amount_case() == Order::kQuoteAmount) {
+    *os << order.quote_amount();
   }
   *os << ",";
   if (order.has_price() && order.price() > 0) {
@@ -139,77 +138,77 @@ bool ExecuteOrder(const TraderAccountConfig& trader_account_config,
   switch (order.type()) {
     case Order::MARKET:
       if (order.side() == Order::BUY) {
-        if (order.oneof_amount_case() == Order::kSecurityAmount) {
+        if (order.oneof_amount_case() == Order::kBaseAmount) {
           return trader_account->MarketBuy(
               trader_account_config.market_order_fee_config(), ohlc_tick,
-              order.security_amount());
+              order.base_amount());
         } else {
-          assert(order.oneof_amount_case() == Order::kCashAmount);
-          return trader_account->MarketBuyAtCash(
+          assert(order.oneof_amount_case() == Order::kQuoteAmount);
+          return trader_account->MarketBuyAtQuote(
               trader_account_config.market_order_fee_config(), ohlc_tick,
-              order.cash_amount());
+              order.quote_amount());
         }
       } else {
         assert(order.side() == Order::SELL);
-        if (order.oneof_amount_case() == Order::kSecurityAmount) {
+        if (order.oneof_amount_case() == Order::kBaseAmount) {
           return trader_account->MarketSell(
               trader_account_config.market_order_fee_config(), ohlc_tick,
-              order.security_amount());
+              order.base_amount());
         } else {
-          assert(order.oneof_amount_case() == Order::kCashAmount);
-          return trader_account->MarketSellAtCash(
+          assert(order.oneof_amount_case() == Order::kQuoteAmount);
+          return trader_account->MarketSellAtQuote(
               trader_account_config.market_order_fee_config(), ohlc_tick,
-              order.cash_amount());
+              order.quote_amount());
         }
       }
     case Order::STOP:
       if (order.side() == Order::BUY) {
-        if (order.oneof_amount_case() == Order::kSecurityAmount) {
+        if (order.oneof_amount_case() == Order::kBaseAmount) {
           return trader_account->StopBuy(
               trader_account_config.stop_order_fee_config(), ohlc_tick,
-              order.security_amount(), order.price());
+              order.base_amount(), order.price());
         } else {
-          assert(order.oneof_amount_case() == Order::kCashAmount);
-          return trader_account->StopBuyAtCash(
+          assert(order.oneof_amount_case() == Order::kQuoteAmount);
+          return trader_account->StopBuyAtQuote(
               trader_account_config.stop_order_fee_config(), ohlc_tick,
-              order.cash_amount(), order.price());
+              order.quote_amount(), order.price());
         }
       } else {
         assert(order.side() == Order::SELL);
-        if (order.oneof_amount_case() == Order::kSecurityAmount) {
+        if (order.oneof_amount_case() == Order::kBaseAmount) {
           return trader_account->StopSell(
               trader_account_config.stop_order_fee_config(), ohlc_tick,
-              order.security_amount(), order.price());
+              order.base_amount(), order.price());
         } else {
-          assert(order.oneof_amount_case() == Order::kCashAmount);
-          return trader_account->StopSellAtCash(
+          assert(order.oneof_amount_case() == Order::kQuoteAmount);
+          return trader_account->StopSellAtQuote(
               trader_account_config.stop_order_fee_config(), ohlc_tick,
-              order.cash_amount(), order.price());
+              order.quote_amount(), order.price());
         }
       }
     case Order::LIMIT:
       if (order.side() == Order::BUY) {
-        if (order.oneof_amount_case() == Order::kSecurityAmount) {
+        if (order.oneof_amount_case() == Order::kBaseAmount) {
           return trader_account->LimitBuy(
               trader_account_config.limit_order_fee_config(), ohlc_tick,
-              order.security_amount(), order.price());
+              order.base_amount(), order.price());
         } else {
-          assert(order.oneof_amount_case() == Order::kCashAmount);
-          return trader_account->LimitBuyAtCash(
+          assert(order.oneof_amount_case() == Order::kQuoteAmount);
+          return trader_account->LimitBuyAtQuote(
               trader_account_config.limit_order_fee_config(), ohlc_tick,
-              order.cash_amount(), order.price());
+              order.quote_amount(), order.price());
         }
       } else {
         assert(order.side() == Order::SELL);
-        if (order.oneof_amount_case() == Order::kSecurityAmount) {
+        if (order.oneof_amount_case() == Order::kBaseAmount) {
           return trader_account->LimitSell(
               trader_account_config.limit_order_fee_config(), ohlc_tick,
-              order.security_amount(), order.price());
+              order.base_amount(), order.price());
         } else {
-          assert(order.oneof_amount_case() == Order::kCashAmount);
-          return trader_account->LimitSellAtCash(
+          assert(order.oneof_amount_case() == Order::kQuoteAmount);
+          return trader_account->LimitSellAtQuote(
               trader_account_config.limit_order_fee_config(), ohlc_tick,
-              order.cash_amount(), order.price());
+              order.quote_amount(), order.price());
         }
       }
     default:
@@ -259,22 +258,20 @@ TraderExecutionResult ExecuteTrader(
     // Update the trader internal state on the current OHLC tick T[i].
     // Emit a new set of "trader_orders" for the next OHLC tick T[i+1].
     trader_orders.clear();
-    trader->Update(ohlc_tick, trader_account.security_balance,
-                   trader_account.cash_balance, &trader_orders);
+    trader->Update(ohlc_tick, trader_account.base_balance,
+                   trader_account.quote_balance, &trader_orders);
     trader->LogInternalState(trader_os);
   }
-  result.set_start_security_balance(
-      trader_account_config.start_security_balance());
-  result.set_start_cash_balance(trader_account_config.start_cash_balance());
-  result.set_end_security_balance(trader_account.security_balance);
-  result.set_end_cash_balance(trader_account.cash_balance);
+  result.set_start_base_balance(trader_account_config.start_base_balance());
+  result.set_start_quote_balance(trader_account_config.start_quote_balance());
+  result.set_end_base_balance(trader_account.base_balance);
+  result.set_end_quote_balance(trader_account.quote_balance);
   result.set_start_price(ohlc_history_begin->close());
   result.set_end_price((--ohlc_history_end)->close());
-  result.set_start_value(result.start_cash_balance() +
-                         result.start_price() *
-                             result.start_security_balance());
-  result.set_end_value(result.end_cash_balance() +
-                       result.end_price() * result.end_security_balance());
+  result.set_start_value(result.start_quote_balance() +
+                         result.start_price() * result.start_base_balance());
+  result.set_end_value(result.end_quote_balance() +
+                       result.end_price() * result.end_base_balance());
   result.set_total_executed_orders(total_executed_orders);
   result.set_total_fee(trader_account.total_fee);
   return result;
@@ -319,7 +316,7 @@ TraderEvaluationResult EvaluateTrader(
     assert(result.start_value() > 0);
     period->set_trader_final_gain(result.end_value() / result.start_value());
     assert(result.start_price() > 0 && result.end_price() > 0);
-    period->set_base_final_gain(result.end_price() / result.start_price());
+    period->set_baseline_final_gain(result.end_price() / result.start_price());
     if (trader_eval_config.evaluation_period_months() == 0) {
       break;
     }
@@ -327,17 +324,17 @@ TraderEvaluationResult EvaluateTrader(
   trader_eval_result.set_score(GetGeometricAverage(
       trader_eval_result.period(),
       [](const TraderEvaluationResult::Period& period) {
-        return period.trader_final_gain() / period.base_final_gain();
+        return period.trader_final_gain() / period.baseline_final_gain();
       }));
   trader_eval_result.set_avg_trader_gain(
       GetAverage(trader_eval_result.period(),
                  [](const TraderEvaluationResult::Period& period) {
                    return period.trader_final_gain();
                  }));
-  trader_eval_result.set_avg_base_gain(
+  trader_eval_result.set_avg_baseline_gain(
       GetAverage(trader_eval_result.period(),
                  [](const TraderEvaluationResult::Period& period) {
-                   return period.base_final_gain();
+                   return period.baseline_final_gain();
                  }));
   trader_eval_result.set_avg_total_executed_orders(
       GetAverage(trader_eval_result.period(),

@@ -1,4 +1,4 @@
-//  Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2020 Peter Cerno. All rights reserved.
 
 #ifndef LIB_TRADER_EVAL_H
 #define LIB_TRADER_EVAL_H
