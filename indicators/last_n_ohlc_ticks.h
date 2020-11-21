@@ -55,6 +55,9 @@ class LastNOhlcTicks {
   virtual const std::deque<OhlcTick>& GetLastNOhlcTicks() const;
 
   // Updates the deque of last N OHLC ticks.
+  // Under normal circumstances this method runs in O(1) time.
+  // The only exception is when the given OHLC tick is far in the future, in
+  // which case we need to backfill all the intermediate zero volume OHLC ticks.
   // We assume that period_size_sec_ is divisible by the period of ohlc_tick.
   virtual void Update(const OhlcTick& ohlc_tick);
 
@@ -71,14 +74,6 @@ class LastNOhlcTicks {
 
   void NewOhlcTickAdded();
   void LastOhlcTickUpdated(const OhlcTick& old_ohlc_tick);
-};
-
-// Keeps track of the last N day OHLC ticks.
-class LastNDayOhlcTicks : public LastNOhlcTicks {
-  explicit LastNDayOhlcTicks(int num_days)
-      : LastNOhlcTicks{/*num_ohlc_ticks=*/num_days,
-                       /*period_size_sec=*/kSecondsPerDay} {}
-  virtual ~LastNDayOhlcTicks() {}
 };
 
 }  // namespace trader

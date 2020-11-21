@@ -25,7 +25,7 @@ void AddOhlcTick(float open, float high, float low, float close,
   ohlc_tick->set_volume(1000.0f);
 }
 
-// Adds daily OHLC tick to the history.
+// Adds OHLC tick to the history period_sec away from the last OHLC tick.
 void AddOhlcTickWithPeriod(float open, float high, float low, float close,
                            int period_sec, OhlcHistory* ohlc_history) {
   int timestamp_sec = 1483228800;  // 2017-01-01
