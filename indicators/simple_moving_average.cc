@@ -46,4 +46,5 @@ void SimpleMovingAverage::Update(const OhlcTick& ohlc_tick) {
                                             GetNumOhlcTicks());
   }
 }
+
 }  // namespace trader
