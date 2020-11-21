@@ -36,3 +36,22 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "exponential_moving_average",
+    srcs = ["exponential_moving_average.cc"],
+    hdrs = ["exponential_moving_average.h"],
+    deps = [
+        ":last_n_ohlc_ticks",
+        "//lib:trader_base",
+    ],
+)
+
+cc_test(
+    name = "exponential_moving_average_test",
+    srcs = ["exponential_moving_average_test.cc"],
+    deps = [
+        ":exponential_moving_average",
+        "@googletest//:gtest_main",
+    ],
+)
