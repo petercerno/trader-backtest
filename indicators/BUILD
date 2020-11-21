@@ -17,3 +17,22 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "simple_moving_average",
+    srcs = ["simple_moving_average.cc"],
+    hdrs = ["simple_moving_average.h"],
+    deps = [
+        ":last_n_ohlc_ticks",
+        "//lib:trader_base",
+    ],
+)
+
+cc_test(
+    name = "simple_moving_average_test",
+    srcs = ["simple_moving_average_test.cc"],
+    deps = [
+        ":simple_moving_average",
+        "@googletest//:gtest_main",
+    ],
+)
