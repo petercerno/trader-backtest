@@ -4,6 +4,7 @@
 #define INDICATORS_EXPONENTIAL_MOVING_AVERAGE_H
 
 #include "indicators/last_n_ohlc_ticks.h"
+#include "indicators/util.h"
 #include "lib/trader_base.h"
 
 namespace trader {
@@ -46,27 +47,14 @@ class ExponentialMovingAverage {
   // We assume that period_size_sec is divisible by the period of ohlc_tick.
   virtual void Update(const OhlcTick& ohlc_tick);
 
- protected:
-  // Computes the Exponential Moving Average based on the current (most recent)
-  // OHLC tick and the previous (stored) Exponential Moving Average.
-  // ohlc_tick: The most recent OHLC tick.
-  virtual float ComputeExponentialMovingAverage(
-      const OhlcTick& ohlc_tick) const;
-
  private:
   // Keeps track of the current OHLC tick.
   LastNOhlcTicks last_n_ohlc_ticks_;
 
-  // Smoothing factor.
-  float smoothing_ = 0;
-  // Exponential Moving Average length.
-  int ema_length_ = 0;
-  // Number of seen OHLC ticks over which the EMA is computed.
-  int num_ohlc_ticks_ = 0;
-  // Current Exponential Moving Average.
-  float current_ema_ = 0;
-  // Previous Exponential Moving Average.
-  float previous_ema_ = 0;
+  // Weight of the new closing prices in the Exponential Moving Average.
+  float weight_ = 0;
+  // Exponential Moving Average helper.
+  ExponentialMovingAverageHelper ema_helper_;
 
   ExponentialMovingAverageUpdatedCallback
       exponential_moving_average_updated_callback_;
