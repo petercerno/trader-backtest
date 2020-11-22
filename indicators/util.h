@@ -5,7 +5,7 @@
 
 namespace trader {
 
-// Calculates Exponential Moving Average (EMA) over the provided values.
+// Calculates the Exponential Moving Average (EMA) over the provided values.
 // All methods run in O(1) time.
 class ExponentialMovingAverageHelper {
  public:

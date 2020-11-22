@@ -9,7 +9,7 @@
 
 namespace trader {
 
-// Calculates Exponential Moving Average (EMA) of the closing prices over
+// Calculates the Exponential Moving Average (EMA) of the closing prices over
 // all (previous) OHLC ticks with a specified period size (in seconds).
 // We assume that the period is divisible by the period of update OHLC ticks.
 // Based on: https://www.investopedia.com/terms/m/movingaverage.asp

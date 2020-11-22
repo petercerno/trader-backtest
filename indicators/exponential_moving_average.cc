@@ -7,7 +7,7 @@ namespace trader {
 ExponentialMovingAverage::ExponentialMovingAverage(float smoothing,
                                                    int ema_length,
                                                    int period_size_sec)
-    : last_n_ohlc_ticks_(1, period_size_sec),
+    : last_n_ohlc_ticks_(/*num_ohlc_ticks=*/1, period_size_sec),
       weight_(smoothing / (1.0f + ema_length)) {
   last_n_ohlc_ticks_.RegisterLastTickUpdatedCallback(
       [this](const OhlcTick& old_ohlc_tick, const OhlcTick& new_ohlc_tick) {

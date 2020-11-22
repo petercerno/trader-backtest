@@ -8,8 +8,8 @@
 
 namespace trader {
 
-// Calculates Simple Moving Average (SMA) of the closing prices over the last N
-// OHLC ticks with a specified period size (in seconds).
+// Calculates the Simple Moving Average (SMA) of the closing prices over
+// the last N OHLC ticks with a specified period size (in seconds).
 // We assume that the period is divisible by the period of update OHLC ticks.
 // Based on: https://www.investopedia.com/terms/m/movingaverage.asp
 //      and: https://www.investopedia.com/terms/s/sma.asp
