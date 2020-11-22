@@ -19,6 +19,21 @@ cc_test(
 )
 
 cc_library(
+    name = "util",
+    srcs = ["util.cc"],
+    hdrs = ["util.h"],
+)
+
+cc_test(
+    name = "util_test",
+    srcs = ["util_test.cc"],
+    deps = [
+        ":util",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "simple_moving_average",
     srcs = ["simple_moving_average.cc"],
     hdrs = ["simple_moving_average.h"],
@@ -43,6 +58,7 @@ cc_library(
     hdrs = ["exponential_moving_average.h"],
     deps = [
         ":last_n_ohlc_ticks",
+        ":util",
         "//lib:trader_base",
     ],
 )
