@@ -71,3 +71,23 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "relative_strength_index",
+    srcs = ["relative_strength_index.cc"],
+    hdrs = ["relative_strength_index.h"],
+    deps = [
+        ":last_n_ohlc_ticks",
+        ":util",
+        "//lib:trader_base",
+    ],
+)
+
+cc_test(
+    name = "relative_strength_index_test",
+    srcs = ["relative_strength_index_test.cc"],
+    deps = [
+        ":relative_strength_index",
+        "@googletest//:gtest_main",
+    ],
+)
