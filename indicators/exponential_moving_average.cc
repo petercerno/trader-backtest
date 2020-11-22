@@ -31,13 +31,6 @@ ExponentialMovingAverage::ExponentialMovingAverage(float smoothing,
       });
 }
 
-void ExponentialMovingAverage::RegisterExponentialMovingAverageUpdatedCallback(
-    ExponentialMovingAverageUpdatedCallback
-        exponential_moving_average_updated_callback) {
-  exponential_moving_average_updated_callback_ =
-      exponential_moving_average_updated_callback;
-}
-
 float ExponentialMovingAverage::GetExponentialMovingAverage() const {
   return ema_helper_.GetExponentialMovingAverage();
 }
@@ -48,10 +41,6 @@ int ExponentialMovingAverage::GetNumOhlcTicks() const {
 
 void ExponentialMovingAverage::Update(const OhlcTick& ohlc_tick) {
   last_n_ohlc_ticks_.Update(ohlc_tick);
-  if (exponential_moving_average_updated_callback_) {
-    exponential_moving_average_updated_callback_(GetExponentialMovingAverage(),
-                                                 GetNumOhlcTicks());
-  }
 }
 
 }  // namespace trader

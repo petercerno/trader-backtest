@@ -10,18 +10,12 @@
 namespace trader {
 
 // Calculates Exponential Moving Average (EMA) of the closing prices over
-// all (previous) OHLC ticks with a specified period (in seconds).
+// all (previous) OHLC ticks with a specified period size (in seconds).
 // We assume that the period is divisible by the period of update OHLC ticks.
 // Based on: https://www.investopedia.com/terms/m/movingaverage.asp
 //      and: https://www.investopedia.com/terms/e/ema.asp
 class ExponentialMovingAverage {
  public:
-  // Called after the Exponential Moving Average was updated.
-  // exponential_moving_average: The new updated Exponential Moving Average.
-  // num_ohlc_ticks: Number of seen OHLC ticks over which the EMA is computed.
-  using ExponentialMovingAverageUpdatedCallback = std::function<void(
-      const float exponential_moving_average, int num_ohlc_ticks)>;
-
   // Constructor.
   // smoothing: Smoothing factor, the most common choice is 2.
   // ema_length: EMA length, typically 10, 50, or 200.
@@ -29,10 +23,6 @@ class ExponentialMovingAverage {
   ExponentialMovingAverage(float smoothing, int ema_length,
                            int period_size_sec);
   virtual ~ExponentialMovingAverage() {}
-
-  virtual void RegisterExponentialMovingAverageUpdatedCallback(
-      ExponentialMovingAverageUpdatedCallback
-          exponential_moving_average_updated_callback);
 
   // Returns Exponential Moving Average (of closing prices) over all (previous)
   // OHLC ticks. This method runs in O(1) time.
@@ -55,9 +45,6 @@ class ExponentialMovingAverage {
   float weight_ = 0;
   // Exponential Moving Average helper.
   ExponentialMovingAverageHelper ema_helper_;
-
-  ExponentialMovingAverageUpdatedCallback
-      exponential_moving_average_updated_callback_;
 };
 
 }  // namespace trader

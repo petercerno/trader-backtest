@@ -21,12 +21,6 @@ SimpleMovingAverage::SimpleMovingAverage(int num_ohlc_ticks,
       });
 }
 
-void SimpleMovingAverage::RegisterSimpleMovingAverageUpdatedCallback(
-    SimpleMovingAverageUpdatedCallback simple_moving_average_updated_callback) {
-  simple_moving_average_updated_callback_ =
-      simple_moving_average_updated_callback;
-}
-
 float SimpleMovingAverage::GetSimpleMovingAverage() const {
   const int num_ohlc_ticks = GetNumOhlcTicks();
   if (num_ohlc_ticks == 0) {
@@ -41,10 +35,6 @@ int SimpleMovingAverage::GetNumOhlcTicks() const {
 
 void SimpleMovingAverage::Update(const OhlcTick& ohlc_tick) {
   last_n_ohlc_ticks_.Update(ohlc_tick);
-  if (simple_moving_average_updated_callback_) {
-    simple_moving_average_updated_callback_(GetSimpleMovingAverage(),
-                                            GetNumOhlcTicks());
-  }
 }
 
 }  // namespace trader

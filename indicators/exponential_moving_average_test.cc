@@ -67,106 +67,64 @@ TEST(ExponentialMovingAverageTest, GetEMAWhenAdding8HourOhlcTicks) {
       /*ema_length=*/7,
       /*period_size_sec=*/kSecondsPerDay);
 
-  float last_exponential_moving_average = -1;
-  int last_num_ohlc_ticks = -1;
-  exponential_moving_average.RegisterExponentialMovingAverageUpdatedCallback(
-      [&last_exponential_moving_average, &last_num_ohlc_ticks](
-          const float exponential_moving_average, const int num_ohlc_ticks) {
-        last_exponential_moving_average = exponential_moving_average;
-        last_num_ohlc_ticks = num_ohlc_ticks;
-      });
-
   EXPECT_FLOAT_EQ(0, exponential_moving_average.GetExponentialMovingAverage());
   EXPECT_EQ(0, exponential_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ(-1, last_exponential_moving_average);
-  EXPECT_EQ(-1, last_num_ohlc_ticks);
 
   exponential_moving_average.Update(ohlc_history[0]);
   EXPECT_FLOAT_EQ(120,
                   exponential_moving_average.GetExponentialMovingAverage());
   EXPECT_EQ(1, exponential_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ(120, last_exponential_moving_average);
-  EXPECT_EQ(1, last_num_ohlc_ticks);
 
   exponential_moving_average.Update(ohlc_history[1]);
   EXPECT_FLOAT_EQ(150,
                   exponential_moving_average.GetExponentialMovingAverage());
   EXPECT_EQ(1, exponential_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ(150, last_exponential_moving_average);
-  EXPECT_EQ(1, last_num_ohlc_ticks);
 
   exponential_moving_average.Update(ohlc_history[2]);
   EXPECT_FLOAT_EQ(140,
                   exponential_moving_average.GetExponentialMovingAverage());
   EXPECT_EQ(1, exponential_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ(140, last_exponential_moving_average);
-  EXPECT_EQ(1, last_num_ohlc_ticks);
 
   exponential_moving_average.Update(ohlc_history[3]);
   EXPECT_FLOAT_EQ(
       100.0f * (2.0f / (1.0f + 7.0f)) + 140.0f * (1.0f - 2.0f / (1.0f + 7.0f)),
       exponential_moving_average.GetExponentialMovingAverage());
   EXPECT_EQ(2, exponential_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ(
-      100.0f * (2.0f / (1.0f + 7.0f)) + 140.0f * (1.0f - 2.0f / (1.0f + 7.0f)),
-      last_exponential_moving_average);
-  EXPECT_EQ(2, last_num_ohlc_ticks);
 
   exponential_moving_average.Update(ohlc_history[4]);
   EXPECT_FLOAT_EQ(50.0f * 0.25f + 140.0f * 0.75f,
                   exponential_moving_average.GetExponentialMovingAverage());
   EXPECT_EQ(2, exponential_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ(50.0f * 0.25f + 140.0f * 0.75f,
-                  last_exponential_moving_average);
-  EXPECT_EQ(2, last_num_ohlc_ticks);
 
   exponential_moving_average.Update(ohlc_history[5]);
   EXPECT_FLOAT_EQ(80.0f * 0.25f + 140.0f * 0.75f,
                   exponential_moving_average.GetExponentialMovingAverage());
   EXPECT_EQ(2, exponential_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ(80.0f * 0.25f + 140.0f * 0.75f,
-                  last_exponential_moving_average);
-  EXPECT_EQ(2, last_num_ohlc_ticks);
 
   exponential_moving_average.Update(ohlc_history[6]);
   EXPECT_FLOAT_EQ(150.0f * 0.25f + (80.0f * 0.25f + 140.0f * 0.75f) * 0.75f,
                   exponential_moving_average.GetExponentialMovingAverage());
   EXPECT_EQ(3, exponential_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ(150.0f * 0.25f + (80.0f * 0.25f + 140.0f * 0.75f) * 0.75f,
-                  last_exponential_moving_average);
-  EXPECT_EQ(3, last_num_ohlc_ticks);
 
   exponential_moving_average.Update(ohlc_history[7]);
   EXPECT_FLOAT_EQ(240.0f * 0.25f + 125.0f * 0.75f,
                   exponential_moving_average.GetExponentialMovingAverage());
   EXPECT_EQ(3, exponential_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ(240.0f * 0.25f + 125.0f * 0.75f,
-                  last_exponential_moving_average);
-  EXPECT_EQ(3, last_num_ohlc_ticks);
 
   exponential_moving_average.Update(ohlc_history[8]);
   EXPECT_FLOAT_EQ(400.0f * 0.25f + 125.0f * 0.75f,
                   exponential_moving_average.GetExponentialMovingAverage());
   EXPECT_EQ(3, exponential_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ(400.0f * 0.25f + 125.0f * 0.75f,
-                  last_exponential_moving_average);
-  EXPECT_EQ(3, last_num_ohlc_ticks);
 
   exponential_moving_average.Update(ohlc_history[9]);
   EXPECT_FLOAT_EQ(300.0f * 0.25f + (400.0f * 0.25f + 125.0f * 0.75f) * 0.75f,
                   exponential_moving_average.GetExponentialMovingAverage());
   EXPECT_EQ(4, exponential_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ(300.0f * 0.25f + (400.0f * 0.25f + 125.0f * 0.75f) * 0.75f,
-                  last_exponential_moving_average);
-  EXPECT_EQ(4, last_num_ohlc_ticks);
 
   exponential_moving_average.Update(ohlc_history[10]);
   EXPECT_FLOAT_EQ(650.0f * 0.25f + 193.75 * 0.75f,
                   exponential_moving_average.GetExponentialMovingAverage());
   EXPECT_EQ(4, exponential_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ(650.0f * 0.25f + 193.75 * 0.75f,
-                  last_exponential_moving_average);
-  EXPECT_EQ(4, last_num_ohlc_ticks);
 
   exponential_moving_average.Update(ohlc_history[11]);
   EXPECT_FLOAT_EQ(750.0f * 0.25f +       // nowrap
@@ -175,12 +133,6 @@ TEST(ExponentialMovingAverageTest, GetEMAWhenAdding8HourOhlcTicks) {
                           0.75f,
                   exponential_moving_average.GetExponentialMovingAverage());
   EXPECT_EQ(6, exponential_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ(750.0f * 0.25f +       // nowrap
-                      (650.0f * 0.25f +  // nowrap
-                       (650.0f * 0.25f + 193.75 * 0.75f) * 0.75f) *
-                          0.75f,
-                  last_exponential_moving_average);
-  EXPECT_EQ(6, last_num_ohlc_ticks);
 }
 
 }  // namespace trader

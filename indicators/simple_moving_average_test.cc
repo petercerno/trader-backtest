@@ -65,101 +65,65 @@ TEST(SimpleMovingAverageTest, Get3SMAWhenAdding8HourOhlcTicks) {
   SimpleMovingAverage simple_moving_average(/*num_ohlc_ticks=*/3,
                                             /*period_size_sec=*/kSecondsPerDay);
 
-  float last_simple_moving_average = -1;
-  int last_num_ohlc_ticks = -1;
-  simple_moving_average.RegisterSimpleMovingAverageUpdatedCallback(
-      [&last_simple_moving_average, &last_num_ohlc_ticks](
-          const float simple_moving_average, const int num_ohlc_ticks) {
-        last_simple_moving_average = simple_moving_average;
-        last_num_ohlc_ticks = num_ohlc_ticks;
-      });
-
   EXPECT_FLOAT_EQ(0, simple_moving_average.GetSimpleMovingAverage());
   EXPECT_EQ(0, simple_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ(-1, last_simple_moving_average);
-  EXPECT_EQ(-1, last_num_ohlc_ticks);
 
   simple_moving_average.Update(ohlc_history[0]);
   EXPECT_FLOAT_EQ(120, simple_moving_average.GetSimpleMovingAverage());
   EXPECT_EQ(1, simple_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ(120, last_simple_moving_average);
-  EXPECT_EQ(1, last_num_ohlc_ticks);
 
   simple_moving_average.Update(ohlc_history[1]);
   EXPECT_FLOAT_EQ(150, simple_moving_average.GetSimpleMovingAverage());
   EXPECT_EQ(1, simple_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ(150, last_simple_moving_average);
-  EXPECT_EQ(1, last_num_ohlc_ticks);
 
   simple_moving_average.Update(ohlc_history[2]);
   EXPECT_FLOAT_EQ(140, simple_moving_average.GetSimpleMovingAverage());
   EXPECT_EQ(1, simple_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ(140, last_simple_moving_average);
-  EXPECT_EQ(1, last_num_ohlc_ticks);
 
   simple_moving_average.Update(ohlc_history[3]);
   EXPECT_FLOAT_EQ((140.0f + 100.0f) / 2.0f,
                   simple_moving_average.GetSimpleMovingAverage());
   EXPECT_EQ(2, simple_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ((140.0f + 100.0f) / 2.0f, last_simple_moving_average);
-  EXPECT_EQ(2, last_num_ohlc_ticks);
 
   simple_moving_average.Update(ohlc_history[4]);
   EXPECT_FLOAT_EQ((140.0f + 50.0f) / 2.0f,
                   simple_moving_average.GetSimpleMovingAverage());
   EXPECT_EQ(2, simple_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ((140.0f + 50.0f) / 2.0f, last_simple_moving_average);
-  EXPECT_EQ(2, last_num_ohlc_ticks);
 
   simple_moving_average.Update(ohlc_history[5]);
   EXPECT_FLOAT_EQ((140.0f + 80.0f) / 2.0f,
                   simple_moving_average.GetSimpleMovingAverage());
   EXPECT_EQ(2, simple_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ((140.0f + 80.0f) / 2.0f, last_simple_moving_average);
-  EXPECT_EQ(2, last_num_ohlc_ticks);
 
   simple_moving_average.Update(ohlc_history[6]);
   EXPECT_FLOAT_EQ((140.0f + 80.0f + 150.0f) / 3.0f,
                   simple_moving_average.GetSimpleMovingAverage());
   EXPECT_EQ(3, simple_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ((140.0f + 80.0f + 150.0f) / 3.0f, last_simple_moving_average);
-  EXPECT_EQ(3, last_num_ohlc_ticks);
 
   simple_moving_average.Update(ohlc_history[7]);
   EXPECT_FLOAT_EQ((140.0f + 80.0f + 240.0f) / 3.0f,
                   simple_moving_average.GetSimpleMovingAverage());
   EXPECT_EQ(3, simple_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ((140.0f + 80.0f + 240.0f) / 3.0f, last_simple_moving_average);
-  EXPECT_EQ(3, last_num_ohlc_ticks);
 
   simple_moving_average.Update(ohlc_history[8]);
   EXPECT_FLOAT_EQ((140.0f + 80.0f + 400.0f) / 3.0f,
                   simple_moving_average.GetSimpleMovingAverage());
   EXPECT_EQ(3, simple_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ((140.0f + 80.0f + 400.0f) / 3.0f, last_simple_moving_average);
-  EXPECT_EQ(3, last_num_ohlc_ticks);
 
   simple_moving_average.Update(ohlc_history[9]);
   EXPECT_FLOAT_EQ((80.0f + 400.0f + 300.0f) / 3.0f,
                   simple_moving_average.GetSimpleMovingAverage());
   EXPECT_EQ(3, simple_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ((80.0f + 400.0f + 300.0f) / 3.0f, last_simple_moving_average);
-  EXPECT_EQ(3, last_num_ohlc_ticks);
 
   simple_moving_average.Update(ohlc_history[10]);
   EXPECT_FLOAT_EQ((80.0f + 400.0f + 650.0f) / 3.0f,
                   simple_moving_average.GetSimpleMovingAverage());
   EXPECT_EQ(3, simple_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ((80.0f + 400.0f + 650.0f) / 3.0f, last_simple_moving_average);
-  EXPECT_EQ(3, last_num_ohlc_ticks);
 
   simple_moving_average.Update(ohlc_history[11]);
   EXPECT_FLOAT_EQ((650.0f + 650.0f + 750.0f) / 3.0f,
                   simple_moving_average.GetSimpleMovingAverage());
   EXPECT_EQ(3, simple_moving_average.GetNumOhlcTicks());
-  EXPECT_FLOAT_EQ((650.0f + 650.0f + 750.0f) / 3.0f,
-                  last_simple_moving_average);
-  EXPECT_EQ(3, last_num_ohlc_ticks);
 }
 
 }  // namespace trader
