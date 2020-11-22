@@ -12,7 +12,7 @@ ExponentialMovingAverage::ExponentialMovingAverage(float smoothing,
   last_n_ohlc_ticks_.RegisterLastTickUpdatedCallback(
       [this](const OhlcTick& old_ohlc_tick, const OhlcTick& new_ohlc_tick) {
         // We have observed at least 1 OHLC tick.
-        // The most recent OHLC tick is being updated.
+        // The most recent OHLC tick was updated.
         assert(ema_helper_.GetNumValues() >= 1);
         ema_helper_.UpdateCurrentValue(new_ohlc_tick.close(), weight_);
       });
@@ -25,7 +25,7 @@ ExponentialMovingAverage::ExponentialMovingAverage(float smoothing,
   last_n_ohlc_ticks_.RegisterNewTickAddedAndOldestTickRemovedCallback(
       [this](const OhlcTick& removed_ohlc_tick, const OhlcTick& new_ohlc_tick) {
         // We have observed at least 1 OHLC tick.
-        // New OHLC tick is being added.
+        // New OHLC tick was added.
         assert(ema_helper_.GetNumValues() >= 1);
         ema_helper_.AddNewValue(new_ohlc_tick.close(), weight_);
       });
