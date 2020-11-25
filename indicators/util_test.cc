@@ -40,4 +40,260 @@ TEST(ExponentialMovingAverageHelperTest, GetExponentialMovingAverage) {
   EXPECT_EQ(3, ema_helper.GetNumValues());
 }
 
+TEST(SlidingWindowMinimumTest, GetSlidingWindowMinimum) {
+  SlidingWindowMinimum sliding_window_minimum(/*window_size=*/5);
+  // Values: []
+  EXPECT_FLOAT_EQ(0, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(0, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(0, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.AddNewValue(100);
+  // Values: [100]
+  EXPECT_FLOAT_EQ(100, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(1, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(1, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.UpdateCurrentValue(50);
+  // Values: [50]
+  EXPECT_FLOAT_EQ(50, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(1, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(1, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.UpdateCurrentValue(150);
+  // Values: [150]
+  EXPECT_FLOAT_EQ(150, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(1, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(1, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.AddNewValue(100);
+  // Values: [150, 100]
+  EXPECT_FLOAT_EQ(100, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(2, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(2, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.UpdateCurrentValue(50);
+  // Values: [150, 50]
+  EXPECT_FLOAT_EQ(50, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(2, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(2, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.UpdateCurrentValue(200);
+  // Values: [150, 200]
+  EXPECT_FLOAT_EQ(150, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(2, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(2, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.AddNewValue(100);
+  // Values: [150, 200, 100]
+  EXPECT_FLOAT_EQ(100, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(3, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(3, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.UpdateCurrentValue(300);
+  // Values: [150, 200, 300]
+  EXPECT_FLOAT_EQ(150, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(3, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(3, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.AddNewValue(100);
+  // Values: [150, 200, 300, 100]
+  EXPECT_FLOAT_EQ(100, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(4, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(4, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.UpdateCurrentValue(250);
+  // Values: [150, 200, 300, 250]
+  EXPECT_FLOAT_EQ(150, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(4, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(4, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.AddNewValue(400);
+  // Values: [150, 200, 300, 250, 400]
+  EXPECT_FLOAT_EQ(150, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(5, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.UpdateCurrentValue(100);
+  // Values: [150, 200, 300, 250, 100]
+  EXPECT_FLOAT_EQ(100, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(5, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.UpdateCurrentValue(500);
+  // Values: [150, 200, 300, 250, 500]
+  EXPECT_FLOAT_EQ(150, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(5, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.AddNewValue(100);
+  // Values: 150, [200, 300, 250, 500, 100]
+  EXPECT_FLOAT_EQ(100, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(6, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.UpdateCurrentValue(400);
+  // Values: 150, [200, 300, 250, 500, 400]
+  EXPECT_FLOAT_EQ(200, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(6, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.AddNewValue(600);
+  // Values: 150, 200, [300, 250, 500, 400, 600]
+  EXPECT_FLOAT_EQ(250, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(7, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.UpdateCurrentValue(200);
+  // Values: 150, 200, [300, 250, 500, 400, 200]
+  EXPECT_FLOAT_EQ(200, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(7, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.AddNewValue(600);
+  // Values: 150, 200, 300, [250, 500, 400, 200, 600]
+  EXPECT_FLOAT_EQ(200, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(8, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.UpdateCurrentValue(100);
+  // Values: 150, 200, 300, [250, 500, 400, 200, 100]
+  EXPECT_FLOAT_EQ(100, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(8, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_minimum.GetWindowSize());
+
+  sliding_window_minimum.UpdateCurrentValue(500);
+  // Values: 150, 200, 300, [250, 500, 400, 200, 500]
+  EXPECT_FLOAT_EQ(200, sliding_window_minimum.GetSlidingWindowMinimum());
+  EXPECT_EQ(8, sliding_window_minimum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_minimum.GetWindowSize());
+}
+
+TEST(SlidingWindowMaximumTest, GetSlidingWindowMaximum) {
+  SlidingWindowMaximum sliding_window_maximum(/*window_size=*/5);
+  // Values: []
+  EXPECT_FLOAT_EQ(0, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(0, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(0, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.AddNewValue(100);
+  // Values: [100]
+  EXPECT_FLOAT_EQ(100, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(1, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(1, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.UpdateCurrentValue(50);
+  // Values: [50]
+  EXPECT_FLOAT_EQ(50, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(1, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(1, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.UpdateCurrentValue(150);
+  // Values: [150]
+  EXPECT_FLOAT_EQ(150, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(1, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(1, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.AddNewValue(100);
+  // Values: [150, 100]
+  EXPECT_FLOAT_EQ(150, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(2, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(2, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.UpdateCurrentValue(50);
+  // Values: [150, 50]
+  EXPECT_FLOAT_EQ(150, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(2, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(2, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.UpdateCurrentValue(200);
+  // Values: [150, 200]
+  EXPECT_FLOAT_EQ(200, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(2, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(2, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.AddNewValue(100);
+  // Values: [150, 200, 100]
+  EXPECT_FLOAT_EQ(200, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(3, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(3, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.UpdateCurrentValue(300);
+  // Values: [150, 200, 300]
+  EXPECT_FLOAT_EQ(300, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(3, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(3, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.AddNewValue(100);
+  // Values: [150, 200, 300, 100]
+  EXPECT_FLOAT_EQ(300, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(4, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(4, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.UpdateCurrentValue(250);
+  // Values: [150, 200, 300, 250]
+  EXPECT_FLOAT_EQ(300, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(4, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(4, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.AddNewValue(400);
+  // Values: [150, 200, 300, 250, 400]
+  EXPECT_FLOAT_EQ(400, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(5, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.UpdateCurrentValue(100);
+  // Values: [150, 200, 300, 250, 100]
+  EXPECT_FLOAT_EQ(300, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(5, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.UpdateCurrentValue(500);
+  // Values: [150, 200, 300, 250, 500]
+  EXPECT_FLOAT_EQ(500, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(5, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.AddNewValue(100);
+  // Values: 150, [200, 300, 250, 500, 100]
+  EXPECT_FLOAT_EQ(500, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(6, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.UpdateCurrentValue(400);
+  // Values: 150, [200, 300, 250, 500, 400]
+  EXPECT_FLOAT_EQ(500, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(6, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.AddNewValue(600);
+  // Values: 150, 200, [300, 250, 500, 400, 600]
+  EXPECT_FLOAT_EQ(600, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(7, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.UpdateCurrentValue(200);
+  // Values: 150, 200, [300, 250, 500, 400, 200]
+  EXPECT_FLOAT_EQ(500, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(7, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.AddNewValue(600);
+  // Values: 150, 200, 300, [250, 500, 400, 200, 600]
+  EXPECT_FLOAT_EQ(600, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(8, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.UpdateCurrentValue(100);
+  // Values: 150, 200, 300, [250, 500, 400, 200, 100]
+  EXPECT_FLOAT_EQ(500, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(8, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_maximum.GetWindowSize());
+
+  sliding_window_maximum.UpdateCurrentValue(500);
+  // Values: 150, 200, 300, [250, 500, 400, 200, 500]
+  EXPECT_FLOAT_EQ(500, sliding_window_maximum.GetSlidingWindowMaximum());
+  EXPECT_EQ(8, sliding_window_maximum.GetNumValues());
+  EXPECT_EQ(5, sliding_window_maximum.GetWindowSize());
+}
+
 }  // namespace trader
