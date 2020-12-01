@@ -4,6 +4,27 @@
 
 namespace trader {
 
+void SimpleMovingAverageHelper::AddNewValue(float value) {
+  if (num_values_ == 0 || window_size_ == 1) {
+    current_value_ = value;
+    ++num_values_;
+    return;
+  }
+  window_.push_back(current_value_);
+  window_sum_ += current_value_;
+  if (window_.size() >= window_size_) {
+    window_sum_ -= window_.front();
+    window_.pop_front();
+  }
+  current_value_ = value;
+  ++num_values_;
+}
+
+void SimpleMovingAverageHelper::UpdateCurrentValue(float value) {
+  assert(num_values_ >= 1);
+  current_value_ = value;
+}
+
 void ExponentialMovingAverageHelper::AddNewValue(float value, float weight) {
   previous_ema_ = current_ema_;
   ++num_values_;

@@ -10,6 +10,48 @@
 
 namespace trader {
 
+// Calculates the Simple Moving Average (SMA) over the provided values.
+// All methods run in O(1) time.
+class SimpleMovingAverageHelper {
+ public:
+  // Constructor.
+  // window_size: Number of values in the sliding window for the SMA.
+  explicit SimpleMovingAverageHelper(int window_size)
+      : window_size_(window_size) {}
+  ~SimpleMovingAverageHelper() {}
+
+  // Returns the current Simple Moving Average.
+  float GetSimpleMovingAverage() const {
+    return num_values_ > 0 ? (current_value_ + window_sum_) / GetWindowSize()
+                           : 0;
+  }
+
+  // Returns the total number of added values.
+  int GetNumValues() const { return num_values_; }
+
+  // Returns the current size of the sliding window.
+  int GetWindowSize() const { return std::min(num_values_, window_size_); }
+
+  // Adds a new value.
+  void AddNewValue(float value);
+
+  // Updates the current (most recent) value.
+  // Assumes that at least one value was added before.
+  void UpdateCurrentValue(float value);
+
+ private:
+  // Size of the sliding window.
+  int window_size_ = 0;
+  // Current value.
+  float current_value_ = 0;
+  // Deque of values within the sliding window (excluding the current value).
+  std::deque<float> window_;
+  // Sum over all elements in the sliding window (excluding the current value).
+  float window_sum_ = 0;
+  // Total number of added values (including the current value).
+  int num_values_ = 0;
+};
+
 // Calculates the Exponential Moving Average (EMA) over the provided values.
 // All methods run in O(1) time.
 class ExponentialMovingAverageHelper {
@@ -47,7 +89,7 @@ class SlidingWindowMinimum {
  public:
   // Constructor.
   // window_size: Number of values in the sliding window.
-  SlidingWindowMinimum(int window_size) : window_size_(window_size) {
+  explicit SlidingWindowMinimum(int window_size) : window_size_(window_size) {
     assert(window_size > 0);
   }
   ~SlidingWindowMinimum() {}
@@ -76,7 +118,7 @@ class SlidingWindowMinimum {
   int window_size_ = 0;
   // Current (most recently added / updated) value.
   float current_value_ = 0;
-  // Current sliding window minimum.
+  // Current sliding window minimum (including the current value).
   float current_sliding_window_minimum_ = 0;
   // Deque of values within the sliding window (excluding the current value).
   std::deque<std::pair<float, int>> window_;
@@ -90,7 +132,7 @@ class SlidingWindowMaximum {
  public:
   // Constructor.
   // window_size: Number of values in the sliding window.
-  SlidingWindowMaximum(int window_size)
+  explicit SlidingWindowMaximum(int window_size)
       : sliding_window_minimum_(window_size) {}
   ~SlidingWindowMaximum() {}
 
