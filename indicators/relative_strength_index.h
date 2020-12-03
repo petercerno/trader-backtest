@@ -44,6 +44,10 @@ class RelativeStrengthIndex {
   virtual void Update(const OhlcTick& ohlc_tick);
 
  private:
+  // Auxiliary method called when the last OHLC tick was updated.
+  void LastTickUpdated();
+  // Auxiliary method called when a new OHLC tick was added.
+  void NewTickAdded();
   // Computes the weight for the smoothed or modified moving average.
   float GetModifiedMovingAverageWeight() const;
   // Computes the most recent upward change U and downward change D.

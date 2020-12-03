@@ -13,29 +13,20 @@ RelativeStrengthIndex::RelativeStrengthIndex(int num_periods,
         // We have observed at least 1 OHLC tick.
         // The most recent OHLC tick was updated.
         assert(num_ohlc_ticks_ >= 1);
-        const float weight = GetModifiedMovingAverageWeight();
-        const auto change = GetUpwardDownwardChange();
-        upward_change_mma_.UpdateCurrentValue(change.first, weight);
-        downward_change_mma_.UpdateCurrentValue(change.second, weight);
+        LastTickUpdated();
       });
   last_n_ohlc_ticks_.RegisterNewTickAddedCallback(
       [this](const OhlcTick& new_ohlc_tick) {
-        ++num_ohlc_ticks_;
-        const float weight = GetModifiedMovingAverageWeight();
-        const auto change = GetUpwardDownwardChange();
-        upward_change_mma_.AddNewValue(change.first, weight);
-        downward_change_mma_.AddNewValue(change.second, weight);
+        // This is the first or second observed OHLC tick.
+        assert(num_ohlc_ticks_ <= 1);
+        NewTickAdded();
       });
   last_n_ohlc_ticks_.RegisterNewTickAddedAndOldestTickRemovedCallback(
       [this](const OhlcTick& removed_ohlc_tick, const OhlcTick& new_ohlc_tick) {
-        // We have observed at least 1 OHLC tick.
+        // We have observed at least 2 OHLC ticks.
         // New OHLC tick was added.
-        assert(num_ohlc_ticks_ >= 1);
-        ++num_ohlc_ticks_;
-        const float weight = GetModifiedMovingAverageWeight();
-        const auto change = GetUpwardDownwardChange();
-        upward_change_mma_.AddNewValue(change.first, weight);
-        downward_change_mma_.AddNewValue(change.second, weight);
+        assert(num_ohlc_ticks_ >= 2);
+        NewTickAdded();
       });
 }
 
@@ -65,6 +56,21 @@ int RelativeStrengthIndex::GetNumOhlcTicks() const { return num_ohlc_ticks_; }
 
 void RelativeStrengthIndex::Update(const OhlcTick& ohlc_tick) {
   last_n_ohlc_ticks_.Update(ohlc_tick);
+}
+
+void RelativeStrengthIndex::LastTickUpdated() {
+  const float weight = GetModifiedMovingAverageWeight();
+  const auto change = GetUpwardDownwardChange();
+  upward_change_mma_.UpdateCurrentValue(change.first, weight);
+  downward_change_mma_.UpdateCurrentValue(change.second, weight);
+}
+
+void RelativeStrengthIndex::NewTickAdded() {
+  ++num_ohlc_ticks_;
+  const float weight = GetModifiedMovingAverageWeight();
+  const auto change = GetUpwardDownwardChange();
+  upward_change_mma_.AddNewValue(change.first, weight);
+  downward_change_mma_.AddNewValue(change.second, weight);
 }
 
 float RelativeStrengthIndex::GetModifiedMovingAverageWeight() const {
