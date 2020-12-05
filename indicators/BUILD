@@ -91,3 +91,23 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "stochastic_oscillator",
+    srcs = ["stochastic_oscillator.cc"],
+    hdrs = ["stochastic_oscillator.h"],
+    deps = [
+        ":last_n_ohlc_ticks",
+        ":util",
+        "//lib:trader_base",
+    ],
+)
+
+cc_test(
+    name = "stochastic_oscillator_test",
+    srcs = ["stochastic_oscillator_test.cc"],
+    deps = [
+        ":stochastic_oscillator",
+        "@googletest//:gtest_main",
+    ],
+)
