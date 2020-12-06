@@ -102,6 +102,9 @@ TEST(LastNOhlcTicksTest, GetLast3DaysWhenAdding8HourOhlcTicks) {
 
   ASSERT_TRUE(last_n_days.GetLastNOhlcTicks().empty());
 
+  // O: 100  H: 150  L:  80  C: 120  V: 1000  T: 2017-01-01 00:00
+  // --- Daily History ---
+  // O: 100  H: 150  L:  80  C: 120  V: 1000  T: 2017-01-01 (Day 1)
   last_n_days.Update(ohlc_history[0]);
   ASSERT_EQ(1, last_n_days.GetLastNOhlcTicks().size());
   ExpectOhlcTick(1483228800, 100, 150, 80, 120, 1000,
@@ -114,6 +117,9 @@ TEST(LastNOhlcTicksTest, GetLast3DaysWhenAdding8HourOhlcTicks) {
   ASSERT_EQ(0, new_tick_shifted_removed_ohlc_tick.size());
   ASSERT_EQ(0, new_tick_shifted_new_ohlc_tick.size());
 
+  // O: 120  H: 180  L: 100  C: 150  V: 1000  T: 2017-01-01 08:00
+  // --- Daily History ---
+  // O: 100  H: 180  L:  80  C: 150  V: 2000  T: 2017-01-01 (Day 1)
   last_n_days.Update(ohlc_history[1]);
   ASSERT_EQ(1, last_n_days.GetLastNOhlcTicks().size());
   ExpectOhlcTick(1483228800, 100, 180, 80, 150, 2000,
@@ -128,6 +134,9 @@ TEST(LastNOhlcTicksTest, GetLast3DaysWhenAdding8HourOhlcTicks) {
   ASSERT_EQ(0, new_tick_shifted_removed_ohlc_tick.size());
   ASSERT_EQ(0, new_tick_shifted_new_ohlc_tick.size());
 
+  // O: 150  H: 250  L: 100  C: 140  V: 1000  T: 2017-01-01 16:00
+  // --- Daily History ---
+  // O: 100  H: 250  L:  80  C: 140  V: 3000  T: 2017-01-01 (Day 1)
   last_n_days.Update(ohlc_history[2]);
   ASSERT_EQ(1, last_n_days.GetLastNOhlcTicks().size());
   ExpectOhlcTick(1483228800, 100, 250, 80, 140, 3000,
@@ -142,6 +151,10 @@ TEST(LastNOhlcTicksTest, GetLast3DaysWhenAdding8HourOhlcTicks) {
   ASSERT_EQ(0, new_tick_shifted_removed_ohlc_tick.size());
   ASSERT_EQ(0, new_tick_shifted_new_ohlc_tick.size());
 
+  // O: 140  H: 150  L:  80  C: 100  V: 1000  T: 2017-01-02 00:00 (+1 Day)
+  // --- Daily History ---
+  // O: 100  H: 250  L:  80  C: 140  V: 3000  T: 2017-01-01 (Day 1)
+  // O: 140  H: 150  L:  80  C: 100  V: 1000  T: 2017-01-02 (Day 2)
   last_n_days.Update(ohlc_history[3]);
   ASSERT_EQ(2, last_n_days.GetLastNOhlcTicks().size());
   ExpectOhlcTick(1483228800, 100, 250, 80, 140, 3000,
@@ -156,6 +169,10 @@ TEST(LastNOhlcTicksTest, GetLast3DaysWhenAdding8HourOhlcTicks) {
   ASSERT_EQ(0, new_tick_shifted_removed_ohlc_tick.size());
   ASSERT_EQ(0, new_tick_shifted_new_ohlc_tick.size());
 
+  // O: 100  H: 120  L:  20  C:  50  V: 1000  T: 2017-01-02 08:00
+  // --- Daily History ---
+  // O: 100  H: 250  L:  80  C: 140  V: 3000  T: 2017-01-01 (Day 1)
+  // O: 140  H: 150  L:  20  C:  50  V: 2000  T: 2017-01-02 (Day 2)
   last_n_days.Update(ohlc_history[4]);
   ASSERT_EQ(2, last_n_days.GetLastNOhlcTicks().size());
   ExpectOhlcTick(1483228800, 100, 250, 80, 140, 3000,
@@ -172,6 +189,10 @@ TEST(LastNOhlcTicksTest, GetLast3DaysWhenAdding8HourOhlcTicks) {
   ASSERT_EQ(0, new_tick_shifted_removed_ohlc_tick.size());
   ASSERT_EQ(0, new_tick_shifted_new_ohlc_tick.size());
 
+  // O:  50  H: 100  L:  40  C:  80  V: 1000  T: 2017-01-02 16:00
+  // --- Daily History ---
+  // O: 100  H: 250  L:  80  C: 140  V: 3000  T: 2017-01-01 (Day 1)
+  // O: 140  H: 150  L:  20  C:  80  V: 3000  T: 2017-01-02 (Day 2)
   last_n_days.Update(ohlc_history[5]);
   ASSERT_EQ(2, last_n_days.GetLastNOhlcTicks().size());
   ExpectOhlcTick(1483228800, 100, 250, 80, 140, 3000,
@@ -188,6 +209,11 @@ TEST(LastNOhlcTicksTest, GetLast3DaysWhenAdding8HourOhlcTicks) {
   ASSERT_EQ(0, new_tick_shifted_removed_ohlc_tick.size());
   ASSERT_EQ(0, new_tick_shifted_new_ohlc_tick.size());
 
+  // O:  80  H: 180  L:  50  C: 150  V: 1000  T: 2017-01-03 00:00 (+1 Day)
+  // --- Daily History ---
+  // O: 100  H: 250  L:  80  C: 140  V: 3000  T: 2017-01-01 (Day 1)
+  // O: 140  H: 150  L:  20  C:  80  V: 3000  T: 2017-01-02 (Day 2)
+  // O:  80  H: 180  L:  50  C: 150  V: 1000  T: 2017-01-03 (Day 3)
   last_n_days.Update(ohlc_history[6]);
   ASSERT_EQ(3, last_n_days.GetLastNOhlcTicks().size());
   ExpectOhlcTick(1483228800, 100, 250, 80, 140, 3000,
@@ -204,6 +230,11 @@ TEST(LastNOhlcTicksTest, GetLast3DaysWhenAdding8HourOhlcTicks) {
   ASSERT_EQ(0, new_tick_shifted_removed_ohlc_tick.size());
   ASSERT_EQ(0, new_tick_shifted_new_ohlc_tick.size());
 
+  // O: 150  H: 250  L: 120  C: 240  V: 1000  T: 2017-01-03 08:00
+  // --- Daily History ---
+  // O: 100  H: 250  L:  80  C: 140  V: 3000  T: 2017-01-01 (Day 1)
+  // O: 140  H: 150  L:  20  C:  80  V: 3000  T: 2017-01-02 (Day 2)
+  // O:  80  H: 250  L:  50  C: 240  V: 2000  T: 2017-01-03 (Day 3)
   last_n_days.Update(ohlc_history[7]);
   ASSERT_EQ(3, last_n_days.GetLastNOhlcTicks().size());
   ExpectOhlcTick(1483228800, 100, 250, 80, 140, 3000,
@@ -222,6 +253,11 @@ TEST(LastNOhlcTicksTest, GetLast3DaysWhenAdding8HourOhlcTicks) {
   ASSERT_EQ(0, new_tick_shifted_removed_ohlc_tick.size());
   ASSERT_EQ(0, new_tick_shifted_new_ohlc_tick.size());
 
+  // O: 240  H: 450  L: 220  C: 400  V: 1000  T: 2017-01-03 16:00
+  // --- Daily History ---
+  // O: 100  H: 250  L:  80  C: 140  V: 3000  T: 2017-01-01 (Day 1)
+  // O: 140  H: 150  L:  20  C:  80  V: 3000  T: 2017-01-02 (Day 2)
+  // O:  80  H: 450  L:  50  C: 400  V: 3000  T: 2017-01-03 (Day 3)
   last_n_days.Update(ohlc_history[8]);
   ASSERT_EQ(3, last_n_days.GetLastNOhlcTicks().size());
   ExpectOhlcTick(1483228800, 100, 250, 80, 140, 3000,
@@ -240,6 +276,12 @@ TEST(LastNOhlcTicksTest, GetLast3DaysWhenAdding8HourOhlcTicks) {
   ASSERT_EQ(0, new_tick_shifted_removed_ohlc_tick.size());
   ASSERT_EQ(0, new_tick_shifted_new_ohlc_tick.size());
 
+  // O: 400  H: 450  L: 250  C: 300  V: 1000  T: 2017-01-04 00:00 (+1 Day)
+  // --- Daily History ---
+  // O: 100  H: 250  L:  80  C: 140  V: 3000  T: 2017-01-01 (Day 1)
+  // O: 140  H: 150  L:  20  C:  80  V: 3000  T: 2017-01-02 (Day 2)
+  // O:  80  H: 450  L:  50  C: 400  V: 3000  T: 2017-01-03 (Day 3)
+  // O: 400  H: 450  L: 250  C: 300  V: 1000  T: 2017-01-04 (Day 4)
   last_n_days.Update(ohlc_history[9]);
   ASSERT_EQ(3, last_n_days.GetLastNOhlcTicks().size());
   ExpectOhlcTick(1483315200, 140, 150, 20, 80, 3000,
@@ -258,6 +300,12 @@ TEST(LastNOhlcTicksTest, GetLast3DaysWhenAdding8HourOhlcTicks) {
   ExpectOhlcTick(1483488000, 400, 450, 250, 300, 1000,
                  new_tick_shifted_new_ohlc_tick.back());
 
+  // O: 300  H: 700  L: 220  C: 650  V: 1000  T: 2017-01-04 08:00
+  // --- Daily History ---
+  // O: 100  H: 250  L:  80  C: 140  V: 3000  T: 2017-01-01 (Day 1)
+  // O: 140  H: 150  L:  20  C:  80  V: 3000  T: 2017-01-02 (Day 2)
+  // O:  80  H: 450  L:  50  C: 400  V: 3000  T: 2017-01-03 (Day 3)
+  // O: 400  H: 700  L: 220  C: 650  V: 2000  T: 2017-01-04 (Day 4)
   last_n_days.Update(ohlc_history[10]);
   ASSERT_EQ(3, last_n_days.GetLastNOhlcTicks().size());
   ExpectOhlcTick(1483315200, 140, 150, 20, 80, 3000,
@@ -276,6 +324,19 @@ TEST(LastNOhlcTicksTest, GetLast3DaysWhenAdding8HourOhlcTicks) {
   ASSERT_EQ(1, new_tick_shifted_removed_ohlc_tick.size());
   ASSERT_EQ(1, new_tick_shifted_new_ohlc_tick.size());
 
+  // O: 650  H: 650  L: 650  C: 650  V:    0  T: 2017-01-04 16:00
+  // O: 650  H: 650  L: 650  C: 650  V:    0  T: 2017-01-05 00:00 (+1 Day)
+  // O: 650  H: 650  L: 650  C: 650  V:    0  T: 2017-01-05 08:00
+  // O: 650  H: 650  L: 650  C: 650  V:    0  T: 2017-01-05 16:00
+  // O: 650  H: 650  L: 650  C: 650  V:    0  T: 2017-01-06 00:00 (+1 Day)
+  // O: 650  H: 800  L: 600  C: 750  V: 1000  T: 2017-01-06 08:00
+  // --- Daily History ---
+  // O: 100  H: 250  L:  80  C: 140  V: 3000  T: 2017-01-01 (Day 1)
+  // O: 140  H: 150  L:  20  C:  80  V: 3000  T: 2017-01-02 (Day 2)
+  // O:  80  H: 450  L:  50  C: 400  V: 3000  T: 2017-01-03 (Day 3)
+  // O: 400  H: 700  L: 220  C: 650  V: 2000  T: 2017-01-04 (Day 4)
+  // O: 650  H: 650  L: 650  C: 650  V:    0  T: 2017-01-05 (Day 5)
+  // O: 650  H: 800  L: 600  C: 750  V: 1000  T: 2017-01-06 (Day 6)
   last_n_days.Update(ohlc_history[11]);
   ASSERT_EQ(3, last_n_days.GetLastNOhlcTicks().size());
   ExpectOhlcTick(1483488000, 400, 700, 220, 650, 2000,
