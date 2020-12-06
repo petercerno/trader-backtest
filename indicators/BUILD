@@ -73,6 +73,26 @@ cc_test(
 )
 
 cc_library(
+    name = "moving_average_convergence_divergence",
+    srcs = ["moving_average_convergence_divergence.cc"],
+    hdrs = ["moving_average_convergence_divergence.h"],
+    deps = [
+        ":last_n_ohlc_ticks",
+        ":util",
+        "//lib:trader_base",
+    ],
+)
+
+cc_test(
+    name = "moving_average_convergence_divergence_test",
+    srcs = ["moving_average_convergence_divergence_test.cc"],
+    deps = [
+        ":moving_average_convergence_divergence",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "relative_strength_index",
     srcs = ["relative_strength_index.cc"],
     hdrs = ["relative_strength_index.h"],
