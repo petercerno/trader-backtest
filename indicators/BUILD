@@ -3,6 +3,31 @@ package(default_visibility = ["//:__pkg__"])
 load("@rules_proto//proto:defs.bzl", "proto_library")
 
 cc_library(
+    name = "util",
+    srcs = ["util.cc"],
+    hdrs = ["util.h"],
+)
+
+cc_test(
+    name = "util_test",
+    srcs = ["util_test.cc"],
+    deps = [
+        ":util",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "test_util",
+    srcs = ["test_util.cc"],
+    hdrs = ["test_util.h"],
+    deps = [
+        "//lib:trader_base",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "last_n_ohlc_ticks",
     srcs = ["last_n_ohlc_ticks.cc"],
     hdrs = ["last_n_ohlc_ticks.h"],
@@ -14,21 +39,7 @@ cc_test(
     srcs = ["last_n_ohlc_ticks_test.cc"],
     deps = [
         ":last_n_ohlc_ticks",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "util",
-    srcs = ["util.cc"],
-    hdrs = ["util.h"],
-)
-
-cc_test(
-    name = "util_test",
-    srcs = ["util_test.cc"],
-    deps = [
-        ":util",
+        ":test_util",
         "@googletest//:gtest_main",
     ],
 )
@@ -48,6 +59,7 @@ cc_test(
     srcs = ["simple_moving_average_test.cc"],
     deps = [
         ":simple_moving_average",
+        ":test_util",
         "@googletest//:gtest_main",
     ],
 )
@@ -68,6 +80,7 @@ cc_test(
     srcs = ["exponential_moving_average_test.cc"],
     deps = [
         ":exponential_moving_average",
+        ":test_util",
         "@googletest//:gtest_main",
     ],
 )
@@ -88,6 +101,7 @@ cc_test(
     srcs = ["moving_average_convergence_divergence_test.cc"],
     deps = [
         ":moving_average_convergence_divergence",
+        ":test_util",
         "@googletest//:gtest_main",
     ],
 )
@@ -108,6 +122,7 @@ cc_test(
     srcs = ["relative_strength_index_test.cc"],
     deps = [
         ":relative_strength_index",
+        ":test_util",
         "@googletest//:gtest_main",
     ],
 )
@@ -128,6 +143,7 @@ cc_test(
     srcs = ["stochastic_oscillator_test.cc"],
     deps = [
         ":stochastic_oscillator",
+        ":test_util",
         "@googletest//:gtest_main",
     ],
 )
