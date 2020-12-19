@@ -48,6 +48,22 @@ cc_test(
 )
 
 cc_library(
+    name = "trader_side_input",
+    srcs = ["trader_side_input.cc"],
+    hdrs = ["trader_side_input.h"],
+    deps = [":trader_base"],
+)
+
+cc_test(
+    name = "trader_side_input_test",
+    srcs = ["trader_side_input_test.cc"],
+    deps = [
+        ":trader_side_input",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "trader_interface",
     hdrs = ["trader_interface.h"],
     deps = [":trader_base"],

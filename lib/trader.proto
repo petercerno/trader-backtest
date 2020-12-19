@@ -31,6 +31,17 @@ message OhlcTick {
   optional float volume = 6;
 }
 
+// Side-input record for the trader.
+// This is used to provide additional information (signals) to the trader.
+// Note that the interpretation of the signals is up to the trader itself.
+message SideInputRecord {
+  // UNIX timestamp (in seconds).
+  optional int32 timestamp_sec = 1;
+  // List of signals. We assume that all signals are floats and that every
+  // SideInputRecord has the same number of signals.
+  repeated float signal = 2;
+}
+
 // Transaction fee configuration.
 message FeeConfig {
   // Relative transaction fee.

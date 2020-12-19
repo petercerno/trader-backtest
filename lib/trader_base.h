@@ -39,6 +39,9 @@ using PriceHistory = std::vector<PriceRecord>;
 // Historical OHLC ticks over time.
 using OhlcHistory = std::vector<OhlcTick>;
 
+// Historical side inputs.
+using SideHistory = std::vector<SideInputRecord>;
+
 // Returns a pair of iterators covering the time interval [start_timestamp_sec,
 // end_timestamp_sec) of the given history.
 template <typename T>
