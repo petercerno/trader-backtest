@@ -21,6 +21,11 @@ DEFINE_string(input_ohlc_history_delimited_proto_file, "",
 DEFINE_string(output_ohlc_history_delimited_proto_file, "",
               "Output file containing the delimited OhlcRecord protos.");
 
+DEFINE_string(input_side_history_csv_file, "",
+              "Input CSV file containing the historical side inputs.");
+DEFINE_string(output_side_history_delimited_proto_file, "",
+              "Output file containing the delimited SideInputRecord protos.");
+
 DEFINE_string(start_date_utc, "", "Start date YYYY-MM-DD in UTC (included).");
 DEFINE_string(end_date_utc, "", "End date YYYY-MM-DD in UTC (excluded).");
 
@@ -165,6 +170,70 @@ bool ReadOhlcHistoryFromCsvFile(const std::string& file_name,
   const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::high_resolution_clock::now() - start);
   std::cout << "Loaded " << ohlc_history->size() << " OHLC ticks in "
+            << duration.count() / 1000.0 << " seconds" << std::endl
+            << std::flush;
+  return true;
+}
+
+// Reads the input CSV file containing the historical side inputs and saves them
+// into the given side_history vector.
+bool ReadSideHistoryFromCsvFile(const std::string& file_name,
+                                long start_timestamp_sec,
+                                long end_timestamp_sec,
+                                SideHistory* side_history) {
+  assert(side_history != nullptr);
+  std::cout << "Reading side history from CSV file: " << file_name << std::endl
+            << std::flush;
+  auto start = std::chrono::high_resolution_clock::now();
+  std::ifstream infile(file_name);
+  if (!infile.is_open()) {
+    std::cerr << "Cannot open file: " << file_name << std::endl;
+    return false;
+  }
+  int row = 0;
+  std::string line;
+  int timestamp_sec_prev = 0;
+  int timestamp_sec = 0;
+  float signal = 0;
+  int num_signals = 0;
+  while (std::getline(infile, line)) {
+    ++row;
+    std::replace(line.begin(), line.end(), ',', ' ');
+    std::istringstream iss(line);
+    if (!(iss >> timestamp_sec)) {
+      std::cerr << "Cannot parse timestamp on line " << row << ": " << line
+                << std::endl;
+      return false;
+    }
+    if (start_timestamp_sec > 0 && timestamp_sec < start_timestamp_sec) {
+      continue;
+    }
+    if (end_timestamp_sec > 0 && timestamp_sec >= end_timestamp_sec) {
+      break;
+    }
+    if (timestamp_sec <= 0 || timestamp_sec <= timestamp_sec_prev) {
+      std::cerr << "Invalid timestamp on line " << row << ": " << line
+                << std::endl;
+      return false;
+    }
+    timestamp_sec_prev = timestamp_sec;
+    side_history->emplace_back();
+    side_history->back().set_timestamp_sec(timestamp_sec);
+    while (iss >> signal) {
+      side_history->back().add_signal(signal);
+    }
+    if (num_signals == 0) {
+      num_signals = side_history->back().signal_size();
+    }
+    if (num_signals == 0 || num_signals != side_history->back().signal_size()) {
+      std::cerr << "Invalid number of signals on line " << row << ": " << line
+                << std::endl;
+      return false;
+    }
+  }
+  const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::high_resolution_clock::now() - start);
+  std::cout << "Loaded " << side_history->size() << " records in "
             << duration.count() / 1000.0 << " seconds" << std::endl
             << std::flush;
   return true;
@@ -413,12 +482,18 @@ int main(int argc, char* argv[]) {
       !FLAGS_input_ohlc_history_csv_file.empty() ||
       !FLAGS_input_ohlc_history_delimited_proto_file.empty();
 
-  if (read_price_history && read_ohlc_history) {
-    std::cerr << "Cannot read both price history and ohlc history" << std::endl;
+  const bool read_side_history = !FLAGS_input_side_history_csv_file.empty();
+
+  const int num_history_files = (read_price_history ? 1 : 0) +
+                                (read_ohlc_history ? 1 : 0) +
+                                (read_side_history ? 1 : 0);
+
+  if (num_history_files > 1) {
+    std::cerr << "Cannot read more than one input history file" << std::endl;
     return 1;
   }
 
-  if (!read_price_history && !read_ohlc_history) {
+  if (num_history_files == 0) {
     std::cerr << "Input history file not specified" << std::endl;
     return 1;
   }
@@ -453,6 +528,15 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  SideHistory side_history;
+  if (!FLAGS_input_side_history_csv_file.empty()) {
+    if (!ReadSideHistoryFromCsvFile(FLAGS_input_side_history_csv_file,
+                                    start_timestamp_sec, end_timestamp_sec,
+                                    &side_history)) {
+      return 1;
+    }
+  }
+
   if (!price_history.empty()) {
     std::cout << "Top " << FLAGS_top_n_gaps << " gaps:" << std::endl;
     PrintPriceHistoryGaps(price_history,
@@ -476,6 +560,14 @@ int main(int argc, char* argv[]) {
       !FLAGS_output_ohlc_history_delimited_proto_file.empty()) {
     if (!WriteHistoryToDelimitedProtoFile(
             ohlc_history, FLAGS_output_ohlc_history_delimited_proto_file)) {
+      return 1;
+    }
+  }
+
+  if (!side_history.empty() &&
+      !FLAGS_output_side_history_delimited_proto_file.empty()) {
+    if (!WriteHistoryToDelimitedProtoFile(
+            side_history, FLAGS_output_side_history_delimited_proto_file)) {
       return 1;
     }
   }
