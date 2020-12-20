@@ -4,6 +4,7 @@
 
 #include "lib/trader_base.h"
 #include "lib/trader_eval.h"
+#include "logging/csv_logger.h"
 #include "traders/limit_trader.h"
 #include "traders/rebalancing_trader.h"
 #include "traders/stop_trader.h"
@@ -261,10 +262,10 @@ int main(int argc, char* argv[]) {
         OpenLogFile(FLAGS_output_exchange_log_file);
     std::unique_ptr<std::ofstream> trader_log_stream =
         OpenLogFile(FLAGS_output_trader_log_file);
+    CsvLogger logger(exchange_log_stream.get(), trader_log_stream.get());
     TraderEvaluationResult trader_eval_result =
         EvaluateTrader(trader_account_config, trader_eval_config, ohlc_history,
-                       *trader_factory.get(), exchange_log_stream.get(),
-                       trader_log_stream.get());
+                       *trader_factory.get(), &logger);
     for (const TraderEvaluationResult::Period& period :
          trader_eval_result.period()) {
       std::cout << "["

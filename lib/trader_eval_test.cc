@@ -6,6 +6,7 @@
 #include <google/protobuf/util/message_differencer.h>
 
 #include "gtest/gtest.h"
+#include "logging/csv_logger.h"
 #include "util/util_time.h"
 
 namespace trader {
@@ -204,10 +205,11 @@ TEST(ExecuteTraderTest, LimitBuyAndSell) {
 
   std::stringstream exchange_os;
   std::stringstream trader_os;
+  CsvLogger logger(&exchange_os, &trader_os);
 
   TraderExecutionResult result =
       ExecuteTrader(trader_account_config, ohlc_history.begin(),
-                    ohlc_history.end(), &trader, &exchange_os, &trader_os);
+                    ohlc_history.end(), &trader, &logger);
 
   TraderExecutionResult expected_result;
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
@@ -294,10 +296,11 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
 
   std::stringstream exchange_os;
   std::stringstream trader_os;
+  CsvLogger logger(&exchange_os, &trader_os);
 
   TraderEvaluationResult result =
       EvaluateTrader(trader_account_config, trader_eval_config, ohlc_history,
-                     trader_factory, &exchange_os, &trader_os);
+                     trader_factory, &logger);
 
   TraderEvaluationResult expected_result;
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
@@ -440,8 +443,7 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
 
   TraderEvaluationResult result =
       EvaluateTrader(trader_account_config, trader_eval_config, ohlc_history,
-                     trader_factory, /* exchange_os = */ nullptr,
-                     /* trader_os = */ nullptr);
+                     trader_factory, /* logger = */ nullptr);
 
   TraderEvaluationResult expected_result;
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(

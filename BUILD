@@ -5,6 +5,7 @@ cc_binary(
         "//external:gflags",
         "//lib:trader_base",
         "//lib:trader_eval",
+        "//logging:csv_logger",
         "//traders",
         "//util:util_proto",
         "//util:util_time",

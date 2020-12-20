@@ -44,90 +44,13 @@ void InitTraderAccount(const TraderAccountConfig& trader_account_config,
   trader_account->market_liquidity = trader_account_config.market_liquidity();
   trader_account->max_volume_ratio = trader_account_config.max_volume_ratio();
 }
-
-// Logs the "ohlc_tick" to the output stream "os".
-void LogOhlcTick(const OhlcTick& ohlc_tick, std::ostream* os) {
-  *os << std::fixed << std::setprecision(0)  // nowrap
-      << ohlc_tick.timestamp_sec() << ","    // nowrap
-      << std::setprecision(3)                // nowrap
-      << ohlc_tick.open() << ","             // nowrap
-      << ohlc_tick.high() << ","             // nowrap
-      << ohlc_tick.low() << ","              // nowrap
-      << ohlc_tick.close() << ","            // nowrap
-      << ohlc_tick.volume();
-}
-
-// Logs the "trader_account" balances to the output stream "os".
-void LogTraderAccount(const TraderAccount& trader_account, std::ostream* os) {
-  *os << std::fixed << std::setprecision(3)   // nowrap
-      << trader_account.base_balance << ","   // nowrap
-      << trader_account.quote_balance << ","  // nowrap
-      << trader_account.total_fee;
-}
-
-// Logs the "order" to the output stream "os".
-void LogOrder(const Order& order, std::ostream* os) {
-  *os << Order::Type_Name(order.type()) << ","  // nowrap
-      << Order::Side_Name(order.side()) << ","  // nowrap
-      << std::fixed << std::setprecision(3);
-  if (order.oneof_amount_case() == Order::kBaseAmount) {
-    *os << order.base_amount();
-  }
-  *os << ",";
-  if (order.oneof_amount_case() == Order::kQuoteAmount) {
-    *os << order.quote_amount();
-  }
-  *os << ",";
-  if (order.has_price() && order.price() > 0) {
-    *os << order.price();
-  }
-}
-
-// Logs empty order to the output stream "os".
-void LogEmptyOrder(std::ostream* os) { *os << ",,,,"; }
-
-// Logs the "ohlc_tick" and "trader_account" to the output stream "os".
-void LogExchangeState(const OhlcTick& ohlc_tick,
-                      const TraderAccount& trader_account, std::ostream* os) {
-  if (os == nullptr) {
-    return;
-  }
-  LogOhlcTick(ohlc_tick, os);
-  *os << ",";
-  LogTraderAccount(trader_account, os);
-  *os << ",";
-  LogEmptyOrder(os);
-  *os << std::endl;
-}
-
-// Logs the "ohlc_tick", "trader_account", "order" to the output stream "os".
-void LogExchangeState(const OhlcTick& ohlc_tick,
-                      const TraderAccount& trader_account, const Order& order,
-                      std::ostream* os) {
-  if (os == nullptr) {
-    return;
-  }
-  LogOhlcTick(ohlc_tick, os);
-  *os << ",";
-  LogTraderAccount(trader_account, os);
-  *os << ",";
-  LogOrder(order, os);
-  *os << std::endl;
-}
-
-void LogTraderState(const std::string& trader_state, std::ostream* os) {
-  if (os == nullptr) {
-    return;
-  }
-  *os << trader_state << std::endl;
-}
 }  // namespace
 
 TraderExecutionResult ExecuteTrader(
     const TraderAccountConfig& trader_account_config,
     OhlcHistory::const_iterator ohlc_history_begin,
     OhlcHistory::const_iterator ohlc_history_end, TraderInterface* trader,
-    std::ostream* exchange_os, std::ostream* trader_os) {
+    LoggerInterface* logger) {
   TraderExecutionResult result;
   if (ohlc_history_begin == ohlc_history_end) {
     return {};
@@ -142,7 +65,9 @@ TraderExecutionResult ExecuteTrader(
        ++ohlc_tick_it) {
     const OhlcTick& ohlc_tick = *ohlc_tick_it;
     // Log the current OHLC tick T[i] and the trader account.
-    LogExchangeState(ohlc_tick, trader_account, exchange_os);
+    if (logger != nullptr) {
+      logger->LogExchangeState(ohlc_tick, trader_account);
+    }
     // The trader was updated on the previous OHLC tick T[i-1] and emitted
     // "trader_orders". There are no other active orders on the exchange.
     // Execute (or cancel) "trader_orders" on the current OHLC tick T[i].
@@ -152,7 +77,9 @@ TraderExecutionResult ExecuteTrader(
       if (success) {
         ++total_executed_orders;
         // Log only the executed orders and their impact on the trader account.
-        LogExchangeState(ohlc_tick, trader_account, order, exchange_os);
+        if (logger != nullptr) {
+          logger->LogExchangeState(ohlc_tick, trader_account, order);
+        }
       }
     }
     if (ohlc_tick.volume() == 0) {
@@ -167,7 +94,9 @@ TraderExecutionResult ExecuteTrader(
     trader_orders.clear();
     trader->Update(ohlc_tick, trader_account.base_balance,
                    trader_account.quote_balance, &trader_orders);
-    LogTraderState(trader->GetInternalState(), trader_os);
+    if (logger != nullptr) {
+      logger->LogTraderState(trader->GetInternalState());
+    }
   }
   result.set_start_base_balance(trader_account_config.start_base_balance());
   result.set_start_quote_balance(trader_account_config.start_quote_balance());
@@ -188,8 +117,7 @@ TraderEvaluationResult EvaluateTrader(
     const TraderAccountConfig& trader_account_config,
     const TraderEvaluationConfig& trader_eval_config,
     const OhlcHistory& ohlc_history,
-    const TraderFactoryInterface& trader_factory, std::ostream* exchange_os,
-    std::ostream* trader_os) {
+    const TraderFactoryInterface& trader_factory, LoggerInterface* logger) {
   TraderEvaluationResult trader_eval_result;
   *trader_eval_result.mutable_trader_account_config() = trader_account_config;
   *trader_eval_result.mutable_trader_eval_config() = trader_eval_config;
@@ -213,9 +141,9 @@ TraderEvaluationResult EvaluateTrader(
       continue;
     }
     std::unique_ptr<TraderInterface> trader = trader_factory.NewTrader();
-    TraderExecutionResult result = ExecuteTrader(
-        trader_account_config, ohlc_history_subset.first,
-        ohlc_history_subset.second, trader.get(), exchange_os, trader_os);
+    TraderExecutionResult result =
+        ExecuteTrader(trader_account_config, ohlc_history_subset.first,
+                      ohlc_history_subset.second, trader.get(), logger);
     TraderEvaluationResult::Period* period = trader_eval_result.add_period();
     period->set_start_timestamp_sec(start_eval_timestamp_sec);
     period->set_end_timestamp_sec(end_eval_timestamp_sec);
@@ -271,8 +199,7 @@ std::vector<TraderEvaluationResult> EvaluateBatchOfTraders(
                     &trader_factory]() {
           return EvaluateTrader(trader_account_config, trader_eval_config,
                                 ohlc_history, trader_factory,
-                                /* exchange_os = */ nullptr,
-                                /* trader_os = */ nullptr);
+                                /* logger = */ nullptr);
         }));
   }
   for (auto& trader_eval_result_future : trader_eval_result_futures) {

@@ -5,30 +5,26 @@
 
 #include "lib/trader_account.h"
 #include "lib/trader_interface.h"
+#include "logging/logger_interface.h"
 
 namespace trader {
 
 // Executes a given instance of "trader" over a region of the OHLC history.
 // Returns the final trader account at the end of the execution.
-// "exchange_os" is an optional output stream for logging exchange operations.
-// "trader_os" is an optional output stream for logging internal trader state.
 TraderExecutionResult ExecuteTrader(
     const TraderAccountConfig& trader_account_config,
     OhlcHistory::const_iterator ohlc_history_begin,
     OhlcHistory::const_iterator ohlc_history_end, TraderInterface* trader,
-    std::ostream* exchange_os, std::ostream* trader_os);
+    LoggerInterface* logger);
 
 // Evaluates a single type of trader (as defined by the "trader_factory")
 // over one or more regions of the OHLC history (as defined by the
 // "trader_eval_config"). Returns TraderEvaluationResult.
-// "exchange_os" is an optional output stream for logging exchange operations.
-// "trader_os" is an optional output stream for logging internal trader state.
 TraderEvaluationResult EvaluateTrader(
     const TraderAccountConfig& trader_account_config,
     const TraderEvaluationConfig& trader_eval_config,
     const OhlcHistory& ohlc_history,
-    const TraderFactoryInterface& trader_factory, std::ostream* exchange_os,
-    std::ostream* trader_os);
+    const TraderFactoryInterface& trader_factory, LoggerInterface* logger);
 
 // Evaluates (in parallel) a batch of traders (as defined by the vector of
 // "trader_factories") over one or more regions of the OHLC history.
