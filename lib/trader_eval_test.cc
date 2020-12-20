@@ -119,24 +119,22 @@ class TestTrader : public TraderInterface {
     }
   }
 
-  void LogInternalState(std::ostream* os) const override {
-    if (os == nullptr) {
-      return;
-    }
-    *os << std::fixed << std::setprecision(0)  // nowrap
-        << last_timestamp_sec_ << ","          // nowrap
-        << std::setprecision(3)                // nowrap
-        << last_base_balance_ << ","           // nowrap
-        << last_quote_balance_ << ","          // nowrap
-        << last_close_ << ",";                 // nowrap
+  std::string GetInternalState() const override {
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(0)  // nowrap
+       << last_timestamp_sec_ << ","          // nowrap
+       << std::setprecision(3)                // nowrap
+       << last_base_balance_ << ","           // nowrap
+       << last_quote_balance_ << ","          // nowrap
+       << last_close_ << ",";                 // nowrap
     if (is_long_) {
-      *os << "IN_LONG,LIMIT_SELL@"  // nowrap
-          << std::setprecision(0) << sell_price_;
+      ss << "IN_LONG,LIMIT_SELL@"  // nowrap
+         << std::setprecision(0) << sell_price_;
     } else {
-      *os << "IN_CASH,LIMIT_BUY@"  // nowrap
-          << std::setprecision(0) << buy_price_;
+      ss << "IN_CASH,LIMIT_BUY@"  // nowrap
+         << std::setprecision(0) << buy_price_;
     }
-    *os << std::endl;
+    return ss.str();
   }
 
  private:

@@ -84,10 +84,8 @@ void StopTrader::EmitStopOrder(float price, std::vector<Order>* orders) const {
   order->set_price(stop_order_price_);
 }
 
-void StopTrader::LogInternalState(std::ostream* os) const {
-  if (os == nullptr) {
-    return;
-  }
+std::string StopTrader::GetInternalState() const {
+  std::stringstream ss;
   std::string mode;
   if (mode_ == Mode::IN_LONG) {
     mode = "IN_LONG";
@@ -95,15 +93,16 @@ void StopTrader::LogInternalState(std::ostream* os) const {
     assert(mode_ == Mode::IN_CASH);
     mode = "IN_CASH";
   }
-  *os << std::fixed << std::setprecision(0)  // nowrap
-      << last_timestamp_sec_ << ","          // nowrap
-      << std::setprecision(5)                // nowrap
-      << last_base_balance_ << ","           // nowrap
-      << std::setprecision(2)                // nowrap
-      << last_quote_balance_ << ","          // nowrap
-      << last_close_ << ","                  // nowrap
-      << mode << ","                         // nowrap
-      << stop_order_price_ << std::endl;     // nowrap
+  ss << std::fixed << std::setprecision(0)  // nowrap
+     << last_timestamp_sec_ << ","          // nowrap
+     << std::setprecision(5)                // nowrap
+     << last_base_balance_ << ","           // nowrap
+     << std::setprecision(2)                // nowrap
+     << last_quote_balance_ << ","          // nowrap
+     << last_close_ << ","                  // nowrap
+     << mode << ","                         // nowrap
+     << stop_order_price_;                  // nowrap
+  return ss.str();
 }
 
 std::string StopTraderFactory::GetTraderName() const {

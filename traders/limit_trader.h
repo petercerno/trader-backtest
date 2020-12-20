@@ -17,7 +17,7 @@ class LimitTrader : public TraderInterface {
 
   void Update(const OhlcTick& ohlc_tick, float base_balance,
               float quote_balance, std::vector<Order>* orders) override;
-  void LogInternalState(std::ostream* os) const override;
+  std::string GetInternalState() const override;
 
  private:
   LimitTraderConfig trader_config_;

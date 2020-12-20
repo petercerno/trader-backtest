@@ -114,6 +114,13 @@ void LogExchangeState(const OhlcTick& ohlc_tick,
   LogOrder(order, os);
   *os << std::endl;
 }
+
+void LogTraderState(const std::string& trader_state, std::ostream* os) {
+  if (os == nullptr) {
+    return;
+  }
+  *os << trader_state << std::endl;
+}
 }  // namespace
 
 TraderExecutionResult ExecuteTrader(
@@ -160,7 +167,7 @@ TraderExecutionResult ExecuteTrader(
     trader_orders.clear();
     trader->Update(ohlc_tick, trader_account.base_balance,
                    trader_account.quote_balance, &trader_orders);
-    trader->LogInternalState(trader_os);
+    LogTraderState(trader->GetInternalState(), trader_os);
   }
   result.set_start_base_balance(trader_account_config.start_base_balance());
   result.set_start_quote_balance(trader_account_config.start_quote_balance());

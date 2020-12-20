@@ -96,16 +96,15 @@ void RebalancingTrader::Update(const OhlcTick& ohlc_tick, float base_balance,
   last_close_ = price;
 }
 
-void RebalancingTrader::LogInternalState(std::ostream* os) const {
-  if (os == nullptr) {
-    return;
-  }
-  *os << std::fixed << std::setprecision(0)  // nowrap
-      << last_timestamp_sec_ << ","          // nowrap
-      << std::setprecision(3)                // nowrap
-      << last_base_balance_ << ","           // nowrap
-      << last_quote_balance_ << ","          // nowrap
-      << last_close_ << std::endl;           // nowrap
+std::string RebalancingTrader::GetInternalState() const {
+  std::stringstream ss;
+  ss << std::fixed << std::setprecision(0)  // nowrap
+     << last_timestamp_sec_ << ","          // nowrap
+     << std::setprecision(3)                // nowrap
+     << last_base_balance_ << ","           // nowrap
+     << last_quote_balance_ << ","          // nowrap
+     << last_close_;                        // nowrap
+  return ss.str();
 }
 
 std::string RebalancingTraderFactory::GetTraderName() const {

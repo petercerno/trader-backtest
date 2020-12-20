@@ -50,11 +50,10 @@ class TraderInterface {
   virtual void Update(const OhlcTick& ohlc_tick, float base_balance,
                       float quote_balance, std::vector<Order>* orders) = 0;
 
-  // Outputs the internal trader state into the output stream "os".
-  // Does nothing if "os" is nullptr.
-  // Note that it is recommended to output the internal state as a string of
-  // comma-separated values for easier analysis.
-  virtual void LogInternalState(std::ostream* os) const = 0;
+  // Returns the internal trader state (as a string).
+  // Note that it is recommended to represent the internal state as a string of
+  // (fixed number of) comma-separated values for easier analysis.
+  virtual std::string GetInternalState() const = 0;
 };
 
 // Usually we want to evaluate the same trader over different time periods.
