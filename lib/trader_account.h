@@ -3,9 +3,7 @@
 #ifndef LIB_TRADER_ACCOUNT_H
 #define LIB_TRADER_ACCOUNT_H
 
-#include <limits>
-
-#include "lib/trader.pb.h"
+#include "lib/trader_base.h"
 
 namespace trader {
 
@@ -172,6 +170,11 @@ struct TraderAccount {
   // Returns true iff the order was executed successfully.
   bool LimitSellAtQuote(const FeeConfig& fee_config, const OhlcTick& ohlc_tick,
                         float quote_amount, float limit_price);
+
+  // Executes the order over the given ohlc_tick.
+  // Returns true iff the order was executed successfully.
+  bool ExecuteOrder(const TraderAccountConfig& trader_account_config,
+                    const Order& order, const OhlcTick& ohlc_tick);
 };
 
 }  // namespace trader

@@ -8,12 +8,6 @@
 
 namespace trader {
 
-// Executes "order" over the given "ohlc_tick" and updates the "trader_account".
-// Returns true iff the order was executed successfully.
-bool ExecuteOrder(const TraderAccountConfig& trader_account_config,
-                  const Order& order, const OhlcTick& ohlc_tick,
-                  TraderAccount* trader_account);
-
 // Executes a given instance of "trader" over a region of the OHLC history.
 // Returns the final trader account at the end of the execution.
 // "exchange_os" is an optional output stream for logging exchange operations.

@@ -45,21 +45,6 @@ void InitTraderAccount(const TraderAccountConfig& trader_account_config,
   trader_account->max_volume_ratio = trader_account_config.max_volume_ratio();
 }
 
-// Checks if the "order" is valid.
-bool IsValidOrder(const Order& order) {
-  return
-      // Both order type and order side must be defined.
-      order.has_type() && order.has_side() &&
-      (  // Positive price is required for non-market orders.
-          order.type() == Order::MARKET ||
-          (order.has_price() && order.price() > 0)) &&
-      (  // Every order must specify a positive base amount or quote amount.
-          (order.oneof_amount_case() == Order::kBaseAmount &&
-           order.has_base_amount() && order.base_amount() > 0) ||
-          (order.oneof_amount_case() == Order::kQuoteAmount &&
-           order.has_quote_amount() && order.quote_amount() > 0));
-}
-
 // Logs the "ohlc_tick" to the output stream "os".
 void LogOhlcTick(const OhlcTick& ohlc_tick, std::ostream* os) {
   *os << std::fixed << std::setprecision(0)  // nowrap
@@ -131,91 +116,6 @@ void LogExchangeState(const OhlcTick& ohlc_tick,
 }
 }  // namespace
 
-bool ExecuteOrder(const TraderAccountConfig& trader_account_config,
-                  const Order& order, const OhlcTick& ohlc_tick,
-                  TraderAccount* trader_account) {
-  assert(IsValidOrder(order));
-  switch (order.type()) {
-    case Order::MARKET:
-      if (order.side() == Order::BUY) {
-        if (order.oneof_amount_case() == Order::kBaseAmount) {
-          return trader_account->MarketBuy(
-              trader_account_config.market_order_fee_config(), ohlc_tick,
-              order.base_amount());
-        } else {
-          assert(order.oneof_amount_case() == Order::kQuoteAmount);
-          return trader_account->MarketBuyAtQuote(
-              trader_account_config.market_order_fee_config(), ohlc_tick,
-              order.quote_amount());
-        }
-      } else {
-        assert(order.side() == Order::SELL);
-        if (order.oneof_amount_case() == Order::kBaseAmount) {
-          return trader_account->MarketSell(
-              trader_account_config.market_order_fee_config(), ohlc_tick,
-              order.base_amount());
-        } else {
-          assert(order.oneof_amount_case() == Order::kQuoteAmount);
-          return trader_account->MarketSellAtQuote(
-              trader_account_config.market_order_fee_config(), ohlc_tick,
-              order.quote_amount());
-        }
-      }
-    case Order::STOP:
-      if (order.side() == Order::BUY) {
-        if (order.oneof_amount_case() == Order::kBaseAmount) {
-          return trader_account->StopBuy(
-              trader_account_config.stop_order_fee_config(), ohlc_tick,
-              order.base_amount(), order.price());
-        } else {
-          assert(order.oneof_amount_case() == Order::kQuoteAmount);
-          return trader_account->StopBuyAtQuote(
-              trader_account_config.stop_order_fee_config(), ohlc_tick,
-              order.quote_amount(), order.price());
-        }
-      } else {
-        assert(order.side() == Order::SELL);
-        if (order.oneof_amount_case() == Order::kBaseAmount) {
-          return trader_account->StopSell(
-              trader_account_config.stop_order_fee_config(), ohlc_tick,
-              order.base_amount(), order.price());
-        } else {
-          assert(order.oneof_amount_case() == Order::kQuoteAmount);
-          return trader_account->StopSellAtQuote(
-              trader_account_config.stop_order_fee_config(), ohlc_tick,
-              order.quote_amount(), order.price());
-        }
-      }
-    case Order::LIMIT:
-      if (order.side() == Order::BUY) {
-        if (order.oneof_amount_case() == Order::kBaseAmount) {
-          return trader_account->LimitBuy(
-              trader_account_config.limit_order_fee_config(), ohlc_tick,
-              order.base_amount(), order.price());
-        } else {
-          assert(order.oneof_amount_case() == Order::kQuoteAmount);
-          return trader_account->LimitBuyAtQuote(
-              trader_account_config.limit_order_fee_config(), ohlc_tick,
-              order.quote_amount(), order.price());
-        }
-      } else {
-        assert(order.side() == Order::SELL);
-        if (order.oneof_amount_case() == Order::kBaseAmount) {
-          return trader_account->LimitSell(
-              trader_account_config.limit_order_fee_config(), ohlc_tick,
-              order.base_amount(), order.price());
-        } else {
-          assert(order.oneof_amount_case() == Order::kQuoteAmount);
-          return trader_account->LimitSellAtQuote(
-              trader_account_config.limit_order_fee_config(), ohlc_tick,
-              order.quote_amount(), order.price());
-        }
-      }
-    default:
-      assert(false);  // Invalid order type.
-  }
-}
-
 TraderExecutionResult ExecuteTrader(
     const TraderAccountConfig& trader_account_config,
     OhlcHistory::const_iterator ohlc_history_begin,
@@ -240,8 +140,8 @@ TraderExecutionResult ExecuteTrader(
     // "trader_orders". There are no other active orders on the exchange.
     // Execute (or cancel) "trader_orders" on the current OHLC tick T[i].
     for (const Order& order : trader_orders) {
-      const bool success = ExecuteOrder(trader_account_config, order, ohlc_tick,
-                                        &trader_account);
+      const bool success =
+          trader_account.ExecuteOrder(trader_account_config, order, ohlc_tick);
       if (success) {
         ++total_executed_orders;
         // Log only the executed orders and their impact on the trader account.

@@ -2,10 +2,6 @@
 
 #include "lib/trader_account.h"
 
-#include <algorithm>
-#include <cassert>
-#include <cmath>
-
 namespace trader {
 namespace {
 float Floor(float amount, float unit) {
@@ -18,6 +14,20 @@ float Ceil(float amount, float unit) {
 
 float Round(float amount, float unit) {
   return unit > 0 ? unit * std::round(amount / unit) : amount;
+}
+
+bool IsValidOrder(const Order& order) {
+  return
+      // Both order type and order side must be defined.
+      order.has_type() && order.has_side() &&
+      (  // Positive price is required for non-market orders.
+          order.type() == Order::MARKET ||
+          (order.has_price() && order.price() > 0)) &&
+      (  // Every order must specify a positive base amount or quote amount.
+          (order.oneof_amount_case() == Order::kBaseAmount &&
+           order.has_base_amount() && order.base_amount() > 0) ||
+          (order.oneof_amount_case() == Order::kQuoteAmount &&
+           order.has_quote_amount() && order.quote_amount() > 0));
 }
 }  // namespace
 
@@ -274,6 +284,84 @@ bool TraderAccount::LimitSellAtQuote(const FeeConfig& fee_config,
   }
   const float max_base_amount = GetMaxBaseAmount(ohlc_tick);
   return SellAtQuote(fee_config, quote_amount, limit_price, max_base_amount);
+}
+
+bool TraderAccount::ExecuteOrder(
+    const TraderAccountConfig& trader_account_config, const Order& order,
+    const OhlcTick& ohlc_tick) {
+  assert(IsValidOrder(order));
+  switch (order.type()) {
+    case Order::MARKET:
+      if (order.side() == Order::BUY) {
+        if (order.oneof_amount_case() == Order::kBaseAmount) {
+          return MarketBuy(trader_account_config.market_order_fee_config(),
+                           ohlc_tick, order.base_amount());
+        } else {
+          assert(order.oneof_amount_case() == Order::kQuoteAmount);
+          return MarketBuyAtQuote(
+              trader_account_config.market_order_fee_config(), ohlc_tick,
+              order.quote_amount());
+        }
+      } else {
+        assert(order.side() == Order::SELL);
+        if (order.oneof_amount_case() == Order::kBaseAmount) {
+          return MarketSell(trader_account_config.market_order_fee_config(),
+                            ohlc_tick, order.base_amount());
+        } else {
+          assert(order.oneof_amount_case() == Order::kQuoteAmount);
+          return MarketSellAtQuote(
+              trader_account_config.market_order_fee_config(), ohlc_tick,
+              order.quote_amount());
+        }
+      }
+    case Order::STOP:
+      if (order.side() == Order::BUY) {
+        if (order.oneof_amount_case() == Order::kBaseAmount) {
+          return StopBuy(trader_account_config.stop_order_fee_config(),
+                         ohlc_tick, order.base_amount(), order.price());
+        } else {
+          assert(order.oneof_amount_case() == Order::kQuoteAmount);
+          return StopBuyAtQuote(trader_account_config.stop_order_fee_config(),
+                                ohlc_tick, order.quote_amount(), order.price());
+        }
+      } else {
+        assert(order.side() == Order::SELL);
+        if (order.oneof_amount_case() == Order::kBaseAmount) {
+          return StopSell(trader_account_config.stop_order_fee_config(),
+                          ohlc_tick, order.base_amount(), order.price());
+        } else {
+          assert(order.oneof_amount_case() == Order::kQuoteAmount);
+          return StopSellAtQuote(trader_account_config.stop_order_fee_config(),
+                                 ohlc_tick, order.quote_amount(),
+                                 order.price());
+        }
+      }
+    case Order::LIMIT:
+      if (order.side() == Order::BUY) {
+        if (order.oneof_amount_case() == Order::kBaseAmount) {
+          return LimitBuy(trader_account_config.limit_order_fee_config(),
+                          ohlc_tick, order.base_amount(), order.price());
+        } else {
+          assert(order.oneof_amount_case() == Order::kQuoteAmount);
+          return LimitBuyAtQuote(trader_account_config.limit_order_fee_config(),
+                                 ohlc_tick, order.quote_amount(),
+                                 order.price());
+        }
+      } else {
+        assert(order.side() == Order::SELL);
+        if (order.oneof_amount_case() == Order::kBaseAmount) {
+          return LimitSell(trader_account_config.limit_order_fee_config(),
+                           ohlc_tick, order.base_amount(), order.price());
+        } else {
+          assert(order.oneof_amount_case() == Order::kQuoteAmount);
+          return LimitSellAtQuote(
+              trader_account_config.limit_order_fee_config(), ohlc_tick,
+              order.quote_amount(), order.price());
+        }
+      }
+    default:
+      assert(false);  // Invalid order type.
+  }
 }
 
 }  // namespace trader
