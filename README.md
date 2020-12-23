@@ -144,7 +144,7 @@ bazel run :convert -- \
   --input_price_history_csv_file="/$(pwd)/data/bitstampUSD.csv" \
   --output_price_history_delimited_proto_file="/$(pwd)/data/bitstampUSD.dpb" \
   --start_date_utc="2017-01-01" \
-  --end_date_utc="2020-10-01"
+  --end_date_utc="2020-12-01"
 ```
 
 The `start_date_utc` and `end_date_utc` dates are optional. We use them to make the output smaller.
@@ -156,7 +156,7 @@ bazel run :convert -- \
   --input_price_history_delimited_proto_file="/$(pwd)/data/bitstampUSD.dpb" \
   --output_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_5min.dpb" \
   --start_date_utc="2017-01-01" \
-  --end_date_utc="2020-10-01" \
+  --end_date_utc="2020-12-01" \
   --sampling_rate_sec=300
 ```
 
@@ -169,7 +169,7 @@ bazel run :trader -- \
   --output_exchange_log_file="/$(pwd)/data/bitstampUSD.out.csv" \
   --output_trader_log_file="/$(pwd)/data/stop_trader_log.csv" \
   --start_date_utc="2017-01-01" \
-  --end_date_utc="2020-10-01" \
+  --end_date_utc="2020-12-01" \
   --start_base_balance=1.0 \
   --start_quote_balance=0.0
 ```
@@ -177,11 +177,11 @@ bazel run :trader -- \
 The output:
 
 ```
-Loaded 394272 records in 0.523 seconds
-Selected 394272 OHLC ticks within the period: [2017-01-01 00:00:00 - 2020-10-01 00:00:00)
+Loaded 411840 records in 0.718 seconds
+Selected 411840 OHLC ticks within the period: [2017-01-01 00:00:00 - 2020-12-01 00:00:00)
 
 Trader evaluation:
-[2017-01-01 00:00:00 - 2020-10-01 00:00:00): 1.1067
+[2017-01-01 00:00:00 - 2020-12-01 00:00:00): 1.10669
 ```
 
 The evaluation output is the ratio of the trader's performance and the performance of the *Buy and HODL* strategy.
@@ -193,7 +193,7 @@ bazel run :trader -- \
   --input_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_5min.dpb" \
   --trader="stop" \
   --start_date_utc="2017-01-01" \
-  --end_date_utc="2020-10-01" \
+  --end_date_utc="2020-12-01" \
   --evaluation_period_months=6 \
   --start_base_balance=1.0 \
   --start_quote_balance=0.0
@@ -212,11 +212,11 @@ Trader evaluation:
 [2017-04-01 00:00:00 - 2017-10-01 00:00:00): 1.02772
 [2017-05-01 00:00:00 - 2017-11-01 00:00:00): 1.03472
 ...
-[2019-12-01 00:00:00 - 2020-06-01 00:00:00): 1.39337
-[2020-01-01 00:00:00 - 2020-07-01 00:00:00): 1.43864
 [2020-02-01 00:00:00 - 2020-08-01 00:00:00): 1.33628
 [2020-03-01 00:00:00 - 2020-09-01 00:00:00): 1.17149
 [2020-04-01 00:00:00 - 2020-10-01 00:00:00): 0.860107
+[2020-05-01 00:00:00 - 2020-11-01 00:00:00): 0.681354
+[2020-06-01 00:00:00 - 2020-12-01 00:00:00): 0.860026
 ```
 
 To evaluate a batch of traders (i.e. to do a grid search) one can run:
@@ -226,7 +226,7 @@ bazel run :trader -- \
   --input_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_5min.dpb" \
   --trader="stop" \
   --start_date_utc="2017-01-01" \
-  --end_date_utc="2020-10-01" \
+  --end_date_utc="2020-12-01" \
   --evaluation_period_months=6 \
   --start_base_balance=1.0 \
   --start_quote_balance=0.0 \
@@ -236,14 +236,14 @@ bazel run :trader -- \
 The output:
 
 ```
-Loaded 394272 records in 0.805 seconds
-Selected 394272 OHLC ticks within the period: [2017-01-01 00:00:00 - 2020-10-01 00:00:00)
+Loaded 411840 records in 0.788 seconds
+Selected 411840 OHLC ticks within the period: [2017-01-01 00:00:00 - 2020-12-01 00:00:00)
 
 Batch evaluation:
-stop-trader[0.100|0.100|0.010|0.100]: 1.05953
-stop-trader[0.150|0.100|0.010|0.050]: 1.0426
-stop-trader[0.200|0.050|0.010|0.010]: 1.03798
-stop-trader[0.150|0.100|0.010|0.010]: 1.02781
-stop-trader[0.150|0.100|0.010|0.100]: 1.02206
+stop-trader[0.100|0.100|0.010|0.100]: 1.04326
+stop-trader[0.200|0.050|0.010|0.010]: 1.02727
+stop-trader[0.150|0.100|0.010|0.050]: 1.02701
+stop-trader[0.150|0.100|0.010|0.010]: 1.01169
+stop-trader[0.150|0.100|0.010|0.100]: 1.00874
 ...
 ```
