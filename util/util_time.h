@@ -12,7 +12,7 @@ namespace trader {
 // If empty string is provided, sets the output timestamp_sec to 0.
 // Returns true on success.
 bool ConvertDateUTCToTimestampSec(const std::string& datetime_utc,
-                                  long* timestamp_sec);
+                                  long& timestamp_sec);
 
 // Converts UNIX timestamp (in seconds) to date YYYY-MM-DD in UTC.
 std::string ConvertTimestampSecToDateUTC(long timestamp_sec);

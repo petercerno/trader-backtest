@@ -10,7 +10,7 @@ using ::trader::testing::PrepareExampleOhlcHistory;
 
 TEST(MovingAverageConvergenceDivergenceTest, GetMACDWhenAdding8HourOhlcTicks) {
   OhlcHistory ohlc_history;
-  PrepareExampleOhlcHistory(&ohlc_history);
+  PrepareExampleOhlcHistory(ohlc_history);
 
   MovingAverageConvergenceDivergence macd(
       /*fast_length=*/4,

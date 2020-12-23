@@ -10,7 +10,7 @@ using ::trader::testing::PrepareExampleOhlcHistory;
 
 TEST(RelativeStrengthIndexTest, GetRSIWhenAdding8HourOhlcTicks) {
   OhlcHistory ohlc_history;
-  PrepareExampleOhlcHistory(&ohlc_history);
+  PrepareExampleOhlcHistory(ohlc_history);
 
   RelativeStrengthIndex relative_strength_index(
       /*num_periods=*/3,

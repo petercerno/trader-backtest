@@ -8,12 +8,12 @@
 
 namespace trader {
 namespace {
-void SetupOhlcTick(OhlcTick* ohlc_tick) {
-  ohlc_tick->set_open(10.0f);
-  ohlc_tick->set_high(20.0f);
-  ohlc_tick->set_low(2.0f);
-  ohlc_tick->set_close(15.0f);
-  ohlc_tick->set_volume(1234.56f);
+void SetupOhlcTick(OhlcTick& ohlc_tick) {
+  ohlc_tick.set_open(10.0f);
+  ohlc_tick.set_high(20.0f);
+  ohlc_tick.set_low(2.0f);
+  ohlc_tick.set_close(15.0f);
+  ohlc_tick.set_volume(1234.56f);
 }
 }  // namespace
 
@@ -251,7 +251,7 @@ TEST(GetFeeTest, RelativeAndFixedAndMinimumFee) {
 TEST(GetPriceTest, MarketBuy) {
   TraderAccount trader_account;
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.market_liquidity = 1.0f;
   EXPECT_FLOAT_EQ(10.0f, trader_account.GetMarketBuyPrice(ohlc_tick));
@@ -266,7 +266,7 @@ TEST(GetPriceTest, MarketBuy) {
 TEST(GetPriceTest, MarketSell) {
   TraderAccount trader_account;
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.market_liquidity = 1.0f;
   EXPECT_FLOAT_EQ(10.0f, trader_account.GetMarketSellPrice(ohlc_tick));
@@ -281,7 +281,7 @@ TEST(GetPriceTest, MarketSell) {
 TEST(GetPriceTest, StopBuy) {
   TraderAccount trader_account;
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.market_liquidity = 1.0f;
   EXPECT_FLOAT_EQ(  // Target stop price below opening price
@@ -311,7 +311,7 @@ TEST(GetPriceTest, StopBuy) {
 TEST(GetPriceTest, StopSell) {
   TraderAccount trader_account;
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.market_liquidity = 1.0f;
   EXPECT_FLOAT_EQ(  // Target stop price above opening price
@@ -343,7 +343,7 @@ TEST(GetMaxBaseAmountTest, Basic) {
 
   TraderAccount trader_account;
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.max_volume_ratio = 0;
   trader_account.base_unit = 0;
@@ -1171,7 +1171,7 @@ TEST(BuyTest, MarketBuyWithFeeAndLimitedPrecision) {
   fee_config.set_minimum_fee(1.5f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.market_liquidity = 0.5f;
   EXPECT_FLOAT_EQ(15.0f, trader_account.GetMarketBuyPrice(ohlc_tick));
@@ -1200,7 +1200,7 @@ TEST(BuyTest, MarketBuyAtQuoteWithFeeAndLimitedPrecision) {
   fee_config.set_minimum_fee(1.5f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.market_liquidity = 0.5f;
   EXPECT_FLOAT_EQ(15.0f, trader_account.GetMarketBuyPrice(ohlc_tick));
@@ -1229,7 +1229,7 @@ TEST(SellTest, MarketSellWithFeeAndLimitedPrecision) {
   fee_config.set_minimum_fee(1.5f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.market_liquidity = 1.0f;
   EXPECT_FLOAT_EQ(10.0f, trader_account.GetMarketSellPrice(ohlc_tick));
@@ -1258,7 +1258,7 @@ TEST(SellTest, MarketSellAtQuoteWithFeeAndLimitedPrecision) {
   fee_config.set_minimum_fee(1.5f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.market_liquidity = 1.0f;
   EXPECT_FLOAT_EQ(10.0f, trader_account.GetMarketSellPrice(ohlc_tick));
@@ -1287,7 +1287,7 @@ TEST(BuyTest, StopBuyWithFeeAndLimitedPrecision) {
   fee_config.set_minimum_fee(1.5f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.market_liquidity = 0.5f;
   EXPECT_FLOAT_EQ(
@@ -1324,7 +1324,7 @@ TEST(BuyTest, StopBuyAtQuoteWithFeeAndLimitedPrecision) {
   fee_config.set_minimum_fee(1.5f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.market_liquidity = 0.5f;
   EXPECT_FLOAT_EQ(
@@ -1361,7 +1361,7 @@ TEST(SellTest, StopSellWithFeeAndLimitedPrecision) {
   fee_config.set_minimum_fee(1.5f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.market_liquidity = 1.0f;
   EXPECT_FLOAT_EQ(
@@ -1398,7 +1398,7 @@ TEST(SellTest, StopSellAtQuoteWithFeeAndLimitedPrecision) {
   fee_config.set_minimum_fee(1.5f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.market_liquidity = 1.0f;
   EXPECT_FLOAT_EQ(
@@ -1435,7 +1435,7 @@ TEST(BuyTest, LimitBuyWithFeeAndLimitedPrecision) {
   fee_config.set_minimum_fee(1.5f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.max_volume_ratio = 0.1;
   EXPECT_FLOAT_EQ(123.456f, trader_account.GetMaxBaseAmount(ohlc_tick));
@@ -1471,7 +1471,7 @@ TEST(BuyTest, LimitBuyWithFeeAndLimitedPrecisionExceedsMaxAmount) {
   fee_config.set_minimum_fee(1.5f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.max_volume_ratio = 0.001;
   EXPECT_FLOAT_EQ(1.23456f, trader_account.GetMaxBaseAmount(ohlc_tick));
@@ -1508,7 +1508,7 @@ TEST(BuyTest, LimitBuyAtQuoteWithFeeAndLimitedPrecision) {
   fee_config.set_minimum_fee(1.5f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.max_volume_ratio = 0.1;
   EXPECT_FLOAT_EQ(123.456f, trader_account.GetMaxBaseAmount(ohlc_tick));
@@ -1544,7 +1544,7 @@ TEST(BuyTest, LimitBuyAtQuoteWithFeeAndLimitedPrecisionExceedsMaxAmount) {
   fee_config.set_minimum_fee(1.5f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.max_volume_ratio = 0.001;
   EXPECT_FLOAT_EQ(1.23456f, trader_account.GetMaxBaseAmount(ohlc_tick));
@@ -1581,7 +1581,7 @@ TEST(SellTest, LimitSellWithFeeAndLimitedPrecision) {
   fee_config.set_minimum_fee(1.5f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.max_volume_ratio = 0.1;
   EXPECT_FLOAT_EQ(123.456f, trader_account.GetMaxBaseAmount(ohlc_tick));
@@ -1617,7 +1617,7 @@ TEST(SellTest, LimitSellWithFeeAndLimitedPrecisionExceedsMaxAmount) {
   fee_config.set_minimum_fee(1.5f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.max_volume_ratio = 0.001;
   EXPECT_FLOAT_EQ(1.23456f, trader_account.GetMaxBaseAmount(ohlc_tick));
@@ -1654,7 +1654,7 @@ TEST(SellTest, LimitSellAtQuoteWithFeeAndLimitedPrecision) {
   fee_config.set_minimum_fee(1.5f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.max_volume_ratio = 0.1;
   EXPECT_FLOAT_EQ(123.456f, trader_account.GetMaxBaseAmount(ohlc_tick));
@@ -1690,7 +1690,7 @@ TEST(SellTest, LimitSellAtQuoteWithFeeAndLimitedPrecisionExceedsMaxAmount) {
   fee_config.set_minimum_fee(1.5f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   trader_account.max_volume_ratio = 0.001;
   EXPECT_FLOAT_EQ(1.23456f, trader_account.GetMaxBaseAmount(ohlc_tick));
@@ -1732,7 +1732,7 @@ TEST(ExecuteOrderTest, MarketBuyWithFeeAndLimitedPrecision) {
   order.set_base_amount(10.0f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.market_liquidity = 0.5f;
@@ -1764,7 +1764,7 @@ TEST(ExecuteOrderTest, MarketBuyAtQuoteWithFeeAndLimitedPrecision) {
   order.set_quote_amount(169.0f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.market_liquidity = 0.5f;
@@ -1796,7 +1796,7 @@ TEST(ExecuteOrderTest, MarketSellWithFeeAndLimitedPrecision) {
   order.set_base_amount(5.0f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.market_liquidity = 1.0f;
@@ -1828,7 +1828,7 @@ TEST(ExecuteOrderTest, MarketSellAtQuoteWithFeeAndLimitedPrecision) {
   order.set_quote_amount(50.0f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.market_liquidity = 1.0f;
@@ -1859,7 +1859,7 @@ TEST(ExecuteOrderTest, StopBuyWithFeeAndLimitedPrecision) {
   order.set_base_amount(10.0f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.market_liquidity = 0.5f;
@@ -1897,7 +1897,7 @@ TEST(ExecuteOrderTest, StopBuyAtQuoteWithFeeAndLimitedPrecision) {
   order.set_quote_amount(197.0f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.market_liquidity = 0.5f;
@@ -1935,7 +1935,7 @@ TEST(ExecuteOrderTest, StopSellWithFeeAndLimitedPrecision) {
   order.set_base_amount(5.0f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.market_liquidity = 1.0f;
@@ -1973,7 +1973,7 @@ TEST(ExecuteOrderTest, StopSellAtQuoteWithFeeAndLimitedPrecision) {
   order.set_quote_amount(50.0f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.market_liquidity = 1.0f;
@@ -2012,7 +2012,7 @@ TEST(ExecuteOrderTest, LimitBuyWithFeeAndLimitedPrecision) {
   order.set_base_amount(10.0f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.max_volume_ratio = 0.1;
@@ -2051,7 +2051,7 @@ TEST(ExecuteOrderTest, LimitBuyAtQuoteWithFeeAndLimitedPrecision) {
   order.set_quote_amount(57.0f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.max_volume_ratio = 0.1;
@@ -2090,7 +2090,7 @@ TEST(ExecuteOrderTest, LimitSellWithFeeAndLimitedPrecision) {
   order.set_base_amount(5.0f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.max_volume_ratio = 0.1;
@@ -2129,7 +2129,7 @@ TEST(ExecuteOrderTest, LimitSellAtQuoteWithFeeAndLimitedPrecision) {
   order.set_quote_amount(50.0f);
 
   OhlcTick ohlc_tick;
-  SetupOhlcTick(&ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
+  SetupOhlcTick(ohlc_tick);  // O = 10, H = 20, L = 2, C = 15, V = 1234.56
 
   TraderAccount trader_account;
   trader_account.max_volume_ratio = 0.1;

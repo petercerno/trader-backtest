@@ -35,28 +35,28 @@ float GetGeometricAverage(const C& container, F selector) {
 
 // Initializes the trader account based on the trader account configuration.
 void InitTraderAccount(const TraderAccountConfig& trader_account_config,
-                       TraderAccount* trader_account) {
-  trader_account->base_balance = trader_account_config.start_base_balance();
-  trader_account->quote_balance = trader_account_config.start_quote_balance();
-  trader_account->total_fee = 0;
-  trader_account->base_unit = trader_account_config.base_unit();
-  trader_account->quote_unit = trader_account_config.quote_unit();
-  trader_account->market_liquidity = trader_account_config.market_liquidity();
-  trader_account->max_volume_ratio = trader_account_config.max_volume_ratio();
+                       TraderAccount& trader_account) {
+  trader_account.base_balance = trader_account_config.start_base_balance();
+  trader_account.quote_balance = trader_account_config.start_quote_balance();
+  trader_account.total_fee = 0;
+  trader_account.base_unit = trader_account_config.base_unit();
+  trader_account.quote_unit = trader_account_config.quote_unit();
+  trader_account.market_liquidity = trader_account_config.market_liquidity();
+  trader_account.max_volume_ratio = trader_account_config.max_volume_ratio();
 }
 }  // namespace
 
 TraderExecutionResult ExecuteTrader(
     const TraderAccountConfig& trader_account_config,
     OhlcHistory::const_iterator ohlc_history_begin,
-    OhlcHistory::const_iterator ohlc_history_end, TraderInterface* trader,
+    OhlcHistory::const_iterator ohlc_history_end, TraderInterface& trader,
     LoggerInterface* logger) {
   TraderExecutionResult result;
   if (ohlc_history_begin == ohlc_history_end) {
     return {};
   }
   TraderAccount trader_account;
-  InitTraderAccount(trader_account_config, &trader_account);
+  InitTraderAccount(trader_account_config, trader_account);
   std::vector<Order> trader_orders;
   constexpr size_t kEmittedOrdersReserve = 8;
   trader_orders.reserve(kEmittedOrdersReserve);
@@ -92,10 +92,10 @@ TraderExecutionResult ExecuteTrader(
     // Update the trader internal state on the current OHLC tick T[i].
     // Emit a new set of "trader_orders" for the next OHLC tick T[i+1].
     trader_orders.clear();
-    trader->Update(ohlc_tick, trader_account.base_balance,
-                   trader_account.quote_balance, &trader_orders);
+    trader.Update(ohlc_tick, trader_account.base_balance,
+                  trader_account.quote_balance, trader_orders);
     if (logger != nullptr) {
-      logger->LogTraderState(trader->GetInternalState());
+      logger->LogTraderState(trader.GetInternalState());
     }
   }
   result.set_start_base_balance(trader_account_config.start_base_balance());
@@ -143,7 +143,7 @@ TraderEvaluationResult EvaluateTrader(
     std::unique_ptr<TraderInterface> trader = trader_factory.NewTrader();
     TraderExecutionResult result =
         ExecuteTrader(trader_account_config, ohlc_history_subset.first,
-                      ohlc_history_subset.second, trader.get(), logger);
+                      ohlc_history_subset.second, *trader, logger);
     TraderEvaluationResult::Period* period = trader_eval_result.add_period();
     period->set_start_timestamp_sec(start_eval_timestamp_sec);
     period->set_end_timestamp_sec(end_eval_timestamp_sec);

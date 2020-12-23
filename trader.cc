@@ -149,7 +149,7 @@ template <typename T>
 std::vector<T> ReadHistory(const std::string& file_name) {
   std::vector<T> history;
   auto start = std::chrono::high_resolution_clock::now();
-  if (!ReadDelimitedMessagesFromFile<T>(file_name, &history)) {
+  if (!ReadDelimitedMessagesFromFile<T>(file_name, history)) {
     return {};
   }
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -222,8 +222,8 @@ int main(int argc, char* argv[]) {
   long end_timestamp_sec = 0;
   if (FLAGS_start_date_utc.empty() || FLAGS_end_date_utc.empty() ||
       !ConvertDateUTCToTimestampSec(FLAGS_start_date_utc,
-                                    &start_timestamp_sec) ||
-      !ConvertDateUTCToTimestampSec(FLAGS_end_date_utc, &end_timestamp_sec)) {
+                                    start_timestamp_sec) ||
+      !ConvertDateUTCToTimestampSec(FLAGS_end_date_utc, end_timestamp_sec)) {
     std::cerr << "Invalid time period" << std::endl;
     return 1;
   }

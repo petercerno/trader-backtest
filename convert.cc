@@ -46,8 +46,7 @@ namespace {
 bool ReadPriceHistoryFromCsvFile(const std::string& file_name,
                                  long start_timestamp_sec,
                                  long end_timestamp_sec,
-                                 PriceHistory* price_history) {
-  assert(price_history != nullptr);
+                                 PriceHistory& price_history) {
   std::cout << "Reading price history from CSV file: " << file_name << std::endl
             << std::flush;
   auto start = std::chrono::high_resolution_clock::now();
@@ -91,14 +90,14 @@ bool ReadPriceHistoryFromCsvFile(const std::string& file_name,
       return false;
     }
     timestamp_sec_prev = timestamp_sec;
-    price_history->emplace_back();
-    price_history->back().set_timestamp_sec(timestamp_sec);
-    price_history->back().set_price(price);
-    price_history->back().set_volume(volume);
+    price_history.emplace_back();
+    price_history.back().set_timestamp_sec(timestamp_sec);
+    price_history.back().set_price(price);
+    price_history.back().set_volume(volume);
   }
   const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::high_resolution_clock::now() - start);
-  std::cout << "Loaded " << price_history->size() << " records in "
+  std::cout << "Loaded " << price_history.size() << " records in "
             << duration.count() / 1000.0 << " seconds" << std::endl
             << std::flush;
   return true;
@@ -109,8 +108,7 @@ bool ReadPriceHistoryFromCsvFile(const std::string& file_name,
 bool ReadOhlcHistoryFromCsvFile(const std::string& file_name,
                                 long start_timestamp_sec,
                                 long end_timestamp_sec,
-                                OhlcHistory* ohlc_history) {
-  assert(ohlc_history != nullptr);
+                                OhlcHistory& ohlc_history) {
   std::cout << "Reading OHLC history from CSV file: " << file_name << std::endl
             << std::flush;
   auto start = std::chrono::high_resolution_clock::now();
@@ -159,17 +157,17 @@ bool ReadOhlcHistoryFromCsvFile(const std::string& file_name,
       return false;
     }
     timestamp_sec_prev = timestamp_sec;
-    ohlc_history->emplace_back();
-    ohlc_history->back().set_timestamp_sec(timestamp_sec);
-    ohlc_history->back().set_open(open);
-    ohlc_history->back().set_high(high);
-    ohlc_history->back().set_low(low);
-    ohlc_history->back().set_close(close);
-    ohlc_history->back().set_volume(volume);
+    ohlc_history.emplace_back();
+    ohlc_history.back().set_timestamp_sec(timestamp_sec);
+    ohlc_history.back().set_open(open);
+    ohlc_history.back().set_high(high);
+    ohlc_history.back().set_low(low);
+    ohlc_history.back().set_close(close);
+    ohlc_history.back().set_volume(volume);
   }
   const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::high_resolution_clock::now() - start);
-  std::cout << "Loaded " << ohlc_history->size() << " OHLC ticks in "
+  std::cout << "Loaded " << ohlc_history.size() << " OHLC ticks in "
             << duration.count() / 1000.0 << " seconds" << std::endl
             << std::flush;
   return true;
@@ -180,8 +178,7 @@ bool ReadOhlcHistoryFromCsvFile(const std::string& file_name,
 bool ReadSideHistoryFromCsvFile(const std::string& file_name,
                                 long start_timestamp_sec,
                                 long end_timestamp_sec,
-                                SideHistory* side_history) {
-  assert(side_history != nullptr);
+                                SideHistory& side_history) {
   std::cout << "Reading side history from CSV file: " << file_name << std::endl
             << std::flush;
   auto start = std::chrono::high_resolution_clock::now();
@@ -217,15 +214,15 @@ bool ReadSideHistoryFromCsvFile(const std::string& file_name,
       return false;
     }
     timestamp_sec_prev = timestamp_sec;
-    side_history->emplace_back();
-    side_history->back().set_timestamp_sec(timestamp_sec);
+    side_history.emplace_back();
+    side_history.back().set_timestamp_sec(timestamp_sec);
     while (iss >> signal) {
-      side_history->back().add_signal(signal);
+      side_history.back().add_signal(signal);
     }
     if (num_signals == 0) {
-      num_signals = side_history->back().signal_size();
+      num_signals = side_history.back().signal_size();
     }
-    if (num_signals == 0 || num_signals != side_history->back().signal_size()) {
+    if (num_signals == 0 || num_signals != side_history.back().signal_size()) {
       std::cerr << "Invalid number of signals on line " << row << ": " << line
                 << std::endl;
       return false;
@@ -233,7 +230,7 @@ bool ReadSideHistoryFromCsvFile(const std::string& file_name,
   }
   const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::high_resolution_clock::now() - start);
-  std::cout << "Loaded " << side_history->size() << " records in "
+  std::cout << "Loaded " << side_history.size() << " records in "
             << duration.count() / 1000.0 << " seconds" << std::endl
             << std::flush;
   return true;
@@ -244,8 +241,7 @@ template <typename T>
 bool ReadHistoryFromDelimitedProtoFile(
     const std::string& file_name, long start_timestamp_sec,
     long end_timestamp_sec, std::function<bool(int, const T&)> validate,
-    std::vector<T>* history) {
-  assert(history != nullptr);
+    std::vector<T>& history) {
   std::cout << "Reading history from delimited proto file: " << file_name
             << std::endl
             << std::flush;
@@ -255,7 +251,7 @@ bool ReadHistoryFromDelimitedProtoFile(
   if (!ReadDelimitedMessagesFromFile<T>(
           file_name,
           /* reader = */
-          [history, start_timestamp_sec, end_timestamp_sec, validate,
+          [&history, start_timestamp_sec, end_timestamp_sec, validate,
            &record_index,
            &timestamp_sec_prev](const T& message) -> ReaderStatus {
             const int timestamp_sec = message.timestamp_sec();
@@ -277,7 +273,7 @@ bool ReadHistoryFromDelimitedProtoFile(
               return ReaderStatus::kFailure;
             }
             timestamp_sec_prev = timestamp_sec;
-            history->push_back(message);
+            history.push_back(message);
             ++record_index;
             return ReaderStatus::kContinue;
           })) {
@@ -285,7 +281,7 @@ bool ReadHistoryFromDelimitedProtoFile(
   }
   const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::high_resolution_clock::now() - start);
-  std::cout << "Loaded " << history->size() << " records in "
+  std::cout << "Loaded " << history.size() << " records in "
             << duration.count() / 1000.0 << " seconds" << std::endl
             << std::flush;
   return true;
@@ -296,7 +292,7 @@ bool ReadHistoryFromDelimitedProtoFile(
 bool ReadPriceHistoryFromDelimitedProtoFile(const std::string& file_name,
                                             long start_timestamp_sec,
                                             long end_timestamp_sec,
-                                            PriceHistory* price_history) {
+                                            PriceHistory& price_history) {
   return ReadHistoryFromDelimitedProtoFile<PriceRecord>(
       file_name, start_timestamp_sec, end_timestamp_sec,
       /* validate = */
@@ -319,7 +315,7 @@ bool ReadPriceHistoryFromDelimitedProtoFile(const std::string& file_name,
 bool ReadOhlcHistoryFromDelimitedProtoFile(const std::string& file_name,
                                            long start_timestamp_sec,
                                            long end_timestamp_sec,
-                                           OhlcHistory* ohlc_history) {
+                                           OhlcHistory& ohlc_history) {
   return ReadHistoryFromDelimitedProtoFile<OhlcTick>(
       file_name, start_timestamp_sec, end_timestamp_sec,
       /* validate = */
@@ -453,11 +449,11 @@ int main(int argc, char* argv[]) {
   long start_timestamp_sec = 0;
   long end_timestamp_sec = 0;
   if (!ConvertDateUTCToTimestampSec(FLAGS_start_date_utc,
-                                    &start_timestamp_sec)) {
+                                    start_timestamp_sec)) {
     std::cerr << "Invalid start date: " << FLAGS_start_date_utc << std::endl;
     return 1;
   }
-  if (!ConvertDateUTCToTimestampSec(FLAGS_end_date_utc, &end_timestamp_sec)) {
+  if (!ConvertDateUTCToTimestampSec(FLAGS_end_date_utc, end_timestamp_sec)) {
     std::cerr << "Invalid end date: " << FLAGS_end_date_utc << std::endl;
     return 1;
   }
@@ -502,13 +498,13 @@ int main(int argc, char* argv[]) {
   if (!FLAGS_input_price_history_csv_file.empty()) {
     if (!ReadPriceHistoryFromCsvFile(FLAGS_input_price_history_csv_file,
                                      start_timestamp_sec, end_timestamp_sec,
-                                     &price_history)) {
+                                     price_history)) {
       return 1;
     }
   } else if (!FLAGS_input_price_history_delimited_proto_file.empty()) {
     if (!ReadPriceHistoryFromDelimitedProtoFile(
             FLAGS_input_price_history_delimited_proto_file, start_timestamp_sec,
-            end_timestamp_sec, &price_history)) {
+            end_timestamp_sec, price_history)) {
       return 1;
     }
   }
@@ -517,13 +513,13 @@ int main(int argc, char* argv[]) {
   if (!FLAGS_input_ohlc_history_csv_file.empty()) {
     if (!ReadOhlcHistoryFromCsvFile(FLAGS_input_ohlc_history_csv_file,
                                     start_timestamp_sec, end_timestamp_sec,
-                                    &ohlc_history)) {
+                                    ohlc_history)) {
       return 1;
     }
   } else if (!FLAGS_input_ohlc_history_delimited_proto_file.empty()) {
     if (!ReadOhlcHistoryFromDelimitedProtoFile(
             FLAGS_input_ohlc_history_delimited_proto_file, start_timestamp_sec,
-            end_timestamp_sec, &ohlc_history)) {
+            end_timestamp_sec, ohlc_history)) {
       return 1;
     }
   }
@@ -532,7 +528,7 @@ int main(int argc, char* argv[]) {
   if (!FLAGS_input_side_history_csv_file.empty()) {
     if (!ReadSideHistoryFromCsvFile(FLAGS_input_side_history_csv_file,
                                     start_timestamp_sec, end_timestamp_sec,
-                                    &side_history)) {
+                                    side_history)) {
       return 1;
     }
   }

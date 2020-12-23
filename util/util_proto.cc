@@ -10,15 +10,15 @@ using google::protobuf::io::CodedOutputStream;
 using google::protobuf::io::ZeroCopyInputStream;
 using google::protobuf::io::ZeroCopyOutputStream;
 
-bool ReadDelimitedFrom(ZeroCopyInputStream* raw_input, Message* message) {
-  CodedInputStream input(raw_input);
+bool ReadDelimitedFrom(ZeroCopyInputStream& raw_input, Message& message) {
+  CodedInputStream input(&raw_input);
   // Read the size.
   uint32_t size;
   if (!input.ReadVarint32(&size)) return false;
   // Tell the stream not to read beyond that size.
   const auto limit = input.PushLimit(size);
   // Parse the message.
-  if (!message->MergePartialFromCodedStream(&input) ||
+  if (!message.MergePartialFromCodedStream(&input) ||
       !input.ConsumedEntireMessage()) {
     // Cannot parse message.
     return false;
@@ -29,8 +29,8 @@ bool ReadDelimitedFrom(ZeroCopyInputStream* raw_input, Message* message) {
 }
 
 bool WriteDelimitedTo(const Message& message,
-                      ZeroCopyOutputStream* raw_output) {
-  CodedOutputStream output(raw_output);
+                      ZeroCopyOutputStream& raw_output) {
+  CodedOutputStream output(&raw_output);
   // Write the size.
   const int size = message.ByteSize();
   output.WriteVarint32(size);

@@ -7,11 +7,11 @@
 namespace trader {
 namespace {
 void AddPriceRecord(int timestamp_sec, float price, float volume,
-                    PriceHistory* price_history) {
-  price_history->emplace_back();
-  price_history->back().set_timestamp_sec(timestamp_sec);
-  price_history->back().set_price(price);
-  price_history->back().set_volume(volume);
+                    PriceHistory& price_history) {
+  price_history.emplace_back();
+  price_history.back().set_timestamp_sec(timestamp_sec);
+  price_history.back().set_price(price);
+  price_history.back().set_volume(volume);
 }
 
 void ExpectNearPriceRecord(const PriceRecord& expected,
@@ -51,7 +51,7 @@ TEST(GetPriceHistoryGapsTest, EmptyPriceHistory) {
 
 TEST(GetPriceHistoryGapsTest, SingleRecordPriceHistory) {
   PriceHistory price_history;
-  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, price_history);
   std::vector<HistoryGap> history_gaps = GetPriceHistoryGaps(
       /* begin = */ price_history.begin(), /* end = */ price_history.end(),
       /* start_timestamp_sec = */ 0,
@@ -62,12 +62,12 @@ TEST(GetPriceHistoryGapsTest, SingleRecordPriceHistory) {
 
 TEST(GetPriceHistoryGapsTest, MultipleRecordsPriceHistory) {
   PriceHistory price_history;
-  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483230000, 750.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483230600, 850.0f, 2.0e3f, &price_history);
-  AddPriceRecord(1483230900, 800.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483231500, 820.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483231800, 840.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483230000, 750.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483230600, 850.0f, 2.0e3f, price_history);
+  AddPriceRecord(1483230900, 800.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483231500, 820.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483231800, 840.0f, 1.0e3f, price_history);
   std::vector<HistoryGap> history_gaps = GetPriceHistoryGaps(
       /* begin = */ price_history.begin(), /* end = */ price_history.end(),
       /* start_timestamp_sec = */ 0,
@@ -179,26 +179,26 @@ TEST(RemoveOutliersTest, EmptyPriceHistoryHasEmptyOutlierIndices) {
 
 TEST(RemoveOutliersTest, NoOutliers) {
   PriceHistory price_history;
-  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483228860, 705.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483228920, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483228980, 695.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229040, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229100, 705.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229160, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229220, 695.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229280, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229340, 705.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229400, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229460, 695.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229520, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229580, 705.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229640, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229700, 695.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229760, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229820, 705.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229880, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229940, 695.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483228860, 705.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483228920, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483228980, 695.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229040, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229100, 705.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229160, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229220, 695.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229280, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229340, 705.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229400, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229460, 695.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229520, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229580, 705.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229640, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229700, 695.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229760, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229820, 705.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229880, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229940, 695.0f, 1.5e3f, price_history);
   // Without outlier_indices.
   PriceHistory price_history_clean =
       RemoveOutliers(/* begin = */ price_history.begin(),
@@ -224,11 +224,11 @@ TEST(RemoveOutliersTest, NoOutliers) {
 
 TEST(RemoveOutliersTest, NonPositivePrice) {
   PriceHistory price_history;
-  AddPriceRecord(1483228800, 0.01f, 1.0e3f, &price_history);
-  AddPriceRecord(1483228860, 0.01f, 1.0e3f, &price_history);
-  AddPriceRecord(1483228920, 0.00f, 1.0e3f, &price_history);  // Outlier.
-  AddPriceRecord(1483228980, 0.01f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229040, 0.01f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228800, 0.01f, 1.0e3f, price_history);
+  AddPriceRecord(1483228860, 0.01f, 1.0e3f, price_history);
+  AddPriceRecord(1483228920, 0.00f, 1.0e3f, price_history);  // Outlier.
+  AddPriceRecord(1483228980, 0.01f, 1.0e3f, price_history);
+  AddPriceRecord(1483229040, 0.01f, 1.0e3f, price_history);
   // Without outlier_indices.
   PriceHistory price_history_clean =
       RemoveOutliers(/* begin = */ price_history.begin(),
@@ -257,11 +257,11 @@ TEST(RemoveOutliersTest, NonPositivePrice) {
 
 TEST(RemoveOutliersTest, NegativeVolume) {
   PriceHistory price_history;
-  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483228860, 705.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483228920, 700.0f, -0.05f, &price_history);  // Outlier.
-  AddPriceRecord(1483228980, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229040, 695.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483228860, 705.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483228920, 700.0f, -0.05f, price_history);  // Outlier.
+  AddPriceRecord(1483228980, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229040, 695.0f, 1.0e3f, price_history);
   // Without outlier_indices.
   PriceHistory price_history_clean =
       RemoveOutliers(/* begin = */ price_history.begin(),
@@ -290,11 +290,11 @@ TEST(RemoveOutliersTest, NegativeVolume) {
 
 TEST(RemoveOutliersTest, SimpleOutlier) {
   PriceHistory price_history;
-  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483228860, 705.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483228920, 750.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483228980, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229040, 695.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483228860, 705.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483228920, 750.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483228980, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229040, 695.0f, 1.0e3f, price_history);
   // Without outlier_indices.
   PriceHistory price_history_clean =
       RemoveOutliers(/* begin = */ price_history.begin(),
@@ -323,26 +323,26 @@ TEST(RemoveOutliersTest, SimpleOutlier) {
 
 TEST(RemoveOutliersTest, NonPersistentOutliers) {
   PriceHistory price_history;
-  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483228860, 705.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483228920, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483228980, 695.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229040, 750.0f, 1.0e3f, &price_history);  // Outlier.
-  AddPriceRecord(1483229100, 705.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229160, 750.0f, 1.0e3f, &price_history);  // Outlier.
-  AddPriceRecord(1483229220, 695.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229280, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229340, 705.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229400, 450.0f, 1.0e3f, &price_history);  // Outlier.
-  AddPriceRecord(1483229460, 695.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229520, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229580, 705.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229640, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229700, 695.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229760, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229820, 705.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229880, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229940, 695.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483228860, 705.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483228920, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483228980, 695.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229040, 750.0f, 1.0e3f, price_history);  // Outlier.
+  AddPriceRecord(1483229100, 705.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229160, 750.0f, 1.0e3f, price_history);  // Outlier.
+  AddPriceRecord(1483229220, 695.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229280, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229340, 705.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229400, 450.0f, 1.0e3f, price_history);  // Outlier.
+  AddPriceRecord(1483229460, 695.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229520, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229580, 705.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229640, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229700, 695.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229760, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229820, 705.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229880, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229940, 695.0f, 1.5e3f, price_history);
   std::vector<size_t> outlier_indices;
   PriceHistory price_history_clean = RemoveOutliers(
       /* begin = */ price_history.begin(),
@@ -369,26 +369,26 @@ TEST(RemoveOutliersTest, NonPersistentOutliers) {
 
 TEST(RemoveOutliersTest, PersistentJumps) {
   PriceHistory price_history;
-  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483228860, 705.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483228920, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483228980, 695.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229040, 750.0f, 1.0e3f, &price_history);  // Persistent.
-  AddPriceRecord(1483229100, 705.0f, 1.5e3f, &price_history);  // Outlier.
-  AddPriceRecord(1483229160, 750.0f, 1.0e3f, &price_history);  // Persistent.
-  AddPriceRecord(1483229220, 745.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229280, 750.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229340, 755.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229400, 750.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229460, 745.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229520, 750.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229580, 755.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229640, 700.0f, 1.0e3f, &price_history);  // Persistent.
-  AddPriceRecord(1483229700, 695.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229760, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229820, 705.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229880, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229940, 695.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483228860, 705.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483228920, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483228980, 695.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229040, 750.0f, 1.0e3f, price_history);  // Persistent.
+  AddPriceRecord(1483229100, 705.0f, 1.5e3f, price_history);  // Outlier.
+  AddPriceRecord(1483229160, 750.0f, 1.0e3f, price_history);  // Persistent.
+  AddPriceRecord(1483229220, 745.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229280, 750.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229340, 755.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229400, 750.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229460, 745.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229520, 750.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229580, 755.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229640, 700.0f, 1.0e3f, price_history);  // Persistent.
+  AddPriceRecord(1483229700, 695.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229760, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229820, 705.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229880, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229940, 695.0f, 1.5e3f, price_history);
   std::vector<size_t> outlier_indices;
   PriceHistory price_history_clean = RemoveOutliers(
       /* begin = */ price_history.begin(),
@@ -554,10 +554,10 @@ TEST(ResampleTest, EmptyPriceHistory) {
 
 TEST(ResampleTest, EmptyOhlcHistory) {
   PriceHistory price_history;
-  AddPriceRecord(0, 10.0f, 1.0e3f, &price_history);
-  AddPriceRecord(60, 20.0f, 2.0e3f, &price_history);
-  AddPriceRecord(120, 30.0f, 3.0e3f, &price_history);
-  AddPriceRecord(180, 40.0f, 4.0e3f, &price_history);
+  AddPriceRecord(0, 10.0f, 1.0e3f, price_history);
+  AddPriceRecord(60, 20.0f, 2.0e3f, price_history);
+  AddPriceRecord(120, 30.0f, 3.0e3f, price_history);
+  AddPriceRecord(180, 40.0f, 4.0e3f, price_history);
   OhlcHistory ohlc_history = Resample(/* begin = */ price_history.begin() + 1,
                                       /* end = */ price_history.begin() + 1,
                                       /* sampling_rate_sec = */ 300);
@@ -570,7 +570,7 @@ TEST(ResampleTest, EmptyOhlcHistory) {
 
 TEST(ResampleTest, ResampleSinglePriceRecord) {
   PriceHistory price_history;
-  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, price_history);
   OhlcHistory ohlc_history = Resample(/* begin = */ price_history.begin(),
                                       /* end = */ price_history.end(),
                                       /* sampling_rate_sec = */ 300);
@@ -581,8 +581,8 @@ TEST(ResampleTest, ResampleSinglePriceRecord) {
 
 TEST(ResampleTest, ResampleMultiplePriceRecords1) {
   PriceHistory price_history;
-  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229400, 800.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229400, 800.0f, 1.5e3f, price_history);
   OhlcHistory ohlc_history = Resample(/* begin = */ price_history.begin(),
                                       /* end = */ price_history.end(),
                                       /* sampling_rate_sec = */ 300);
@@ -605,14 +605,14 @@ TEST(ResampleTest, ResampleMultiplePriceRecords1) {
 
 TEST(ResampleTest, ResampleMultiplePriceRecords2) {
   PriceHistory price_history;
-  AddPriceRecord(1483228850, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483228900, 750.0f, 2.0e3f, &price_history);
-  AddPriceRecord(1483228950, 650.0f, 2.0e3f, &price_history);
-  AddPriceRecord(1483229000, 720.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229450, 800.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229500, 750.0f, 2.5e3f, &price_history);
-  AddPriceRecord(1483229550, 800.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483229600, 850.0f, 2.5e3f, &price_history);
+  AddPriceRecord(1483228850, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483228900, 750.0f, 2.0e3f, price_history);
+  AddPriceRecord(1483228950, 650.0f, 2.0e3f, price_history);
+  AddPriceRecord(1483229000, 720.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229450, 800.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229500, 750.0f, 2.5e3f, price_history);
+  AddPriceRecord(1483229550, 800.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483229600, 850.0f, 2.5e3f, price_history);
   OhlcHistory ohlc_history = Resample(/* begin = */ price_history.begin(),
                                       /* end = */ price_history.end(),
                                       /* sampling_rate_sec = */ 300);

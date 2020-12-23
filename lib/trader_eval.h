@@ -14,7 +14,7 @@ namespace trader {
 TraderExecutionResult ExecuteTrader(
     const TraderAccountConfig& trader_account_config,
     OhlcHistory::const_iterator ohlc_history_begin,
-    OhlcHistory::const_iterator ohlc_history_end, TraderInterface* trader,
+    OhlcHistory::const_iterator ohlc_history_end, TraderInterface& trader,
     LoggerInterface* logger);
 
 // Evaluates a single type of trader (as defined by the "trader_factory")

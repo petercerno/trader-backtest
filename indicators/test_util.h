@@ -23,7 +23,7 @@ namespace testing {
 // O: 300  H: 700  L: 220  C: 650  V: 1000  T: 2017-01-04 08:00
 // --- Gap --
 // O: 650  H: 800  L: 600  C: 750  V: 1000  T: 2017-01-06 08:00
-void PrepareExampleOhlcHistory(OhlcHistory* ohlc_history);
+void PrepareExampleOhlcHistory(OhlcHistory& ohlc_history);
 
 }  // namespace testing
 }  // namespace trader

@@ -16,7 +16,7 @@ class LimitTrader : public TraderInterface {
   virtual ~LimitTrader() {}
 
   void Update(const OhlcTick& ohlc_tick, float base_balance,
-              float quote_balance, std::vector<Order>* orders) override;
+              float quote_balance, std::vector<Order>& orders) override;
   std::string GetInternalState() const override;
 
  private:
@@ -41,7 +41,7 @@ class LimitTrader : public TraderInterface {
 
   // Emits one limit buy and one limit sell order based on the smoothed price
   // and account balances.
-  void EmitLimitOrders(std::vector<Order>* orders) const;
+  void EmitLimitOrders(std::vector<Order>& orders) const;
 };
 
 // Factory that emits LimitTraders.

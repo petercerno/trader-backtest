@@ -5,8 +5,7 @@
 namespace trader {
 
 void LimitTrader::Update(const OhlcTick& ohlc_tick, float base_balance,
-                         float quote_balance, std::vector<Order>* orders) {
-  assert(orders != nullptr);
+                         float quote_balance, std::vector<Order>& orders) {
   const int timestamp_sec = ohlc_tick.timestamp_sec();
   const float price = ohlc_tick.close();
   assert(timestamp_sec > last_timestamp_sec_);
@@ -31,35 +30,35 @@ void LimitTrader::Update(const OhlcTick& ohlc_tick, float base_balance,
   EmitLimitOrders(orders);
 }
 
-void LimitTrader::EmitLimitOrders(std::vector<Order>* orders) const {
+void LimitTrader::EmitLimitOrders(std::vector<Order>& orders) const {
   if (last_timestamp_sec_ < init_timestamp_sec_ + warmup_period_sec_) {
     return;
   }
   if (last_base_balance_ > 0) {
-    orders->emplace_back();
-    Order* sell_order = &orders->back();
-    sell_order->set_type(Order_Type_LIMIT);
-    sell_order->set_side(Order_Side_SELL);
+    orders.emplace_back();
+    Order& sell_order = orders.back();
+    sell_order.set_type(Order_Type_LIMIT);
+    sell_order.set_side(Order_Side_SELL);
     float sell_price =
         smoothed_price_ * (1.0f + trader_config_.limit_sell_margin());
     if (last_close_ > sell_price) {
       sell_price = 1.001f * last_close_;
     }
-    sell_order->set_base_amount(last_base_balance_);
-    sell_order->set_price(sell_price);
+    sell_order.set_base_amount(last_base_balance_);
+    sell_order.set_price(sell_price);
   }
   if (last_quote_balance_ > 0) {
-    orders->emplace_back();
-    Order* buy_order = &orders->back();
-    buy_order->set_type(Order_Type_LIMIT);
-    buy_order->set_side(Order_Side_BUY);
+    orders.emplace_back();
+    Order& buy_order = orders.back();
+    buy_order.set_type(Order_Type_LIMIT);
+    buy_order.set_side(Order_Side_BUY);
     float buy_price =
         smoothed_price_ * (1.0f - trader_config_.limit_buy_margin());
     if (last_close_ < buy_price) {
       buy_price = 0.999f * last_close_;
     }
-    buy_order->set_quote_amount(last_quote_balance_);
-    buy_order->set_price(buy_price);
+    buy_order.set_quote_amount(last_quote_balance_);
+    buy_order.set_price(buy_price);
   }
 }
 

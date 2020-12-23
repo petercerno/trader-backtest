@@ -10,7 +10,7 @@ using ::trader::testing::PrepareExampleOhlcHistory;
 
 TEST(SimpleMovingAverageTest, Get3SMAWhenAdding8HourOhlcTicks) {
   OhlcHistory ohlc_history;
-  PrepareExampleOhlcHistory(&ohlc_history);
+  PrepareExampleOhlcHistory(ohlc_history);
 
   SimpleMovingAverage simple_moving_average(/*num_ohlc_ticks=*/3,
                                             /*period_size_sec=*/kSecondsPerDay);

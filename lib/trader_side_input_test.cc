@@ -10,35 +10,35 @@ static constexpr int kSecondsPer4Hours = 4 * 60 * 60;
 static constexpr int kSecondsPer8Hours = 8 * 60 * 60;
 
 // Adds signals to the side_history. Does not set the timestamp_sec.
-void AddSignals(const std::vector<float>& signals, SideHistory* side_history) {
-  side_history->emplace_back();
-  SideInputRecord* side_input = &side_history->back();
+void AddSignals(const std::vector<float>& signals, SideHistory& side_history) {
+  side_history.emplace_back();
+  SideInputRecord& side_input = side_history.back();
   for (const float signal : signals) {
-    side_input->add_signal(signal);
+    side_input.add_signal(signal);
   }
 }
 
 // Adds signals to the side_history period_sec away from the last record.
 void AddSignalsWithPeriod(const std::vector<float>& signals, int period_sec,
-                          SideHistory* side_history) {
+                          SideHistory& side_history) {
   int timestamp_sec = 1483228800;  // 2017-01-01
-  if (!side_history->empty()) {
-    timestamp_sec = side_history->back().timestamp_sec() + period_sec;
+  if (!side_history.empty()) {
+    timestamp_sec = side_history.back().timestamp_sec() + period_sec;
   }
   AddSignals(signals, side_history);
-  side_history->back().set_timestamp_sec(timestamp_sec);
+  side_history.back().set_timestamp_sec(timestamp_sec);
 }
 
 // Adds signals to the side_history 8h away from the last record.
 void Add8HourSignals(const std::vector<float>& signals,
-                     SideHistory* side_history) {
+                     SideHistory& side_history) {
   AddSignalsWithPeriod(signals, kSecondsPer8Hours, side_history);
 }
 }  // namespace
 
 TEST(TraderSideInputTest, OneSignalSingleRecord) {
   SideHistory side_history;
-  Add8HourSignals({10.0f}, &side_history);  // T: 1483228800
+  Add8HourSignals({10.0f}, side_history);  // T: 1483228800
 
   TraderSideInput trader_side_input(side_history);
   ASSERT_EQ(1, trader_side_input.GetNumberOfRecords());
@@ -61,7 +61,7 @@ TEST(TraderSideInputTest, OneSignalSingleRecord) {
 
 TEST(TraderSideInputTest, MultipleSignalsSingleRecord) {
   SideHistory side_history;
-  Add8HourSignals({10.0f, 20.0f, 5.0f}, &side_history);  // T: 1483228800
+  Add8HourSignals({10.0f, 20.0f, 5.0f}, side_history);  // T: 1483228800
 
   TraderSideInput trader_side_input(side_history);
   ASSERT_EQ(1, trader_side_input.GetNumberOfRecords());
@@ -81,16 +81,16 @@ TEST(TraderSideInputTest, MultipleSignalsSingleRecord) {
 
 TEST(TraderSideInputTest, OneSignalMultipleRecords) {
   SideHistory side_history;
-  Add8HourSignals({10.0f}, &side_history);  // T: 1483228800
-  Add8HourSignals({20.0f}, &side_history);  // T: 1483257600
-  Add8HourSignals({15.0f}, &side_history);  // T: 1483286400
-  Add8HourSignals({5.0f}, &side_history);   // T: 1483315200
-  Add8HourSignals({30.0f}, &side_history);  // T: 1483344000
-  Add8HourSignals({25.0f}, &side_history);  // T: 1483372800
-  Add8HourSignals({10.0f}, &side_history);  // T: 1483401600
-  Add8HourSignals({15.0f}, &side_history);  // T: 1483430400
-  Add8HourSignals({20.0f}, &side_history);  // T: 1483459200
-  Add8HourSignals({5.0f}, &side_history);   // T: 1483488000
+  Add8HourSignals({10.0f}, side_history);  // T: 1483228800
+  Add8HourSignals({20.0f}, side_history);  // T: 1483257600
+  Add8HourSignals({15.0f}, side_history);  // T: 1483286400
+  Add8HourSignals({5.0f}, side_history);   // T: 1483315200
+  Add8HourSignals({30.0f}, side_history);  // T: 1483344000
+  Add8HourSignals({25.0f}, side_history);  // T: 1483372800
+  Add8HourSignals({10.0f}, side_history);  // T: 1483401600
+  Add8HourSignals({15.0f}, side_history);  // T: 1483430400
+  Add8HourSignals({20.0f}, side_history);  // T: 1483459200
+  Add8HourSignals({5.0f}, side_history);   // T: 1483488000
 
   TraderSideInput trader_side_input(side_history);
   ASSERT_EQ(10, trader_side_input.GetNumberOfRecords());
@@ -173,16 +173,16 @@ TEST(TraderSideInputTest, OneSignalMultipleRecords) {
 
 TEST(TraderSideInputTest, MultipleSignalsMultipleRecords) {
   SideHistory side_history;
-  Add8HourSignals({10.0f, 5.0f, 15.0f}, &side_history);   // T: 1483228800
-  Add8HourSignals({20.0f, 10.0f, 30.0f}, &side_history);  // T: 1483257600
-  Add8HourSignals({15.0f, 20.0f, 5.0f}, &side_history);   // T: 1483286400
-  Add8HourSignals({5.0f, 10.0f, 5.0f}, &side_history);    // T: 1483315200
-  Add8HourSignals({30.0f, 20.0f, 15.0f}, &side_history);  // T: 1483344000
-  Add8HourSignals({25.0f, 20.0f, 10.0f}, &side_history);  // T: 1483372800
-  Add8HourSignals({10.0f, 10.0f, 15.0f}, &side_history);  // T: 1483401600
-  Add8HourSignals({15.0f, 5.0f, 30.0f}, &side_history);   // T: 1483430400
-  Add8HourSignals({20.0f, 15.0f, 20.0f}, &side_history);  // T: 1483459200
-  Add8HourSignals({5.0f, 25.0f, 10.0f}, &side_history);   // T: 1483488000
+  Add8HourSignals({10.0f, 5.0f, 15.0f}, side_history);   // T: 1483228800
+  Add8HourSignals({20.0f, 10.0f, 30.0f}, side_history);  // T: 1483257600
+  Add8HourSignals({15.0f, 20.0f, 5.0f}, side_history);   // T: 1483286400
+  Add8HourSignals({5.0f, 10.0f, 5.0f}, side_history);    // T: 1483315200
+  Add8HourSignals({30.0f, 20.0f, 15.0f}, side_history);  // T: 1483344000
+  Add8HourSignals({25.0f, 20.0f, 10.0f}, side_history);  // T: 1483372800
+  Add8HourSignals({10.0f, 10.0f, 15.0f}, side_history);  // T: 1483401600
+  Add8HourSignals({15.0f, 5.0f, 30.0f}, side_history);   // T: 1483430400
+  Add8HourSignals({20.0f, 15.0f, 20.0f}, side_history);  // T: 1483459200
+  Add8HourSignals({5.0f, 25.0f, 10.0f}, side_history);   // T: 1483488000
 
   TraderSideInput trader_side_input(side_history);
   ASSERT_EQ(10, trader_side_input.GetNumberOfRecords());

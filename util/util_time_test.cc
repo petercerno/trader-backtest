@@ -8,61 +8,61 @@ namespace trader {
 
 TEST(ConvertDateUTCToTimestampSecTest, Basic) {
   long timestamp_sec = -1;
-  ASSERT_FALSE(ConvertDateUTCToTimestampSec("Hello World!", &timestamp_sec));
+  ASSERT_FALSE(ConvertDateUTCToTimestampSec("Hello World!", timestamp_sec));
   EXPECT_EQ(-1, timestamp_sec);
-  ASSERT_TRUE(ConvertDateUTCToTimestampSec("1970-01-01", &timestamp_sec));
+  ASSERT_TRUE(ConvertDateUTCToTimestampSec("1970-01-01", timestamp_sec));
   EXPECT_EQ(0, timestamp_sec);
-  ASSERT_TRUE(ConvertDateUTCToTimestampSec("2000-02-29", &timestamp_sec));
+  ASSERT_TRUE(ConvertDateUTCToTimestampSec("2000-02-29", timestamp_sec));
   EXPECT_EQ(951782400, timestamp_sec);
-  ASSERT_TRUE(ConvertDateUTCToTimestampSec("2017-01-01", &timestamp_sec));
+  ASSERT_TRUE(ConvertDateUTCToTimestampSec("2017-01-01", timestamp_sec));
   EXPECT_EQ(1483228800, timestamp_sec);
-  ASSERT_TRUE(ConvertDateUTCToTimestampSec("2050-12-31", &timestamp_sec));
+  ASSERT_TRUE(ConvertDateUTCToTimestampSec("2050-12-31", timestamp_sec));
   EXPECT_EQ(2556057600, timestamp_sec);
-  ASSERT_TRUE(ConvertDateUTCToTimestampSec("", &timestamp_sec));
+  ASSERT_TRUE(ConvertDateUTCToTimestampSec("", timestamp_sec));
   EXPECT_EQ(0, timestamp_sec);
   timestamp_sec = -1;
-  ASSERT_FALSE(ConvertDateUTCToTimestampSec("1000-01-01", &timestamp_sec));
+  ASSERT_FALSE(ConvertDateUTCToTimestampSec("1000-01-01", timestamp_sec));
   EXPECT_EQ(-1, timestamp_sec);
-  ASSERT_FALSE(ConvertDateUTCToTimestampSec("2017-00-01", &timestamp_sec));
+  ASSERT_FALSE(ConvertDateUTCToTimestampSec("2017-00-01", timestamp_sec));
   EXPECT_EQ(-1, timestamp_sec);
-  ASSERT_FALSE(ConvertDateUTCToTimestampSec("2017-13-01", &timestamp_sec));
+  ASSERT_FALSE(ConvertDateUTCToTimestampSec("2017-13-01", timestamp_sec));
   EXPECT_EQ(-1, timestamp_sec);
-  ASSERT_FALSE(ConvertDateUTCToTimestampSec("2017-01-00", &timestamp_sec));
+  ASSERT_FALSE(ConvertDateUTCToTimestampSec("2017-01-00", timestamp_sec));
   EXPECT_EQ(-1, timestamp_sec);
-  ASSERT_FALSE(ConvertDateUTCToTimestampSec("2017-01-32", &timestamp_sec));
+  ASSERT_FALSE(ConvertDateUTCToTimestampSec("2017-01-32", timestamp_sec));
   EXPECT_EQ(-1, timestamp_sec);
 }
 
 TEST(ConvertDateUTCToTimestampSecTest, Extended) {
   long timestamp_sec = -1;
-  ASSERT_FALSE(ConvertDateUTCToTimestampSec("1970-01-01 ", &timestamp_sec));
+  ASSERT_FALSE(ConvertDateUTCToTimestampSec("1970-01-01 ", timestamp_sec));
   EXPECT_EQ(-1, timestamp_sec);
-  ASSERT_FALSE(ConvertDateUTCToTimestampSec(" 2000-02-29", &timestamp_sec));
+  ASSERT_FALSE(ConvertDateUTCToTimestampSec(" 2000-02-29", timestamp_sec));
   EXPECT_EQ(-1, timestamp_sec);
   ASSERT_TRUE(
-      ConvertDateUTCToTimestampSec("1970-01-01 00:00:00", &timestamp_sec));
+      ConvertDateUTCToTimestampSec("1970-01-01 00:00:00", timestamp_sec));
   EXPECT_EQ(0, timestamp_sec);
   ASSERT_TRUE(
-      ConvertDateUTCToTimestampSec("2000-02-29 00:00:00", &timestamp_sec));
+      ConvertDateUTCToTimestampSec("2000-02-29 00:00:00", timestamp_sec));
   EXPECT_EQ(951782400, timestamp_sec);
   ASSERT_TRUE(
-      ConvertDateUTCToTimestampSec("2000-02-29 00:00:10", &timestamp_sec));
+      ConvertDateUTCToTimestampSec("2000-02-29 00:00:10", timestamp_sec));
   EXPECT_EQ(951782410, timestamp_sec);
   ASSERT_TRUE(
-      ConvertDateUTCToTimestampSec("2017-01-01 00:05:00", &timestamp_sec));
+      ConvertDateUTCToTimestampSec("2017-01-01 00:05:00", timestamp_sec));
   EXPECT_EQ(1483229100, timestamp_sec);
   ASSERT_TRUE(
-      ConvertDateUTCToTimestampSec("2050-12-31 01:00:00", &timestamp_sec));
+      ConvertDateUTCToTimestampSec("2050-12-31 01:00:00", timestamp_sec));
   EXPECT_EQ(2556061200, timestamp_sec);
   timestamp_sec = -1;
   ASSERT_FALSE(
-      ConvertDateUTCToTimestampSec("1970-01-01 24:00:00", &timestamp_sec));
+      ConvertDateUTCToTimestampSec("1970-01-01 24:00:00", timestamp_sec));
   EXPECT_EQ(-1, timestamp_sec);
   ASSERT_FALSE(
-      ConvertDateUTCToTimestampSec("1970-01-01 00:60:00", &timestamp_sec));
+      ConvertDateUTCToTimestampSec("1970-01-01 00:60:00", timestamp_sec));
   EXPECT_EQ(-1, timestamp_sec);
   ASSERT_FALSE(
-      ConvertDateUTCToTimestampSec("1970-01-01 00:00:60", &timestamp_sec));
+      ConvertDateUTCToTimestampSec("1970-01-01 00:00:60", timestamp_sec));
   EXPECT_EQ(-1, timestamp_sec);
 }
 

@@ -7,11 +7,11 @@
 namespace trader {
 namespace {
 void AddPriceRecord(int timestamp_sec, float price, float volume,
-                    PriceHistory* price_history) {
-  price_history->emplace_back();
-  price_history->back().set_timestamp_sec(timestamp_sec);
-  price_history->back().set_price(price);
-  price_history->back().set_volume(volume);
+                    PriceHistory& price_history) {
+  price_history.emplace_back();
+  price_history.back().set_timestamp_sec(timestamp_sec);
+  price_history.back().set_price(price);
+  price_history.back().set_volume(volume);
 }
 
 void ExpectNearPriceRecord(const PriceRecord& expected,
@@ -24,11 +24,11 @@ void ExpectNearPriceRecord(const PriceRecord& expected,
 
 TEST(HistorySubsetTest, Basic) {
   PriceHistory price_history;
-  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229400, 800.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483230000, 750.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483230600, 850.0f, 2.0e3f, &price_history);
-  AddPriceRecord(1483231200, 800.0f, 1.5e3f, &price_history);
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229400, 800.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483230000, 750.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483230600, 850.0f, 2.0e3f, price_history);
+  AddPriceRecord(1483231200, 800.0f, 1.5e3f, price_history);
 
   std::pair<PriceHistory::const_iterator, PriceHistory::const_iterator>
       history_subset = HistorySubset(price_history,
@@ -82,11 +82,11 @@ TEST(HistorySubsetTest, Basic) {
 
 TEST(HistorySubsetCopyTest, Basic) {
   PriceHistory price_history;
-  AddPriceRecord(1483228800, 700.0f, 1.0e3f, &price_history);
-  AddPriceRecord(1483229400, 800.0f, 1.5e3f, &price_history);
-  AddPriceRecord(1483230000, 750.0f, 2.0e3f, &price_history);
-  AddPriceRecord(1483230600, 850.0f, 2.5e3f, &price_history);
-  AddPriceRecord(1483231200, 650.0f, 3.0e3f, &price_history);
+  AddPriceRecord(1483228800, 700.0f, 1.0e3f, price_history);
+  AddPriceRecord(1483229400, 800.0f, 1.5e3f, price_history);
+  AddPriceRecord(1483230000, 750.0f, 2.0e3f, price_history);
+  AddPriceRecord(1483230600, 850.0f, 2.5e3f, price_history);
+  AddPriceRecord(1483231200, 650.0f, 3.0e3f, price_history);
 
   PriceHistory history_subset_copy =
       HistorySubsetCopy(price_history,

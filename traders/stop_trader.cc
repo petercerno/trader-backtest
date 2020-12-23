@@ -5,8 +5,7 @@
 namespace trader {
 
 void StopTrader::Update(const OhlcTick& ohlc_tick, float base_balance,
-                        float quote_balance, std::vector<Order>* orders) {
-  assert(orders != nullptr);
+                        float quote_balance, std::vector<Order>& orders) {
   const int timestamp_sec = ohlc_tick.timestamp_sec();
   const float price = ohlc_tick.close();
   assert(timestamp_sec > last_timestamp_sec_);
@@ -69,19 +68,19 @@ void StopTrader::UpdateStopOrderPrice(Mode mode, int timestamp_sec,
   }
 }
 
-void StopTrader::EmitStopOrder(float price, std::vector<Order>* orders) const {
-  orders->emplace_back();
-  Order* order = &orders->back();
-  order->set_type(Order_Type_STOP);
+void StopTrader::EmitStopOrder(float price, std::vector<Order>& orders) const {
+  orders.emplace_back();
+  Order& order = orders.back();
+  order.set_type(Order_Type_STOP);
   if (mode_ == Mode::IN_LONG) {
-    order->set_side(Order_Side_SELL);
-    order->set_base_amount(last_base_balance_);
+    order.set_side(Order_Side_SELL);
+    order.set_base_amount(last_base_balance_);
   } else {
     assert(mode_ == Mode::IN_CASH);
-    order->set_side(Order_Side_BUY);
-    order->set_quote_amount(last_quote_balance_);
+    order.set_side(Order_Side_BUY);
+    order.set_quote_amount(last_quote_balance_);
   }
-  order->set_price(stop_order_price_);
+  order.set_price(stop_order_price_);
 }
 
 std::string StopTrader::GetInternalState() const {

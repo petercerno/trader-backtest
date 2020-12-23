@@ -20,12 +20,12 @@
 namespace trader {
 
 // Reads delimited message from the input stream.
-bool ReadDelimitedFrom(google::protobuf::io::ZeroCopyInputStream* raw_input,
-                       google::protobuf::Message* message);
+bool ReadDelimitedFrom(google::protobuf::io::ZeroCopyInputStream& raw_input,
+                       google::protobuf::Message& message);
 
 // Writes delimited message to the output stream.
 bool WriteDelimitedTo(const google::protobuf::Message& message,
-                      google::protobuf::io::ZeroCopyOutputStream* raw_output);
+                      google::protobuf::io::ZeroCopyOutputStream& raw_output);
 
 // Status returned by the reader (see below).
 enum class ReaderStatus { kContinue, kBreak, kFailure };
@@ -46,7 +46,7 @@ bool ReadDelimitedMessagesFromFile(
     google::protobuf::io::FileInputStream file_stream(fd);
     google::protobuf::io::GzipInputStream gzip_stream(&file_stream);
     T message;
-    while (ReadDelimitedFrom(&gzip_stream, &message)) {
+    while (ReadDelimitedFrom(gzip_stream, message)) {
       const ReaderStatus reader_status = reader(message);
       if (reader_status == ReaderStatus::kContinue) {
         continue;
@@ -66,14 +66,10 @@ bool ReadDelimitedMessagesFromFile(
 // Reads delimited messages from the (compressed) input file.
 template <typename T>
 bool ReadDelimitedMessagesFromFile(const std::string& file_name,
-                                   std::vector<T>* messages) {
-  if (messages == nullptr) {
-    std::cerr << "Undefined output vector messages" << std::endl;
-    return false;
-  }
+                                   std::vector<T>& messages) {
   return ReadDelimitedMessagesFromFile<T>(
       file_name, [&messages](const T& message) -> ReaderStatus {
-        messages->push_back(message);
+        messages.push_back(message);
         return ReaderStatus::kContinue;
       });
 }
@@ -95,7 +91,7 @@ bool WriteDelimitedMessagesToFile(InputIterator first, InputIterator last,
     options.compression_level = compress ? Z_DEFAULT_COMPRESSION : 0;
     google::protobuf::io::GzipOutputStream gzip_stream(&file_stream, options);
     while (first != last) {
-      if (!WriteDelimitedTo(*first, &gzip_stream)) {
+      if (!WriteDelimitedTo(*first, gzip_stream)) {
         std::cerr << "Cannot write message: " << first->DebugString()
                   << std::endl;
         success = false;

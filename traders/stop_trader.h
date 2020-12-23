@@ -16,7 +16,7 @@ class StopTrader : public TraderInterface {
   virtual ~StopTrader() {}
 
   void Update(const OhlcTick& ohlc_tick, float base_balance,
-              float quote_balance, std::vector<Order>* orders) override;
+              float quote_balance, std::vector<Order>& orders) override;
   std::string GetInternalState() const override;
 
  private:
@@ -47,7 +47,7 @@ class StopTrader : public TraderInterface {
   // Updates the trader stop order price.
   void UpdateStopOrderPrice(Mode mode, int timestamp_sec, float price);
   // Emits the stop order based on the (updated) internal trader state.
-  void EmitStopOrder(float price, std::vector<Order>* orders) const;
+  void EmitStopOrder(float price, std::vector<Order>& orders) const;
 };
 
 // Factory that emits StopTraders.

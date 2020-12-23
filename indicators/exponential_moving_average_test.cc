@@ -10,7 +10,7 @@ using ::trader::testing::PrepareExampleOhlcHistory;
 
 TEST(ExponentialMovingAverageTest, GetEMAWhenAdding8HourOhlcTicks) {
   OhlcHistory ohlc_history;
-  PrepareExampleOhlcHistory(&ohlc_history);
+  PrepareExampleOhlcHistory(ohlc_history);
 
   ExponentialMovingAverage exponential_moving_average(
       /*smoothing=*/2,

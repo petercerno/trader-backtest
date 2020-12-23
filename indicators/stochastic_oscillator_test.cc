@@ -10,7 +10,7 @@ using ::trader::testing::PrepareExampleOhlcHistory;
 
 TEST(StochasticOscillatorTest, GetSOWhenAdding8HourOhlcTicks) {
   OhlcHistory ohlc_history;
-  PrepareExampleOhlcHistory(&ohlc_history);
+  PrepareExampleOhlcHistory(ohlc_history);
 
   StochasticOscillator stochastic_oscillator(
       /*num_periods=*/2,

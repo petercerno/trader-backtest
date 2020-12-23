@@ -22,7 +22,7 @@ TEST(ReadWriteDelimitedTest, ReadWriteEmptyStream) {
   {
     IstreamInputStream input_stream(&iss);
     PriceRecord message;
-    while (ReadDelimitedFrom(&input_stream, &message)) {
+    while (ReadDelimitedFrom(input_stream, message)) {
       messages.emplace_back(message);
     }
   }
@@ -37,7 +37,7 @@ TEST(ReadWriteDelimitedTest, ReadWriteSinglePriceRecord) {
     price_record.set_timestamp_sec(1483228800);
     price_record.set_price(700.0f);
     price_record.set_volume(1.5e4f);
-    ASSERT_TRUE(WriteDelimitedTo(price_record, &output_stream));
+    ASSERT_TRUE(WriteDelimitedTo(price_record, output_stream));
   }
 
   std::istringstream iss(oss.str());
@@ -45,7 +45,7 @@ TEST(ReadWriteDelimitedTest, ReadWriteSinglePriceRecord) {
   {
     IstreamInputStream input_stream(&iss);
     PriceRecord message;
-    while (ReadDelimitedFrom(&input_stream, &message)) {
+    while (ReadDelimitedFrom(input_stream, message)) {
       messages.emplace_back(message);
     }
   }
@@ -67,7 +67,7 @@ TEST(ReadWriteDelimitedTest, ReadWriteMultipleOhlcTicks) {
       ohlc_tick.set_low(80.0f + 10.0f * i);
       ohlc_tick.set_close(110.0f + 10.0f * i);
       ohlc_tick.set_volume(1.5e4f + 1.0e3f * i);
-      ASSERT_TRUE(WriteDelimitedTo(ohlc_tick, &output_stream));
+      ASSERT_TRUE(WriteDelimitedTo(ohlc_tick, output_stream));
     }
   }
 
@@ -76,7 +76,7 @@ TEST(ReadWriteDelimitedTest, ReadWriteMultipleOhlcTicks) {
   {
     IstreamInputStream input_stream(&iss);
     OhlcTick message;
-    while (ReadDelimitedFrom(&input_stream, &message)) {
+    while (ReadDelimitedFrom(input_stream, message)) {
       messages.emplace_back(message);
     }
   }

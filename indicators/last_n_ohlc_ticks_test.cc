@@ -23,7 +23,7 @@ void ExpectOhlcTick(int timestamp_sec, float open, float high, float low,
 
 TEST(LastNOhlcTicksTest, GetLast3DaysWhenAdding8HourOhlcTicks) {
   OhlcHistory ohlc_history;
-  PrepareExampleOhlcHistory(&ohlc_history);
+  PrepareExampleOhlcHistory(ohlc_history);
 
   LastNOhlcTicks last_n_days(/*num_ohlc_ticks=*/3,
                              /*period_size_sec=*/kSecondsPerDay);

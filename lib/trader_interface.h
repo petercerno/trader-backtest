@@ -48,7 +48,7 @@ class TraderInterface {
   // called. The emitted orders will be either executed or cancelled by the
   // exchange at the next OHLC tick.
   virtual void Update(const OhlcTick& ohlc_tick, float base_balance,
-                      float quote_balance, std::vector<Order>* orders) = 0;
+                      float quote_balance, std::vector<Order>& orders) = 0;
 
   // Returns the internal trader state (as a string).
   // Note that it is recommended to represent the internal state as a string of

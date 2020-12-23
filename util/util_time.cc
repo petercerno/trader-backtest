@@ -16,9 +16,9 @@ static const std::chrono::system_clock::time_point kEpoch =
     std::chrono::system_clock::from_time_t(0);
 
 // Converts struct tm to UNIX timestamp (in seconds).
-long ConvertTmToTimestampSec(struct std::tm* const tm) {
+long ConvertTmToTimestampSec(struct std::tm& tm) {
   const std::chrono::system_clock::time_point time =
-      std::chrono::system_clock::from_time_t(timegm(tm));
+      std::chrono::system_clock::from_time_t(timegm(&tm));
   return std::chrono::duration_cast<std::chrono::seconds>(time - kEpoch)
       .count();
 }
@@ -75,10 +75,9 @@ std::tm AddMonthsToTm(const struct std::tm& tm, int months) {
 }  // namespace
 
 bool ConvertDateUTCToTimestampSec(const std::string& datetime_utc,
-                                  long* timestamp_sec) {
-  assert(timestamp_sec != nullptr);  // Undefined timestamp_sec
+                                  long& timestamp_sec) {
   if (datetime_utc.empty()) {
-    *timestamp_sec = 0;
+    timestamp_sec = 0;
     return true;
   }
   struct std::tm tm = {0};
@@ -113,7 +112,7 @@ bool ConvertDateUTCToTimestampSec(const std::string& datetime_utc,
   }
   tm.tm_mon -= 1;
   tm.tm_year -= 1900;
-  *timestamp_sec = ConvertTmToTimestampSec(&tm);
+  timestamp_sec = ConvertTmToTimestampSec(tm);
   return true;
 }
 
@@ -160,7 +159,7 @@ std::string DurationToString(long duration_sec) {
 long AddMonthsToTimestampSec(long timestamp_sec, int months) {
   struct std::tm tm(
       AddMonthsToTm(ConvertTimestampSecToTm(timestamp_sec), months));
-  return ConvertTmToTimestampSec(&tm);
+  return ConvertTmToTimestampSec(tm);
 }
 
 }  // namespace trader

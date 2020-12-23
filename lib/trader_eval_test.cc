@@ -27,47 +27,47 @@ void ExpectProtoEq(const google::protobuf::Message& expected_message,
 
 // Adds OHLC tick to the history. Does not set the timestamp_sec.
 void AddOhlcTick(float open, float high, float low, float close,
-                 OhlcHistory* ohlc_history) {
+                 OhlcHistory& ohlc_history) {
   ASSERT_LE(low, open);
   ASSERT_LE(low, high);
   ASSERT_LE(low, close);
   ASSERT_GE(high, open);
   ASSERT_GE(high, close);
-  ohlc_history->emplace_back();
-  OhlcTick* ohlc_tick = &ohlc_history->back();
-  ohlc_tick->set_open(open);
-  ohlc_tick->set_high(high);
-  ohlc_tick->set_low(low);
-  ohlc_tick->set_close(close);
-  ohlc_tick->set_volume(1000.0f);
+  ohlc_history.emplace_back();
+  OhlcTick& ohlc_tick = ohlc_history.back();
+  ohlc_tick.set_open(open);
+  ohlc_tick.set_high(high);
+  ohlc_tick.set_low(low);
+  ohlc_tick.set_close(close);
+  ohlc_tick.set_volume(1000.0f);
 }
 
 // Adds daily OHLC tick to the history.
 void AddDailyOhlcTick(float open, float high, float low, float close,
-                      OhlcHistory* ohlc_history) {
+                      OhlcHistory& ohlc_history) {
   int timestamp_sec = 1483228800;  // 2017-01-01
-  if (!ohlc_history->empty()) {
-    ASSERT_FLOAT_EQ(ohlc_history->back().close(), open);
-    timestamp_sec = ohlc_history->back().timestamp_sec() + 24 * 60 * 60;
+  if (!ohlc_history.empty()) {
+    ASSERT_FLOAT_EQ(ohlc_history.back().close(), open);
+    timestamp_sec = ohlc_history.back().timestamp_sec() + 24 * 60 * 60;
   }
   AddOhlcTick(open, high, low, close, ohlc_history);
-  ohlc_history->back().set_timestamp_sec(timestamp_sec);
+  ohlc_history.back().set_timestamp_sec(timestamp_sec);
 }
 
 // Adds monthly OHLC tick to the history.
 void AddMonthlyOhlcTick(float open, float high, float low, float close,
-                        OhlcHistory* ohlc_history) {
+                        OhlcHistory& ohlc_history) {
   int timestamp_sec = 1483228800;  // 2017-01-01
-  if (!ohlc_history->empty()) {
-    ASSERT_FLOAT_EQ(ohlc_history->back().close(), open);
+  if (!ohlc_history.empty()) {
+    ASSERT_FLOAT_EQ(ohlc_history.back().close(), open);
     timestamp_sec =
-        AddMonthsToTimestampSec(ohlc_history->back().timestamp_sec(), 1);
+        AddMonthsToTimestampSec(ohlc_history.back().timestamp_sec(), 1);
   }
   AddOhlcTick(open, high, low, close, ohlc_history);
-  ohlc_history->back().set_timestamp_sec(timestamp_sec);
+  ohlc_history.back().set_timestamp_sec(timestamp_sec);
 }
 
-void SetupDailyOhlcHistory(OhlcHistory* ohlc_history) {
+void SetupDailyOhlcHistory(OhlcHistory& ohlc_history) {
   AddDailyOhlcTick(100, 150, 80, 120, ohlc_history);   // 2017-01-01
   AddDailyOhlcTick(120, 180, 100, 150, ohlc_history);  // 2017-01-02
   AddDailyOhlcTick(150, 250, 100, 140, ohlc_history);  // 2017-01-03
@@ -75,7 +75,7 @@ void SetupDailyOhlcHistory(OhlcHistory* ohlc_history) {
   AddDailyOhlcTick(100, 120, 20, 50, ohlc_history);    // 2017-01-05
 }
 
-void SetupMonthlyOhlcHistory(OhlcHistory* ohlc_history) {
+void SetupMonthlyOhlcHistory(OhlcHistory& ohlc_history) {
   AddMonthlyOhlcTick(100, 150, 80, 120, ohlc_history);   // 2017-01-01
   AddMonthlyOhlcTick(120, 180, 100, 150, ohlc_history);  // 2017-02-01
   AddMonthlyOhlcTick(150, 250, 100, 140, ohlc_history);  // 2017-03-01
@@ -98,25 +98,24 @@ class TestTrader : public TraderInterface {
   virtual ~TestTrader() {}
 
   void Update(const OhlcTick& ohlc_tick, float base_balance,
-              float quote_balance, std::vector<Order>* orders) override {
-    assert(orders != nullptr);
+              float quote_balance, std::vector<Order>& orders) override {
     last_base_balance_ = base_balance;
     last_quote_balance_ = quote_balance;
     last_timestamp_sec_ = ohlc_tick.timestamp_sec();
     last_close_ = ohlc_tick.close();
     is_long_ = last_close_ * last_base_balance_ > last_quote_balance_;
-    orders->emplace_back();
-    Order* order = &orders->back();
+    orders.emplace_back();
+    Order& order = orders.back();
     if (is_long_) {
-      order->set_type(Order_Type_LIMIT);
-      order->set_side(Order_Side_SELL);
-      order->set_base_amount(last_base_balance_);
-      order->set_price(sell_price_);
+      order.set_type(Order_Type_LIMIT);
+      order.set_side(Order_Side_SELL);
+      order.set_base_amount(last_base_balance_);
+      order.set_price(sell_price_);
     } else {
-      order->set_type(Order_Type_LIMIT);
-      order->set_side(Order_Side_BUY);
-      order->set_quote_amount(last_quote_balance_);
-      order->set_price(buy_price_);
+      order.set_type(Order_Type_LIMIT);
+      order.set_side(Order_Side_BUY);
+      order.set_quote_amount(last_quote_balance_);
+      order.set_price(buy_price_);
     }
   }
 
@@ -199,7 +198,7 @@ TEST(ExecuteTraderTest, LimitBuyAndSell) {
       &trader_account_config));
 
   OhlcHistory ohlc_history;
-  SetupDailyOhlcHistory(&ohlc_history);
+  SetupDailyOhlcHistory(ohlc_history);
 
   TestTrader trader(/* buy_price = */ 50, /* sell_price = */ 200);
 
@@ -209,7 +208,7 @@ TEST(ExecuteTraderTest, LimitBuyAndSell) {
 
   TraderExecutionResult result =
       ExecuteTrader(trader_account_config, ohlc_history.begin(),
-                    ohlc_history.end(), &trader, &logger);
+                    ohlc_history.end(), trader, &logger);
 
   TraderExecutionResult expected_result;
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
@@ -279,7 +278,7 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
       &trader_account_config));
 
   OhlcHistory ohlc_history;
-  SetupMonthlyOhlcHistory(&ohlc_history);
+  SetupMonthlyOhlcHistory(ohlc_history);
 
   TraderEvaluationConfig trader_eval_config;
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
@@ -426,7 +425,7 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
       &trader_account_config));
 
   OhlcHistory ohlc_history;
-  SetupMonthlyOhlcHistory(&ohlc_history);
+  SetupMonthlyOhlcHistory(ohlc_history);
 
   TraderEvaluationConfig trader_eval_config;
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
@@ -622,7 +621,7 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
       &trader_account_config));
 
   OhlcHistory ohlc_history;
-  SetupMonthlyOhlcHistory(&ohlc_history);
+  SetupMonthlyOhlcHistory(ohlc_history);
 
   TraderEvaluationConfig trader_eval_config;
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
