@@ -2,8 +2,8 @@
 
 #include <gflags/gflags.h>
 
+#include "eval/trader_eval.h"
 #include "lib/trader_base.h"
-#include "lib/trader_eval.h"
 #include "logging/csv_logger.h"
 #include "traders/limit_trader.h"
 #include "traders/rebalancing_trader.h"

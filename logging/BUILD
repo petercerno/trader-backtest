@@ -1,6 +1,6 @@
 package(default_visibility = [
     "//:__pkg__",
-    "//lib:__pkg__",
+    "//eval:__pkg__",
 ])
 
 load("@rules_proto//proto:defs.bzl", "proto_library")

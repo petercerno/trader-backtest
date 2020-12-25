@@ -1,6 +1,6 @@
 // Copyright © 2020 Peter Cerno. All rights reserved.
 
-#include "lib/trader_eval.h"
+#include "eval/trader_eval.h"
 
 #include "util/util_time.h"
 

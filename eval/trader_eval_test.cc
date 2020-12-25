@@ -1,6 +1,6 @@
 // Copyright © 2020 Peter Cerno. All rights reserved.
 
-#include "lib/trader_eval.h"
+#include "eval/trader_eval.h"
 
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/util/message_differencer.h>

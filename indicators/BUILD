@@ -1,7 +1,4 @@
-package(default_visibility = [
-    "//:__pkg__",
-    "//traders:__pkg__",
-])
+package(default_visibility = ["//traders:__pkg__"])
 
 load("@rules_proto//proto:defs.bzl", "proto_library")
 

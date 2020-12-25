@@ -2,9 +2,9 @@ cc_binary(
     name = "trader",
     srcs = ["trader.cc"],
     deps = [
+        "//eval:trader_eval",
         "//external:gflags",
         "//lib:trader_base",
-        "//lib:trader_eval",
         "//logging:csv_logger",
         "//traders",
         "//util:util_proto",
