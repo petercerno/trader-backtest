@@ -1,14 +1,14 @@
 // Copyright © 2020 Peter Cerno. All rights reserved.
 
-#ifndef LIB_TRADER_ACCOUNT_H
-#define LIB_TRADER_ACCOUNT_H
+#ifndef BASE_ACCOUNT_H
+#define BASE_ACCOUNT_H
 
-#include "lib/trader_base.h"
+#include "base/base.h"
 
 namespace trader {
 
 // Keeps track of balances and implements methods for all exchange orders.
-struct TraderAccount {
+struct Account {
   // Base (crypto) currency balance (e.g. BTC balance when trading BTC/YYY).
   float base_balance = 0;
   // Quote currency balance (e.g. USD balance when trading XXX/USD).
@@ -171,12 +171,14 @@ struct TraderAccount {
   bool LimitSellAtQuote(const FeeConfig& fee_config, const OhlcTick& ohlc_tick,
                         float quote_amount, float limit_price);
 
+  // GENERAL ORDER EXECUTION
+
   // Executes the order over the given ohlc_tick.
   // Returns true iff the order was executed successfully.
-  bool ExecuteOrder(const TraderAccountConfig& trader_account_config,
+  bool ExecuteOrder(const AccountConfig& account_config,
                     const Order& order, const OhlcTick& ohlc_tick);
 };
 
 }  // namespace trader
 
-#endif  // LIB_TRADER_ACCOUNT_H
+#endif  // BASE_ACCOUNT_H

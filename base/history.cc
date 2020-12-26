@@ -1,6 +1,6 @@
 // Copyright © 2020 Peter Cerno. All rights reserved.
 
-#include "lib/trader_history.h"
+#include "base/history.h"
 
 namespace trader {
 

@@ -74,7 +74,7 @@ std::string LimitTrader::GetInternalState() const {
   return ss.str();
 }
 
-std::string LimitTraderFactory::GetTraderName() const {
+std::string LimitTraderFactory::GetName() const {
   std::stringstream ss;
   ss << std::fixed << std::setprecision(3) << "limit-trader["
      << trader_config_.alpha_per_hour() << "|"

@@ -3,8 +3,8 @@
 #ifndef INDICATORS_TEST_UTIL_H
 #define INDICATORS_TEST_UTIL_H
 
+#include "base/base.h"
 #include "gtest/gtest.h"
-#include "lib/trader_base.h"
 
 namespace trader {
 namespace testing {

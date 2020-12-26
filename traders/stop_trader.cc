@@ -104,7 +104,7 @@ std::string StopTrader::GetInternalState() const {
   return ss.str();
 }
 
-std::string StopTraderFactory::GetTraderName() const {
+std::string StopTraderFactory::GetName() const {
   std::stringstream ss;
   ss << std::fixed << std::setprecision(3) << "stop-trader["
      << trader_config_.stop_order_margin() << "|"

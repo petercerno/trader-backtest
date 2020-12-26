@@ -1,10 +1,10 @@
 // Copyright © 2020 Peter Cerno. All rights reserved.
 
-#include "lib/trader_side_input.h"
+#include "base/side_input.h"
 
 namespace trader {
 
-TraderSideInput::TraderSideInput(const SideHistory& side_history)
+SideInput::SideInput(const SideHistory& side_history)
     : num_signals_(side_history.front().signal_size()) {
   timestamp_sec_history_.reserve(side_history.size());
   data_.reserve(side_history.size() * num_signals_);
@@ -20,14 +20,14 @@ TraderSideInput::TraderSideInput(const SideHistory& side_history)
   }
 }
 
-int TraderSideInput::GetSideInputIndex(int timestamp_sec) const {
+int SideInput::GetSideInputIndex(int timestamp_sec) const {
   return std::upper_bound(timestamp_sec_history_.begin(),
                           timestamp_sec_history_.end(), timestamp_sec) -
          timestamp_sec_history_.begin() - 1;
 }
 
-int TraderSideInput::GetSideInputIndex(int timestamp_sec,
-                                       int prev_side_input_index) const {
+int SideInput::GetSideInputIndex(int timestamp_sec,
+                                 int prev_side_input_index) const {
   if (prev_side_input_index < 0) {
     return GetSideInputIndex(timestamp_sec);
   }

@@ -3,7 +3,7 @@
 #ifndef INDICATORS_LAST_N_OHLC_TICKS_H
 #define INDICATORS_LAST_N_OHLC_TICKS_H
 
-#include "lib/trader_base.h"
+#include "base/base.h"
 
 namespace trader {
 

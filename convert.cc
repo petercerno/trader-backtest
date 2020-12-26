@@ -2,10 +2,10 @@
 
 #include <gflags/gflags.h>
 
-#include "lib/trader_base.h"
-#include "lib/trader_history.h"
-#include "util/util_proto.h"
-#include "util/util_time.h"
+#include "base/base.h"
+#include "base/history.h"
+#include "util/proto.h"
+#include "util/time.h"
 
 DEFINE_string(input_price_history_csv_file, "",
               "Input CSV file containing the historical prices.");

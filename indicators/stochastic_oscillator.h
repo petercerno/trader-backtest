@@ -3,9 +3,9 @@
 #ifndef INDICATORS_STOCHASTIC_OSCILLATOR_H
 #define INDICATORS_STOCHASTIC_OSCILLATOR_H
 
+#include "base/base.h"
 #include "indicators/last_n_ohlc_ticks.h"
 #include "indicators/util.h"
-#include "lib/trader_base.h"
 
 namespace trader {
 

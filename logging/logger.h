@@ -1,10 +1,10 @@
 // Copyright © 2020 Peter Cerno. All rights reserved.
 
-#ifndef LOGGING_LOGGER_INTERFACE_H
-#define LOGGING_LOGGER_INTERFACE_H
+#ifndef LOGGING_LOGGER_H
+#define LOGGING_LOGGER_H
 
-#include "lib/trader_account.h"
-#include "lib/trader_base.h"
+#include "base/account.h"
+#include "base/base.h"
 
 namespace trader {
 
@@ -14,14 +14,13 @@ class LoggerInterface {
   LoggerInterface() {}
   virtual ~LoggerInterface() {}
 
-  // Logs the current ohlc_tick and trader_account.
+  // Logs the current ohlc_tick and account.
   virtual void LogExchangeState(const OhlcTick& ohlc_tick,
-                                const TraderAccount& trader_account) = 0;
-  // Logs the current ohlc_tick, trader_account, and order, after executing
+                                const Account& account) = 0;
+  // Logs the current ohlc_tick, account, and order, after executing
   // the given order.
   virtual void LogExchangeState(const OhlcTick& ohlc_tick,
-                                const TraderAccount& trader_account,
-                                const Order& order) = 0;
+                                const Account& account, const Order& order) = 0;
 
   // Logs the trader state.
   virtual void LogTraderState(const std::string& trader_state) = 0;
@@ -29,4 +28,4 @@ class LoggerInterface {
 
 }  // namespace trader
 
-#endif  // LOGGING_LOGGER_INTERFACE_H
+#endif  // LOGGING_LOGGER_H

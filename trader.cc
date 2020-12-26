@@ -2,20 +2,20 @@
 
 #include <gflags/gflags.h>
 
-#include "eval/trader_eval.h"
-#include "lib/trader_base.h"
+#include "base/base.h"
+#include "eval/eval.h"
 #include "logging/csv_logger.h"
 #include "traders/limit_trader.h"
 #include "traders/rebalancing_trader.h"
 #include "traders/stop_trader.h"
-#include "util/util_proto.h"
-#include "util/util_time.h"
+#include "util/proto.h"
+#include "util/time.h"
 
 DEFINE_string(input_ohlc_history_delimited_proto_file, "",
               "Input file containing the delimited OhlcRecord protos.");
 DEFINE_string(output_exchange_log_file, "",
               "Output CSV file containing the exchange log.");
-DEFINE_string(output_trader_log_file, "",
+DEFINE_string(output_log_file, "",
               "Output file containing the trader-dependent log.");
 DEFINE_string(trader, "limit",
               "Trader to be executed. [limit, rebalancing, stop].");
@@ -42,9 +42,9 @@ static constexpr char kLimitTraderName[] = "limit";
 static constexpr char kRebalancingTraderName[] = "rebalancing";
 static constexpr char kStopTraderName[] = "stop";
 
-// Returns the TraderAccountConfig based on the flags (and default values).
-TraderAccountConfig GetTraderAccountConfig() {
-  TraderAccountConfig config;
+// Returns the trader's AccountConfig based on the flags (and default values).
+AccountConfig GetAccountConfig() {
+  AccountConfig config;
   config.set_start_base_balance(FLAGS_start_base_balance);
   config.set_start_quote_balance(FLAGS_start_quote_balance);
   config.set_base_unit(0.00001f);
@@ -196,15 +196,12 @@ std::unique_ptr<std::ofstream> OpenLogFile(const std::string& log_filename) {
 }
 
 // Prints top_n evaluation results.
-void PrintTraderEvalResults(
-    const std::vector<TraderEvaluationResult>& trader_eval_results,
-    size_t top_n) {
-  const size_t eval_count = std::min(top_n, trader_eval_results.size());
+void PrintTraderEvalResults(const std::vector<EvaluationResult>& eval_results,
+                            size_t top_n) {
+  const size_t eval_count = std::min(top_n, eval_results.size());
   for (int eval_index = 0; eval_index < eval_count; ++eval_index) {
-    const TraderEvaluationResult& trader_eval_result =
-        trader_eval_results.at(eval_index);
-    std::cout << trader_eval_result.trader_name() << ": "
-              << trader_eval_result.score() << std::endl;
+    const EvaluationResult& eval_result = eval_results.at(eval_index);
+    std::cout << eval_result.name() << ": " << eval_result.score() << std::endl;
   }
 }
 }  // namespace
@@ -216,7 +213,7 @@ int main(int argc, char* argv[]) {
 
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  TraderAccountConfig trader_account_config = GetTraderAccountConfig();
+  AccountConfig account_config = GetAccountConfig();
 
   long start_timestamp_sec = 0;
   long end_timestamp_sec = 0;
@@ -228,11 +225,10 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  TraderEvaluationConfig trader_eval_config;
-  trader_eval_config.set_start_timestamp_sec(start_timestamp_sec);
-  trader_eval_config.set_end_timestamp_sec(end_timestamp_sec);
-  trader_eval_config.set_evaluation_period_months(
-      FLAGS_evaluation_period_months);
+  EvaluationConfig eval_config;
+  eval_config.set_start_timestamp_sec(start_timestamp_sec);
+  eval_config.set_end_timestamp_sec(end_timestamp_sec);
+  eval_config.set_evaluation_period_months(FLAGS_evaluation_period_months);
 
   OhlcHistory ohlc_history =
       GetOhlcHistoryFromFlags(start_timestamp_sec, end_timestamp_sec);
@@ -243,38 +239,32 @@ int main(int argc, char* argv[]) {
 
   if (FLAGS_evaluate_batch) {
     std::cout << std::endl << "Batch evaluation:" << std::endl;
-    std::vector<std::unique_ptr<TraderFactoryInterface>> trader_factories =
+    std::vector<std::unique_ptr<TraderFactoryInterface>> factories =
         GetDefaultBatchOfTraders();
-    std::vector<TraderEvaluationResult> trader_eval_results =
-        EvaluateBatchOfTraders(trader_account_config, trader_eval_config,
-                               ohlc_history, trader_factories);
-    std::sort(trader_eval_results.begin(), trader_eval_results.end(),
-              [](const TraderEvaluationResult& lhs,
-                 const TraderEvaluationResult& rhs) {
+    std::vector<EvaluationResult> eval_results = EvaluateBatchOfTraders(
+        account_config, eval_config, ohlc_history, factories);
+    std::sort(eval_results.begin(), eval_results.end(),
+              [](const EvaluationResult& lhs, const EvaluationResult& rhs) {
                 return lhs.score() > rhs.score();
               });
-    PrintTraderEvalResults(trader_eval_results, 20);
+    PrintTraderEvalResults(eval_results, 20);
   } else {
     std::cout << std::endl << "Trader evaluation:" << std::endl;
-    std::unique_ptr<TraderFactoryInterface> trader_factory =
-        GetDefaultTraderFactory();
+    std::unique_ptr<TraderFactoryInterface> factory = GetDefaultTraderFactory();
     std::unique_ptr<std::ofstream> exchange_log_stream =
         OpenLogFile(FLAGS_output_exchange_log_file);
-    std::unique_ptr<std::ofstream> trader_log_stream =
-        OpenLogFile(FLAGS_output_trader_log_file);
-    CsvLogger logger(exchange_log_stream.get(), trader_log_stream.get());
-    TraderEvaluationResult trader_eval_result =
-        EvaluateTrader(trader_account_config, trader_eval_config, ohlc_history,
-                       *trader_factory.get(), &logger);
-    for (const TraderEvaluationResult::Period& period :
-         trader_eval_result.period()) {
+    std::unique_ptr<std::ofstream> log_stream =
+        OpenLogFile(FLAGS_output_log_file);
+    CsvLogger logger(exchange_log_stream.get(), log_stream.get());
+    EvaluationResult eval_result = EvaluateTrader(
+        account_config, eval_config, ohlc_history, *factory.get(), &logger);
+    for (const EvaluationResult::Period& period : eval_result.period()) {
       std::cout << "["
                 << ConvertTimestampSecToDateTimeUTC(
                        period.start_timestamp_sec())
                 << " - "
                 << ConvertTimestampSecToDateTimeUTC(period.end_timestamp_sec())
-                << "): "
-                << period.trader_final_gain() / period.baseline_final_gain()
+                << "): " << period.final_gain() / period.base_final_gain()
                 << std::endl;
     }
   }

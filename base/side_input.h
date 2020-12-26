@@ -1,18 +1,18 @@
 // Copyright © 2020 Peter Cerno. All rights reserved.
 
-#ifndef LIB_TRADER_SIDE_INPUT_H
-#define LIB_TRADER_SIDE_INPUT_H
+#ifndef BASE_SIDE_INPUT_H
+#define BASE_SIDE_INPUT_H
 
-#include "lib/trader_base.h"
+#include "base/base.h"
 
 namespace trader {
 
 // Side history wrapper for fast thread-safe read-only access.
-class TraderSideInput {
+class SideInput {
  public:
   // Constructor. Expects non-empty side_history with increasing timestamps.
-  explicit TraderSideInput(const SideHistory& side_history);
-  virtual ~TraderSideInput() {}
+  explicit SideInput(const SideHistory& side_history);
+  virtual ~SideInput() {}
 
   // Returns the number of signals per side input record.
   int GetNumberOfSignals() const { return num_signals_; }
@@ -49,4 +49,4 @@ class TraderSideInput {
 
 }  // namespace trader
 
-#endif  // LIB_TRADER_SIDE_INPUT_H
+#endif  // BASE_SIDE_INPUT_H

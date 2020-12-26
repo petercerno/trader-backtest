@@ -22,7 +22,7 @@ cc_library(
     srcs = ["test_util.cc"],
     hdrs = ["test_util.h"],
     deps = [
-        "//lib:trader_base",
+        "//base",
         "@googletest//:gtest_main",
     ],
 )
@@ -31,7 +31,7 @@ cc_library(
     name = "last_n_ohlc_ticks",
     srcs = ["last_n_ohlc_ticks.cc"],
     hdrs = ["last_n_ohlc_ticks.h"],
-    deps = ["//lib:trader_base"],
+    deps = ["//base"],
 )
 
 cc_test(
@@ -50,7 +50,7 @@ cc_library(
     hdrs = ["simple_moving_average.h"],
     deps = [
         ":last_n_ohlc_ticks",
-        "//lib:trader_base",
+        "//base",
     ],
 )
 
@@ -71,7 +71,7 @@ cc_library(
     deps = [
         ":last_n_ohlc_ticks",
         ":util",
-        "//lib:trader_base",
+        "//base",
     ],
 )
 
@@ -92,7 +92,7 @@ cc_library(
     deps = [
         ":last_n_ohlc_ticks",
         ":util",
-        "//lib:trader_base",
+        "//base",
     ],
 )
 
@@ -113,7 +113,7 @@ cc_library(
     deps = [
         ":last_n_ohlc_ticks",
         ":util",
-        "//lib:trader_base",
+        "//base",
     ],
 )
 
@@ -134,7 +134,7 @@ cc_library(
     deps = [
         ":last_n_ohlc_ticks",
         ":util",
-        "//lib:trader_base",
+        "//base",
     ],
 )
 

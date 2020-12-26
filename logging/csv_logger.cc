@@ -4,7 +4,7 @@
 
 namespace trader {
 namespace {
-// Logs the "ohlc_tick" to the output stream "os".
+// Logs the ohlc_tick to the output stream os.
 void LogOhlcTick(const OhlcTick& ohlc_tick, std::ostream* os) {
   *os << std::fixed << std::setprecision(0)  // nowrap
       << ohlc_tick.timestamp_sec() << ","    // nowrap
@@ -16,15 +16,15 @@ void LogOhlcTick(const OhlcTick& ohlc_tick, std::ostream* os) {
       << ohlc_tick.volume();
 }
 
-// Logs the "trader_account" balances to the output stream "os".
-void LogTraderAccount(const TraderAccount& trader_account, std::ostream* os) {
-  *os << std::fixed << std::setprecision(3)   // nowrap
-      << trader_account.base_balance << ","   // nowrap
-      << trader_account.quote_balance << ","  // nowrap
-      << trader_account.total_fee;
+// Logs the account balances to the output stream os.
+void LogAccount(const Account& account, std::ostream* os) {
+  *os << std::fixed << std::setprecision(3)  // nowrap
+      << account.base_balance << ","         // nowrap
+      << account.quote_balance << ","        // nowrap
+      << account.total_fee;
 }
 
-// Logs the "order" to the output stream "os".
+// Logs the order to the output stream os.
 void LogOrder(const Order& order, std::ostream* os) {
   *os << Order::Type_Name(order.type()) << ","  // nowrap
       << Order::Side_Name(order.side()) << ","  // nowrap
@@ -42,42 +42,41 @@ void LogOrder(const Order& order, std::ostream* os) {
   }
 }
 
-// Logs empty order to the output stream "os".
+// Logs empty order to the output stream os.
 void LogEmptyOrder(std::ostream* os) { *os << ",,,,"; }
 }  // namespace
 
 void CsvLogger::LogExchangeState(const OhlcTick& ohlc_tick,
-                                 const TraderAccount& trader_account) {
+                                 const Account& account) {
   if (exchange_os_ == nullptr) {
     return;
   }
   LogOhlcTick(ohlc_tick, exchange_os_);
   *exchange_os_ << ",";
-  LogTraderAccount(trader_account, exchange_os_);
+  LogAccount(account, exchange_os_);
   *exchange_os_ << ",";
   LogEmptyOrder(exchange_os_);
   *exchange_os_ << std::endl;
 }
 
 void CsvLogger::LogExchangeState(const OhlcTick& ohlc_tick,
-                                 const TraderAccount& trader_account,
-                                 const Order& order) {
+                                 const Account& account, const Order& order) {
   if (exchange_os_ == nullptr) {
     return;
   }
   LogOhlcTick(ohlc_tick, exchange_os_);
   *exchange_os_ << ",";
-  LogTraderAccount(trader_account, exchange_os_);
+  LogAccount(account, exchange_os_);
   *exchange_os_ << ",";
   LogOrder(order, exchange_os_);
   *exchange_os_ << std::endl;
 }
 
-void CsvLogger::LogTraderState(const std::string& trader_state) {
+void CsvLogger::LogTraderState(const std::string& state) {
   if (trader_os_ == nullptr) {
     return;
   }
-  *trader_os_ << trader_state << std::endl;
+  *trader_os_ << state << std::endl;
 }
 
 }  // namespace trader

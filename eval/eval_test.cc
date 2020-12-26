@@ -1,15 +1,17 @@
 // Copyright © 2020 Peter Cerno. All rights reserved.
 
-#include "eval/trader_eval.h"
+#include "eval/eval.h"
 
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/util/message_differencer.h>
 
 #include "gtest/gtest.h"
 #include "logging/csv_logger.h"
-#include "util/util_time.h"
+#include "util/time.h"
 
 namespace trader {
+using ::google::protobuf::TextFormat;
+
 namespace {
 // Compares two protobuf messages and outputs a diff if they differ.
 void ExpectProtoEq(const google::protobuf::Message& expected_message,
@@ -160,7 +162,7 @@ class TestTraderFactory : public TraderFactoryInterface {
       : buy_price_(buy_price), sell_price_(sell_price) {}
   virtual ~TestTraderFactory() {}
 
-  std::string GetTraderName() const override {
+  std::string GetName() const override {
     std::stringstream trader_name_os;
     trader_name_os << std::fixed << std::setprecision(0) << "test-trader"
                    << "[" << buy_price_ << "|" << sell_price_ << "]";
@@ -181,8 +183,8 @@ class TestTraderFactory : public TraderFactoryInterface {
 }  // namespace
 
 TEST(ExecuteTraderTest, LimitBuyAndSell) {
-  TraderAccountConfig trader_account_config;
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+  AccountConfig account_config;
+  ASSERT_TRUE(TextFormat::ParseFromString(
       R"(
         start_base_balance: 10
         start_quote_balance: 0
@@ -195,7 +197,7 @@ TEST(ExecuteTraderTest, LimitBuyAndSell) {
         }
         market_liquidity: 0.5
         max_volume_ratio: 0.1)",
-      &trader_account_config));
+      &account_config));
 
   OhlcHistory ohlc_history;
   SetupDailyOhlcHistory(ohlc_history);
@@ -206,12 +208,11 @@ TEST(ExecuteTraderTest, LimitBuyAndSell) {
   std::stringstream trader_os;
   CsvLogger logger(&exchange_os, &trader_os);
 
-  TraderExecutionResult result =
-      ExecuteTrader(trader_account_config, ohlc_history.begin(),
-                    ohlc_history.end(), trader, &logger);
+  ExecutionResult result = ExecuteTrader(account_config, ohlc_history.begin(),
+                                         ohlc_history.end(), trader, &logger);
 
-  TraderExecutionResult expected_result;
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+  ExecutionResult expected_result;
+  ASSERT_TRUE(TextFormat::ParseFromString(
       R"(
         start_base_balance: 10
         start_quote_balance: 0
@@ -260,8 +261,8 @@ TEST(ExecuteTraderTest, LimitBuyAndSell) {
 }
 
 TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
-  TraderAccountConfig trader_account_config;
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+  AccountConfig account_config;
+  ASSERT_TRUE(TextFormat::ParseFromString(
       R"(
         start_base_balance: 10
         start_quote_balance: 0
@@ -275,36 +276,35 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
         market_liquidity: 0.5
         max_volume_ratio: 0.1
         )",
-      &trader_account_config));
+      &account_config));
 
   OhlcHistory ohlc_history;
   SetupMonthlyOhlcHistory(ohlc_history);
 
-  TraderEvaluationConfig trader_eval_config;
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+  EvaluationConfig eval_config;
+  ASSERT_TRUE(TextFormat::ParseFromString(
       R"(
         start_timestamp_sec: 1483228800
         end_timestamp_sec: 1514764800
         evaluation_period_months: 0
         )",
-      &trader_eval_config));
+      &eval_config));
 
   TestTraderFactory trader_factory(/* buy_price = */ 50,
                                    /* sell_price = */ 200);
-  EXPECT_EQ("test-trader[50|200]", trader_factory.GetTraderName());
+  EXPECT_EQ("test-trader[50|200]", trader_factory.GetName());
 
   std::stringstream exchange_os;
   std::stringstream trader_os;
   CsvLogger logger(&exchange_os, &trader_os);
 
-  TraderEvaluationResult result =
-      EvaluateTrader(trader_account_config, trader_eval_config, ohlc_history,
-                     trader_factory, &logger);
+  EvaluationResult result = EvaluateTrader(
+      account_config, eval_config, ohlc_history, trader_factory, &logger);
 
-  TraderEvaluationResult expected_result;
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+  EvaluationResult expected_result;
+  ASSERT_TRUE(TextFormat::ParseFromString(
       R"(
-        trader_account_config {
+        account_config {
             start_base_balance: 10
             start_quote_balance: 0
             base_unit: 0.1
@@ -317,12 +317,12 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
             market_liquidity: 0.5
             max_volume_ratio: 0.1
         }
-        trader_eval_config {
+        eval_config {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1514764800
             evaluation_period_months: 0
         }
-        trader_name: "test-trader[50|200]"
+        name: "test-trader[50|200]"
         period {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1514764800
@@ -338,12 +338,12 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
                 total_executed_orders: 3
                 total_fee: 1011
             }
-            trader_final_gain: 4.86166668
-            baseline_final_gain: 6.25
+            final_gain: 4.86166668
+            base_final_gain: 6.25
         }
         score: 0.777866662
-        avg_trader_gain: 4.86166668
-        avg_baseline_gain: 6.25
+        avg_gain: 4.86166668
+        avg_base_gain: 6.25
         avg_total_executed_orders: 3
         avg_total_fee: 1011
         )",
@@ -407,8 +407,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
 }
 
 TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
-  TraderAccountConfig trader_account_config;
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+  AccountConfig account_config;
+  ASSERT_TRUE(TextFormat::ParseFromString(
       R"(
         start_base_balance: 10
         start_quote_balance: 0
@@ -422,32 +422,32 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
         market_liquidity: 0.5
         max_volume_ratio: 0.1
         )",
-      &trader_account_config));
+      &account_config));
 
   OhlcHistory ohlc_history;
   SetupMonthlyOhlcHistory(ohlc_history);
 
-  TraderEvaluationConfig trader_eval_config;
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+  EvaluationConfig eval_config;
+  ASSERT_TRUE(TextFormat::ParseFromString(
       R"(
         start_timestamp_sec: 1483228800
         end_timestamp_sec: 1514764800
         evaluation_period_months: 6
         )",
-      &trader_eval_config));
+      &eval_config));
 
   TestTraderFactory trader_factory(/* buy_price = */ 50,
                                    /* sell_price = */ 200);
-  EXPECT_EQ("test-trader[50|200]", trader_factory.GetTraderName());
+  EXPECT_EQ("test-trader[50|200]", trader_factory.GetName());
 
-  TraderEvaluationResult result =
-      EvaluateTrader(trader_account_config, trader_eval_config, ohlc_history,
-                     trader_factory, /* logger = */ nullptr);
+  EvaluationResult result =
+      EvaluateTrader(account_config, eval_config, ohlc_history, trader_factory,
+                     /* logger = */ nullptr);
 
-  TraderEvaluationResult expected_result;
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+  EvaluationResult expected_result;
+  ASSERT_TRUE(TextFormat::ParseFromString(
       R"(
-        trader_account_config {
+        account_config {
             start_base_balance: 10
             start_quote_balance: 0
             base_unit: 0.1
@@ -460,12 +460,12 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
             market_liquidity: 0.5
             max_volume_ratio: 0.1
         }
-        trader_eval_config {
+        eval_config {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1514764800
             evaluation_period_months: 6
         }
-        trader_name: "test-trader[50|200]"
+        name: "test-trader[50|200]"
         period {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1498867200
@@ -481,8 +481,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 total_executed_orders: 2
                 total_fee: 364
             }
-            trader_final_gain: 2.17083335
-            baseline_final_gain: 0.666666687
+            final_gain: 2.17083335
+            base_final_gain: 0.666666687
         }
         period {
             start_timestamp_sec: 1485907200
@@ -499,8 +499,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 total_executed_orders: 2
                 total_fee: 364
             }
-            trader_final_gain: 3.244
-            baseline_final_gain: 1
+            final_gain: 3.244
+            base_final_gain: 1
         }
         period {
             start_timestamp_sec: 1488326400
@@ -517,8 +517,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 total_executed_orders: 1
                 total_fee: 201
             }
-            trader_final_gain: 1.285
-            baseline_final_gain: 1.71428573
+            final_gain: 1.285
+            base_final_gain: 1.71428573
         }
         period {
             start_timestamp_sec: 1491004800
@@ -535,8 +535,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 total_executed_orders: 1
                 total_fee: 201
             }
-            trader_final_gain: 1.799
-            baseline_final_gain: 4
+            final_gain: 1.799
+            base_final_gain: 4
         }
         period {
             start_timestamp_sec: 1493596800
@@ -553,8 +553,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 total_executed_orders: 1
                 total_fee: 201
             }
-            trader_final_gain: 3.598
-            baseline_final_gain: 6
+            final_gain: 3.598
+            base_final_gain: 6
         }
         period {
             start_timestamp_sec: 1496275200
@@ -571,8 +571,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 total_executed_orders: 1
                 total_fee: 201
             }
-            trader_final_gain: 2.24875
-            baseline_final_gain: 8.125
+            final_gain: 2.24875
+            base_final_gain: 8.125
         }
         period {
             start_timestamp_sec: 1498867200
@@ -589,12 +589,12 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 total_executed_orders: 1
                 total_fee: 201
             }
-            trader_final_gain: 1.19933331
-            baseline_final_gain: 5
+            final_gain: 1.19933331
+            base_final_gain: 5
         }
         score: 0.75648129
-        avg_trader_gain: 2.22070217
-        avg_baseline_gain: 3.78656459
+        avg_gain: 2.22070217
+        avg_base_gain: 3.78656459
         avg_total_executed_orders: 1.28571427
         avg_total_fee: 247.571426
         )",
@@ -603,8 +603,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
 }
 
 TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
-  TraderAccountConfig trader_account_config;
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+  AccountConfig account_config;
+  ASSERT_TRUE(TextFormat::ParseFromString(
       R"(
         start_base_balance: 10
         start_quote_balance: 0
@@ -618,19 +618,19 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
         market_liquidity: 0.5
         max_volume_ratio: 0.1
         )",
-      &trader_account_config));
+      &account_config));
 
   OhlcHistory ohlc_history;
   SetupMonthlyOhlcHistory(ohlc_history);
 
-  TraderEvaluationConfig trader_eval_config;
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+  EvaluationConfig eval_config;
+  ASSERT_TRUE(TextFormat::ParseFromString(
       R"(
         start_timestamp_sec: 1483228800
         end_timestamp_sec: 1514764800
         evaluation_period_months: 6
         )",
-      &trader_eval_config));
+      &eval_config));
 
   std::vector<std::unique_ptr<TraderFactoryInterface>> trader_factories;
   trader_factories.emplace_back(new TestTraderFactory(/* buy_price = */ 50,
@@ -640,16 +640,15 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
   trader_factories.emplace_back(new TestTraderFactory(/* buy_price = */ 30,
                                                       /* sell_price = */ 500));
 
-  std::vector<TraderEvaluationResult> trader_eval_results =
-      EvaluateBatchOfTraders(trader_account_config, trader_eval_config,
-                             ohlc_history, trader_factories);
+  std::vector<EvaluationResult> eval_results = EvaluateBatchOfTraders(
+      account_config, eval_config, ohlc_history, trader_factories);
 
-  ASSERT_EQ(3, trader_eval_results.size());
-  TraderEvaluationResult expected_result[3];
+  ASSERT_EQ(3, eval_results.size());
+  EvaluationResult expected_result[3];
 
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+  ASSERT_TRUE(TextFormat::ParseFromString(
       R"(
-        trader_account_config {
+        account_config {
             start_base_balance: 10
             start_quote_balance: 0
             base_unit: 0.1
@@ -662,67 +661,67 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
             market_liquidity: 0.5
             max_volume_ratio: 0.1
         }
-        trader_eval_config {
+        eval_config {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1514764800
             evaluation_period_months: 6
         }
-        trader_name: "test-trader[50|200]"
+        name: "test-trader[50|200]"
         period {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1498867200
-            trader_final_gain: 2.17083335
-            baseline_final_gain: 0.666666687
+            final_gain: 2.17083335
+            base_final_gain: 0.666666687
         }
         period {
             start_timestamp_sec: 1485907200
             end_timestamp_sec: 1501545600
-            trader_final_gain: 3.244
-            baseline_final_gain: 1
+            final_gain: 3.244
+            base_final_gain: 1
         }
         period {
             start_timestamp_sec: 1488326400
             end_timestamp_sec: 1504224000
-            trader_final_gain: 1.285
-            baseline_final_gain: 1.71428573
+            final_gain: 1.285
+            base_final_gain: 1.71428573
         }
         period {
             start_timestamp_sec: 1491004800
             end_timestamp_sec: 1506816000
-            trader_final_gain: 1.799
-            baseline_final_gain: 4
+            final_gain: 1.799
+            base_final_gain: 4
         }
         period {
             start_timestamp_sec: 1493596800
             end_timestamp_sec: 1509494400
-            trader_final_gain: 3.598
-            baseline_final_gain: 6
+            final_gain: 3.598
+            base_final_gain: 6
         }
         period {
             start_timestamp_sec: 1496275200
             end_timestamp_sec: 1512086400
-            trader_final_gain: 2.24875
-            baseline_final_gain: 8.125
+            final_gain: 2.24875
+            base_final_gain: 8.125
         }
         period {
             start_timestamp_sec: 1498867200
             end_timestamp_sec: 1514764800
-            trader_final_gain: 1.19933331
-            baseline_final_gain: 5
+            final_gain: 1.19933331
+            base_final_gain: 5
         }
         score: 0.75648129
-        avg_trader_gain: 2.22070217
-        avg_baseline_gain: 3.78656459
+        avg_gain: 2.22070217
+        avg_base_gain: 3.78656459
         avg_total_executed_orders: 1.28571427
         avg_total_fee: 247.571426
         )",
       &expected_result[0]));
-  ExpectProtoEq(expected_result[0], trader_eval_results[0],
+  ExpectProtoEq(expected_result[0], eval_results[0],
                 /* full_scope = */ false);
 
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+  ASSERT_TRUE(TextFormat::ParseFromString(
       R"(
-        trader_account_config {
+        account_config {
             start_base_balance: 10
             start_quote_balance: 0
             base_unit: 0.1
@@ -735,67 +734,67 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
             market_liquidity: 0.5
             max_volume_ratio: 0.1
         }
-        trader_eval_config {
+        eval_config {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1514764800
             evaluation_period_months: 6
         }
-        trader_name: "test-trader[40|250]"
+        name: "test-trader[40|250]"
         period {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1498867200
-            trader_final_gain: 3.38833332
-            baseline_final_gain: 0.666666687
+            final_gain: 3.38833332
+            base_final_gain: 0.666666687
         }
         period {
             start_timestamp_sec: 1485907200
             end_timestamp_sec: 1501545600
-            trader_final_gain: 5.06733322
-            baseline_final_gain: 1
+            final_gain: 5.06733322
+            base_final_gain: 1
         }
         period {
             start_timestamp_sec: 1488326400
             end_timestamp_sec: 1504224000
-            trader_final_gain: 1.60642862
-            baseline_final_gain: 1.71428573
+            final_gain: 1.60642862
+            base_final_gain: 1.71428573
         }
         period {
             start_timestamp_sec: 1491004800
             end_timestamp_sec: 1506816000
-            trader_final_gain: 2.249
-            baseline_final_gain: 4
+            final_gain: 2.249
+            base_final_gain: 4
         }
         period {
             start_timestamp_sec: 1493596800
             end_timestamp_sec: 1509494400
-            trader_final_gain: 4.498
-            baseline_final_gain: 6
+            final_gain: 4.498
+            base_final_gain: 6
         }
         period {
             start_timestamp_sec: 1496275200
             end_timestamp_sec: 1512086400
-            trader_final_gain: 2.81125
-            baseline_final_gain: 8.125
+            final_gain: 2.81125
+            base_final_gain: 8.125
         }
         period {
             start_timestamp_sec: 1498867200
             end_timestamp_sec: 1514764800
-            trader_final_gain: 1.49933338
-            baseline_final_gain: 5
+            final_gain: 1.49933338
+            base_final_gain: 5
         }
         score: 1.00773919
-        avg_trader_gain: 3.01709747
-        avg_baseline_gain: 3.78656459
+        avg_gain: 3.01709747
+        avg_base_gain: 3.78656459
         avg_total_executed_orders: 1.28571427
         avg_total_fee: 309
         )",
       &expected_result[1]));
-  ExpectProtoEq(expected_result[1], trader_eval_results[1],
+  ExpectProtoEq(expected_result[1], eval_results[1],
                 /* full_scope = */ false);
 
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+  ASSERT_TRUE(TextFormat::ParseFromString(
       R"(
-        trader_account_config {
+        account_config {
             start_base_balance: 10
             start_quote_balance: 0
             base_unit: 0.1
@@ -808,62 +807,62 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
             market_liquidity: 0.5
             max_volume_ratio: 0.1
         }
-        trader_eval_config {
+        eval_config {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1514764800
             evaluation_period_months: 6
         }
-        trader_name: "test-trader[30|500]"
+        name: "test-trader[30|500]"
         period {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1498867200
-            trader_final_gain: 0.666666687
-            baseline_final_gain: 0.666666687
+            final_gain: 0.666666687
+            base_final_gain: 0.666666687
         }
         period {
             start_timestamp_sec: 1485907200
             end_timestamp_sec: 1501545600
-            trader_final_gain: 1
-            baseline_final_gain: 1
+            final_gain: 1
+            base_final_gain: 1
         }
         period {
             start_timestamp_sec: 1488326400
             end_timestamp_sec: 1504224000
-            trader_final_gain: 1.71428573
-            baseline_final_gain: 1.71428573
+            final_gain: 1.71428573
+            base_final_gain: 1.71428573
         }
         period {
             start_timestamp_sec: 1491004800
             end_timestamp_sec: 1506816000
-            trader_final_gain: 4
-            baseline_final_gain: 4
+            final_gain: 4
+            base_final_gain: 4
         }
         period {
             start_timestamp_sec: 1493596800
             end_timestamp_sec: 1509494400
-            trader_final_gain: 6
-            baseline_final_gain: 6
+            final_gain: 6
+            base_final_gain: 6
         }
         period {
             start_timestamp_sec: 1496275200
             end_timestamp_sec: 1512086400
-            trader_final_gain: 5.62375
-            baseline_final_gain: 8.125
+            final_gain: 5.62375
+            base_final_gain: 8.125
         }
         period {
             start_timestamp_sec: 1498867200
             end_timestamp_sec: 1514764800
-            trader_final_gain: 2.99933338
-            baseline_final_gain: 5
+            final_gain: 2.99933338
+            base_final_gain: 5
         }
         score: 0.881993413
-        avg_trader_gain: 3.14343381
-        avg_baseline_gain: 3.78656459
+        avg_gain: 3.14343381
+        avg_base_gain: 3.78656459
         avg_total_executed_orders: 0.285714298
         avg_total_fee: 143.142853
         )",
       &expected_result[2]));
-  ExpectProtoEq(expected_result[2], trader_eval_results[2],
+  ExpectProtoEq(expected_result[2], eval_results[2],
                 /* full_scope = */ false);
 }
 

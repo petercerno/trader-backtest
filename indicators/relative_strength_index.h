@@ -3,9 +3,9 @@
 #ifndef INDICATORS_RELATIVE_STRENGTH_INDEX_H
 #define INDICATORS_RELATIVE_STRENGTH_INDEX_H
 
+#include "base/base.h"
 #include "indicators/last_n_ohlc_ticks.h"
 #include "indicators/util.h"
-#include "lib/trader_base.h"
 
 namespace trader {
 

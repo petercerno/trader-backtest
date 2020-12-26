@@ -1,9 +1,9 @@
 // Copyright © 2020 Peter Cerno. All rights reserved.
 
-#ifndef LIB_TRADER_INTERFACE_H
-#define LIB_TRADER_INTERFACE_H
+#ifndef BASE_TRADER_H
+#define BASE_TRADER_H
 
-#include "lib/trader_base.h"
+#include "base/base.h"
 
 namespace trader {
 
@@ -66,7 +66,7 @@ class TraderFactoryInterface {
 
   // Returns a name identifying all traders emitted by this factory.
   // The name should be escaped for the CSV file format.
-  virtual std::string GetTraderName() const = 0;
+  virtual std::string GetName() const = 0;
 
   // Returns a new (freshly initialized) instance of a trader.
   virtual std::unique_ptr<TraderInterface> NewTrader() const = 0;
@@ -74,4 +74,4 @@ class TraderFactoryInterface {
 
 }  // namespace trader
 
-#endif  // LIB_TRADER_INTERFACE_H
+#endif  // BASE_TRADER_H

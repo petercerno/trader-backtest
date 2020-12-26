@@ -3,7 +3,7 @@
 #ifndef LOGGING_CSV_LOGGER_H
 #define LOGGING_CSV_LOGGER_H
 
-#include "logging/logger_interface.h"
+#include "logging/logger.h"
 
 namespace trader {
 
@@ -17,13 +17,12 @@ class CsvLogger : public LoggerInterface {
       : exchange_os_(exchange_os), trader_os_(trader_os) {}
   virtual ~CsvLogger() {}
 
-  // Logs the current ohlc_tick and trader_account.
+  // Logs the current ohlc_tick and account.
   void LogExchangeState(const OhlcTick& ohlc_tick,
-                        const TraderAccount& trader_account) override;
-  // Logs the current ohlc_tick, trader_account, and order, after executing
+                        const Account& account) override;
+  // Logs the current ohlc_tick, account, and order, after executing
   // the given order.
-  void LogExchangeState(const OhlcTick& ohlc_tick,
-                        const TraderAccount& trader_account,
+  void LogExchangeState(const OhlcTick& ohlc_tick, const Account& account,
                         const Order& order) override;
 
   // Logs the trader state.

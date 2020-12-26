@@ -1,0 +1,77 @@
+// Copyright © 2020 Peter Cerno. All rights reserved.
+
+syntax = "proto2";
+
+import "base/base.proto";
+
+package trader;
+
+// Result of trader execution over a region of the OHLC history.
+message ExecutionResult {
+    // Base (crypto) currency balance at the beginning of trader execution.
+    optional float start_base_balance = 1;
+    // Quote balance in quote currency at the beginning of trader execution.
+    optional float start_quote_balance = 2;
+    // Base (crypto) currency balance at the end of trader execution.
+    optional float end_base_balance = 3;
+    // Quote balance in quote currency at the end of trader execution.
+    optional float end_quote_balance = 4;
+    // Base (crypto) currency price at the beginning of trader execution.
+    optional float start_price = 5;
+    // Base (crypto) currency price at the end of trader execution.
+    optional float end_price = 6;
+    // Total value (in quote currency) at the beginning of trader execution.
+    optional float start_value = 7;
+    // Total value (in quote currency) at the end of trader execution.
+    optional float end_value = 8;
+    // Total number of executed exchange orders.
+    optional int32 total_executed_orders = 9;
+    // Total accumulated transaction fee (in quote currency).
+    optional float total_fee = 10;
+  }
+  
+  // Trader evaluation configuration.
+  message EvaluationConfig {
+    // Starting UNIX timestamp (in seconds).
+    optional int32 start_timestamp_sec = 1;
+    // Ending UNIX timestamp (in seconds).
+    optional int32 end_timestamp_sec = 2;
+    // Length of evaluation period (in months).
+    optional int32 evaluation_period_months = 3;
+  }
+  
+  // Trader evaluation result for a given evaluation configuration.
+  message EvaluationResult {
+    // Trader account configuration.
+    optional AccountConfig account_config = 1;
+    // Evaluation configuration.
+    optional EvaluationConfig eval_config = 2;
+    // String representation of the trader (trader name and configuration).
+    optional string name = 3;
+    // Trader evaluation over a specific period.
+    message Period {
+      // Starting UNIX timestamp (in seconds) of the evaluation period (included).
+      optional int32 start_timestamp_sec = 1;
+      // Ending UNIX timestamp (in seconds) of the evaluation period (excluded).
+      optional int32 end_timestamp_sec = 2;
+      // Result of trader execution over the period.
+      optional ExecutionResult result = 3;
+      // Final percentual gain of the trader (after fees).
+      optional float final_gain = 4;
+      // Final percentual gain of the baseline (Buy and HODL) method.
+      optional float base_final_gain = 5;
+    }
+    // Trader evaluation over multiple periods.
+    repeated Period period = 4;
+    // Trader evaluation score.
+    optional float score = 5;
+    // Average percentual gain of the trader (after fees).
+    optional float avg_gain = 6;
+    // Average percentual gain of the baseline (Buy and HODL) method.
+    optional float avg_base_gain = 7;
+    // Average total number of executed orders.
+    optional float avg_total_executed_orders = 8;
+    // Average total trader fees in quote currency.
+    optional float avg_total_fee = 9;
+  }
+  

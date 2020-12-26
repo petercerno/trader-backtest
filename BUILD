@@ -2,13 +2,13 @@ cc_binary(
     name = "trader",
     srcs = ["trader.cc"],
     deps = [
-        "//eval:trader_eval",
+        "//base",
+        "//eval",
         "//external:gflags",
-        "//lib:trader_base",
         "//logging:csv_logger",
         "//traders",
-        "//util:util_proto",
-        "//util:util_time",
+        "//util:proto",
+        "//util:time",
     ],
 )
 
@@ -16,10 +16,10 @@ cc_binary(
     name = "convert",
     srcs = ["convert.cc"],
     deps = [
+        "//base",
+        "//base:history",
         "//external:gflags",
-        "//lib:trader_base",
-        "//lib:trader_history",
-        "//util:util_proto",
-        "//util:util_time",
+        "//util:proto",
+        "//util:time",
     ],
 )

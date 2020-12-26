@@ -106,7 +106,7 @@ std::string RebalancingTrader::GetInternalState() const {
   return ss.str();
 }
 
-std::string RebalancingTraderFactory::GetTraderName() const {
+std::string RebalancingTraderFactory::GetName() const {
   std::stringstream ss;
   ss << std::fixed << std::setprecision(3) << "rebalancing-trader["
      << trader_config_.alpha() << "|" << trader_config_.upper_deviation() << "|"

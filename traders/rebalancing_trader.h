@@ -3,7 +3,7 @@
 #ifndef TRADERS_REBALANCING_TRADER_H
 #define TRADERS_REBALANCING_TRADER_H
 
-#include "lib/trader_interface.h"
+#include "base/trader.h"
 #include "traders/trader_config.pb.h"
 
 namespace trader {
@@ -39,7 +39,7 @@ class RebalancingTraderFactory : public TraderFactoryInterface {
       : trader_config_(trader_config) {}
   virtual ~RebalancingTraderFactory() {}
 
-  std::string GetTraderName() const override;
+  std::string GetName() const override;
   std::unique_ptr<TraderInterface> NewTrader() const override;
 
   static std::vector<std::unique_ptr<TraderFactoryInterface>> GetBatchOfTraders(

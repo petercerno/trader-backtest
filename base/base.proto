@@ -4,7 +4,7 @@ syntax = "proto2";
 
 package trader;
 
-// Base (crypto) currency price at a specific time.
+// Base (crypto) currency traded at at a specific price and time.
 message PriceRecord {
   // UNIX timestamp (in seconds).
   optional int32 timestamp_sec = 1;
@@ -31,7 +31,6 @@ message OhlcTick {
   optional float volume = 6;
 }
 
-// Side-input record for the trader.
 // This is used to provide additional information (signals) to the trader.
 // Note that the interpretation of the signals is up to the trader itself.
 message SideInputRecord {
@@ -53,7 +52,7 @@ message FeeConfig {
 }
 
 // Trader account configuration.
-message TraderAccountConfig {
+message AccountConfig {
   // Starting base (crypto) currency balance (e.g. BTC balance).
   optional float start_base_balance = 1;
   // Starting quote balance (e.g. USD balance).
@@ -111,73 +110,4 @@ message Order {
   // Target price at which to execute the order. Ignored for market orders.
   // The actual traded price might differ for stop orders.
   optional float price = 5;
-}
-
-// Result of trader execution over a region of the OHLC history.
-message TraderExecutionResult {
-  // Base (crypto) currency balance at the beginning of trader execution.
-  optional float start_base_balance = 1;
-  // Quote balance in quote currency at the beginning of trader execution.
-  optional float start_quote_balance = 2;
-  // Base (crypto) currency balance at the end of trader execution.
-  optional float end_base_balance = 3;
-  // Quote balance in quote currency at the end of trader execution.
-  optional float end_quote_balance = 4;
-  // Base (crypto) currency price at the beginning of trader execution.
-  optional float start_price = 5;
-  // Base (crypto) currency price at the end of trader execution.
-  optional float end_price = 6;
-  // Total value (in quote currency) at the beginning of trader execution.
-  optional float start_value = 7;
-  // Total value (in quote currency) at the end of trader execution.
-  optional float end_value = 8;
-  // Total number of executed exchange orders.
-  optional int32 total_executed_orders = 9;
-  // Total accumulated transaction fee (in quote currency).
-  optional float total_fee = 10;
-}
-
-// Trader evaluation configuration.
-message TraderEvaluationConfig {
-  // Starting UNIX timestamp (in seconds).
-  optional int32 start_timestamp_sec = 1;
-  // Ending UNIX timestamp (in seconds).
-  optional int32 end_timestamp_sec = 2;
-  // Length of evaluation period (in months).
-  optional int32 evaluation_period_months = 3;
-}
-
-// Trader evaluation result for a given evaluation configuration.
-message TraderEvaluationResult {
-  // Trader account configuration.
-  optional TraderAccountConfig trader_account_config = 1;
-  // Evaluation configuration.
-  optional TraderEvaluationConfig trader_eval_config = 2;
-  // String representation of the trader (trader name and configuration).
-  optional string trader_name = 3;
-  // Trader evaluation over a specific period.
-  message Period {
-    // Starting UNIX timestamp (in seconds) of the evaluation period (included).
-    optional int32 start_timestamp_sec = 1;
-    // Ending UNIX timestamp (in seconds) of the evaluation period (excluded).
-    optional int32 end_timestamp_sec = 2;
-    // Result of trader execution over the period.
-    optional TraderExecutionResult result = 3;
-    // Final percentual gain of the trader (after fees).
-    optional float trader_final_gain = 4;
-    // Final percentual gain of the baseline (Buy and HODL) method.
-    optional float baseline_final_gain = 5;
-  }
-  // Trader evaluation over multiple periods.
-  repeated Period period = 4;
-  // Trader evaluation score.
-  optional float score = 5;
-  // Average percentual gain of the trader (after fees).
-  optional float avg_trader_gain = 6;
-  // Average percentual gain of the baseline method.
-  optional float avg_baseline_gain = 7;
-  // Average total number of executed orders.
-  optional float avg_total_executed_orders = 8;
-  // Average total trader fees in quote currency.
-  optional float avg_total_fee = 9;
 }

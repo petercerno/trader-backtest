@@ -26,6 +26,6 @@ cc_library(
     ],
     deps = [
         ":trader_config_cc_proto",
-        "//lib:trader_interface",
+        "//base:trader",
     ],
 )

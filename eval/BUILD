@@ -1,24 +1,39 @@
 package(default_visibility = ["//:__pkg__"])
 
+load("@rules_proto//proto:defs.bzl", "proto_library")
+
+proto_library(
+    name = "eval_proto",
+    srcs = ["eval.proto"],
+    deps = ["//base:base_proto"],
+)
+
+cc_proto_library(
+    name = "eval_cc_proto",
+    deps = [":eval_proto"],
+)
+
 cc_library(
-    name = "trader_eval",
-    srcs = ["trader_eval.cc"],
-    hdrs = ["trader_eval.h"],
+    name = "eval",
+    srcs = ["eval.cc"],
+    hdrs = ["eval.h"],
     deps = [
-        "//lib:trader_account",
-        "//lib:trader_interface",
-        "//logging:logger_interface",
-        "//util:util_time",
+        ":eval_cc_proto",
+        "//base",
+        "//base:account",
+        "//base:trader",
+        "//logging:logger",
+        "//util:time",
     ],
 )
 
 cc_test(
-    name = "trader_eval_test",
-    srcs = ["trader_eval_test.cc"],
+    name = "eval_test",
+    srcs = ["eval_test.cc"],
     deps = [
-        ":trader_eval",
+        ":eval",
         "//logging:csv_logger",
-        "//util:util_time",
+        "//util:time",
         "@googletest//:gtest_main",
     ],
 )
