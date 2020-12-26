@@ -106,7 +106,7 @@ std::string RebalancingTrader::GetInternalState() const {
   return ss.str();
 }
 
-std::string RebalancingTraderFactory::GetName() const {
+std::string RebalancingTraderEmitter::GetName() const {
   std::stringstream ss;
   ss << std::fixed << std::setprecision(3) << "rebalancing-trader["
      << trader_config_.alpha() << "|" << trader_config_.upper_deviation() << "|"
@@ -114,15 +114,15 @@ std::string RebalancingTraderFactory::GetName() const {
   return ss.str();
 }
 
-std::unique_ptr<TraderInterface> RebalancingTraderFactory::NewTrader() const {
+std::unique_ptr<Trader> RebalancingTraderEmitter::NewTrader() const {
   return std::unique_ptr<RebalancingTrader>(
       new RebalancingTrader(trader_config_));
 }
 
-std::vector<std::unique_ptr<TraderFactoryInterface>>
-RebalancingTraderFactory::GetBatchOfTraders(
+std::vector<std::unique_ptr<TraderEmitter>>
+RebalancingTraderEmitter::GetBatchOfTraders(
     const std::vector<float>& alphas, const std::vector<float>& deviations) {
-  std::vector<std::unique_ptr<TraderFactoryInterface>> batch;
+  std::vector<std::unique_ptr<TraderEmitter>> batch;
   for (const float alpha : alphas)
     for (const float deviation : deviations) {
       RebalancingTraderConfig trader_config;
@@ -130,7 +130,7 @@ RebalancingTraderFactory::GetBatchOfTraders(
       trader_config.set_beta(0.1f);
       trader_config.set_upper_deviation(deviation);
       trader_config.set_lower_deviation(deviation);
-      batch.emplace_back(new RebalancingTraderFactory(trader_config));
+      batch.emplace_back(new RebalancingTraderEmitter(trader_config));
     }
   return batch;
 }

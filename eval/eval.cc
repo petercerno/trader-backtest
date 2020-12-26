@@ -48,8 +48,7 @@ void InitAccount(const AccountConfig& account_config, Account& account) {
 ExecutionResult ExecuteTrader(const AccountConfig& account_config,
                               OhlcHistory::const_iterator ohlc_history_begin,
                               OhlcHistory::const_iterator ohlc_history_end,
-                              TraderInterface& trader,
-                              LoggerInterface* logger) {
+                              Trader& trader, Logger* logger) {
   ExecutionResult result;
   if (ohlc_history_begin == ohlc_history_end) {
     return {};
@@ -115,12 +114,12 @@ ExecutionResult ExecuteTrader(const AccountConfig& account_config,
 EvaluationResult EvaluateTrader(const AccountConfig& account_config,
                                 const EvaluationConfig& eval_config,
                                 const OhlcHistory& ohlc_history,
-                                const TraderFactoryInterface& factory,
-                                LoggerInterface* logger) {
+                                const TraderEmitter& trader_emitter,
+                                Logger* logger) {
   EvaluationResult eval_result;
   *eval_result.mutable_account_config() = account_config;
   *eval_result.mutable_eval_config() = eval_config;
-  eval_result.set_name(factory.GetName());
+  eval_result.set_name(trader_emitter.GetName());
   for (int month_offset = 0;; ++month_offset) {
     const int start_eval_timestamp_sec =
         static_cast<int>(AddMonthsToTimestampSec(
@@ -139,7 +138,7 @@ EvaluationResult EvaluateTrader(const AccountConfig& account_config,
     if (ohlc_history_subset.first == ohlc_history_subset.second) {
       continue;
     }
-    std::unique_ptr<TraderInterface> trader = factory.NewTrader();
+    std::unique_ptr<Trader> trader = trader_emitter.NewTrader();
     ExecutionResult result =
         ExecuteTrader(account_config, ohlc_history_subset.first,
                       ohlc_history_subset.second, *trader, logger);
@@ -181,16 +180,17 @@ EvaluationResult EvaluateTrader(const AccountConfig& account_config,
 std::vector<EvaluationResult> EvaluateBatchOfTraders(
     const AccountConfig& account_config, const EvaluationConfig& eval_config,
     const OhlcHistory& ohlc_history,
-    const std::vector<std::unique_ptr<TraderFactoryInterface>>& factories) {
+    const std::vector<std::unique_ptr<TraderEmitter>>& trader_emitters) {
   std::vector<EvaluationResult> eval_results;
   std::vector<std::future<EvaluationResult>> eval_result_futures;
-  for (const auto& factory_ptr : factories) {
-    const TraderFactoryInterface& factory = *factory_ptr.get();
-    eval_result_futures.emplace_back(std::async([&account_config, &eval_config,
-                                                 &ohlc_history, &factory]() {
-      return EvaluateTrader(account_config, eval_config, ohlc_history, factory,
-                            /* logger = */ nullptr);
-    }));
+  for (const auto& trader_emitter_ptr : trader_emitters) {
+    const TraderEmitter& trader_emitter = *trader_emitter_ptr;
+    eval_result_futures.emplace_back(std::async(
+        [&account_config, &eval_config, &ohlc_history, &trader_emitter]() {
+          return EvaluateTrader(account_config, eval_config, ohlc_history,
+                                trader_emitter,
+                                /* logger = */ nullptr);
+        }));
   }
   for (auto& eval_result_future : eval_result_futures) {
     eval_results.emplace_back(eval_result_future.get());

@@ -9,7 +9,7 @@
 namespace trader {
 
 // Stop trader. Emits exactly one stop order per OHLC tick.
-class StopTrader : public TraderInterface {
+class StopTrader : public Trader {
  public:
   explicit StopTrader(const StopTraderConfig& trader_config)
       : trader_config_(trader_config) {}
@@ -50,17 +50,17 @@ class StopTrader : public TraderInterface {
   void EmitStopOrder(float price, std::vector<Order>& orders) const;
 };
 
-// Factory that emits StopTraders.
-class StopTraderFactory : public TraderFactoryInterface {
+// Emitter that emits StopTraders.
+class StopTraderEmitter : public TraderEmitter {
  public:
-  explicit StopTraderFactory(const StopTraderConfig& trader_config)
+  explicit StopTraderEmitter(const StopTraderConfig& trader_config)
       : trader_config_(trader_config) {}
-  virtual ~StopTraderFactory() {}
+  virtual ~StopTraderEmitter() {}
 
   std::string GetName() const override;
-  std::unique_ptr<TraderInterface> NewTrader() const override;
+  std::unique_ptr<Trader> NewTrader() const override;
 
-  static std::vector<std::unique_ptr<TraderFactoryInterface>> GetBatchOfTraders(
+  static std::vector<std::unique_ptr<TraderEmitter>> GetBatchOfTraders(
       const std::vector<float>& stop_order_margins,
       const std::vector<float>& stop_order_move_margins,
       const std::vector<float>& stop_order_increases_per_day,

@@ -36,10 +36,10 @@ namespace trader {
 // unresponsive for random periods of time (and we see that e.g. in the gaps
 // in the price histories). Therefore, we encourage to test the traders on OHLC
 // histories with various sampling rates and gaps.
-class TraderInterface {
+class Trader {
  public:
-  TraderInterface() {}
-  virtual ~TraderInterface() {}
+  Trader() {}
+  virtual ~Trader() {}
 
   // Updates the (internal) trader state and emits zero or more orders.
   // We assume that "orders" is not null and points to an empty vector.
@@ -57,19 +57,19 @@ class TraderInterface {
 };
 
 // Usually we want to evaluate the same trader over different time periods.
-// This is where the trader factory comes in handy, as it can emit a new
+// This is where the trader emitter comes in handy, as it can emit a new
 // instance of the same trader (with the same configuration) whenever needed.
-class TraderFactoryInterface {
+class TraderEmitter {
  public:
-  TraderFactoryInterface() {}
-  virtual ~TraderFactoryInterface() {}
+  TraderEmitter() {}
+  virtual ~TraderEmitter() {}
 
-  // Returns a name identifying all traders emitted by this factory.
+  // Returns a name identifying all traders emitted by this emitter.
   // The name should be escaped for the CSV file format.
   virtual std::string GetName() const = 0;
 
   // Returns a new (freshly initialized) instance of a trader.
-  virtual std::unique_ptr<TraderInterface> NewTrader() const = 0;
+  virtual std::unique_ptr<Trader> NewTrader() const = 0;
 };
 
 }  // namespace trader

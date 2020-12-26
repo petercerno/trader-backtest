@@ -10,19 +10,19 @@
 #include "util/time.h"
 
 namespace trader {
+using ::google::protobuf::Message;
 using ::google::protobuf::TextFormat;
+using ::google::protobuf::util::MessageDifferencer;
 
 namespace {
 // Compares two protobuf messages and outputs a diff if they differ.
-void ExpectProtoEq(const google::protobuf::Message& expected_message,
-                   const google::protobuf::Message& message,
+void ExpectProtoEq(const Message& expected_message, const Message& message,
                    bool full_scope = true) {
   EXPECT_EQ(expected_message.GetTypeName(), message.GetTypeName());
   std::string diff_report;
-  google::protobuf::util::MessageDifferencer differencer;
-  differencer.set_scope(
-      full_scope ? google::protobuf::util::MessageDifferencer::FULL
-                 : google::protobuf::util::MessageDifferencer::PARTIAL);
+  MessageDifferencer differencer;
+  differencer.set_scope(full_scope ? MessageDifferencer::FULL
+                                   : MessageDifferencer::PARTIAL);
   differencer.ReportDifferencesToString(&diff_report);
   EXPECT_TRUE(differencer.Compare(expected_message, message)) << diff_report;
 }
@@ -93,7 +93,7 @@ void SetupMonthlyOhlcHistory(OhlcHistory& ohlc_history) {
 }
 
 // Trader that buys and sells the base (crypto) currency at fixed prices.
-class TestTrader : public TraderInterface {
+class TestTrader : public Trader {
  public:
   TestTrader(float buy_price, float sell_price)
       : buy_price_(buy_price), sell_price_(sell_price) {}
@@ -155,12 +155,12 @@ class TestTrader : public TraderInterface {
   bool is_long_ = false;
 };
 
-// Factory that emits TestTrader as defined above.
-class TestTraderFactory : public TraderFactoryInterface {
+// Emitter that emits TestTrader as defined above.
+class TestTraderEmitter : public TraderEmitter {
  public:
-  TestTraderFactory(float buy_price, float sell_price)
+  TestTraderEmitter(float buy_price, float sell_price)
       : buy_price_(buy_price), sell_price_(sell_price) {}
-  virtual ~TestTraderFactory() {}
+  virtual ~TestTraderEmitter() {}
 
   std::string GetName() const override {
     std::stringstream trader_name_os;
@@ -169,7 +169,7 @@ class TestTraderFactory : public TraderFactoryInterface {
     return trader_name_os.str();
   }
 
-  std::unique_ptr<TraderInterface> NewTrader() const override {
+  std::unique_ptr<Trader> NewTrader() const override {
     // Note: std::make_unique is C++14 feature.
     return std::unique_ptr<TestTrader>(new TestTrader(buy_price_, sell_price_));
   }
@@ -290,16 +290,16 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
         )",
       &eval_config));
 
-  TestTraderFactory trader_factory(/* buy_price = */ 50,
+  TestTraderEmitter trader_emitter(/* buy_price = */ 50,
                                    /* sell_price = */ 200);
-  EXPECT_EQ("test-trader[50|200]", trader_factory.GetName());
+  EXPECT_EQ("test-trader[50|200]", trader_emitter.GetName());
 
   std::stringstream exchange_os;
   std::stringstream trader_os;
   CsvLogger logger(&exchange_os, &trader_os);
 
   EvaluationResult result = EvaluateTrader(
-      account_config, eval_config, ohlc_history, trader_factory, &logger);
+      account_config, eval_config, ohlc_history, trader_emitter, &logger);
 
   EvaluationResult expected_result;
   ASSERT_TRUE(TextFormat::ParseFromString(
@@ -436,12 +436,12 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
         )",
       &eval_config));
 
-  TestTraderFactory trader_factory(/* buy_price = */ 50,
+  TestTraderEmitter trader_emitter(/* buy_price = */ 50,
                                    /* sell_price = */ 200);
-  EXPECT_EQ("test-trader[50|200]", trader_factory.GetName());
+  EXPECT_EQ("test-trader[50|200]", trader_emitter.GetName());
 
   EvaluationResult result =
-      EvaluateTrader(account_config, eval_config, ohlc_history, trader_factory,
+      EvaluateTrader(account_config, eval_config, ohlc_history, trader_emitter,
                      /* logger = */ nullptr);
 
   EvaluationResult expected_result;
@@ -632,16 +632,16 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
         )",
       &eval_config));
 
-  std::vector<std::unique_ptr<TraderFactoryInterface>> trader_factories;
-  trader_factories.emplace_back(new TestTraderFactory(/* buy_price = */ 50,
-                                                      /* sell_price = */ 200));
-  trader_factories.emplace_back(new TestTraderFactory(/* buy_price = */ 40,
-                                                      /* sell_price = */ 250));
-  trader_factories.emplace_back(new TestTraderFactory(/* buy_price = */ 30,
-                                                      /* sell_price = */ 500));
+  std::vector<std::unique_ptr<TraderEmitter>> trader_emitters;
+  trader_emitters.emplace_back(new TestTraderEmitter(/* buy_price = */ 50,
+                                                     /* sell_price = */ 200));
+  trader_emitters.emplace_back(new TestTraderEmitter(/* buy_price = */ 40,
+                                                     /* sell_price = */ 250));
+  trader_emitters.emplace_back(new TestTraderEmitter(/* buy_price = */ 30,
+                                                     /* sell_price = */ 500));
 
   std::vector<EvaluationResult> eval_results = EvaluateBatchOfTraders(
-      account_config, eval_config, ohlc_history, trader_factories);
+      account_config, eval_config, ohlc_history, trader_emitters);
 
   ASSERT_EQ(3, eval_results.size());
   EvaluationResult expected_result[3];

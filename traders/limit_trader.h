@@ -9,7 +9,7 @@
 namespace trader {
 
 // Limit trader emits one limit buy and one limit sell order per OHLC tick.
-class LimitTrader : public TraderInterface {
+class LimitTrader : public Trader {
  public:
   explicit LimitTrader(const LimitTraderConfig& trader_config)
       : trader_config_(trader_config) {}
@@ -44,17 +44,17 @@ class LimitTrader : public TraderInterface {
   void EmitLimitOrders(std::vector<Order>& orders) const;
 };
 
-// Factory that emits LimitTraders.
-class LimitTraderFactory : public TraderFactoryInterface {
+// Emitter that emits LimitTraders.
+class LimitTraderEmitter : public TraderEmitter {
  public:
-  explicit LimitTraderFactory(const LimitTraderConfig& trader_config)
+  explicit LimitTraderEmitter(const LimitTraderConfig& trader_config)
       : trader_config_(trader_config) {}
-  virtual ~LimitTraderFactory() {}
+  virtual ~LimitTraderEmitter() {}
 
   std::string GetName() const override;
-  std::unique_ptr<TraderInterface> NewTrader() const override;
+  std::unique_ptr<Trader> NewTrader() const override;
 
-  static std::vector<std::unique_ptr<TraderFactoryInterface>> GetBatchOfTraders(
+  static std::vector<std::unique_ptr<TraderEmitter>> GetBatchOfTraders(
       const std::vector<float>& alphas_per_hour,
       const std::vector<float>& limit_buy_margins,
       const std::vector<float>& limit_sell_margins);

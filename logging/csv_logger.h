@@ -8,7 +8,7 @@
 namespace trader {
 
 // CSV logger of exchange movements and trader internal state(s).
-class CsvLogger : public LoggerInterface {
+class CsvLogger : public Logger {
  public:
   // Constructor. Does not take ownership of the provided output streams.
   // exchange_os: Output stream for exchange movements. Ignored if nullptr.

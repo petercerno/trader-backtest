@@ -74,7 +74,7 @@ std::string LimitTrader::GetInternalState() const {
   return ss.str();
 }
 
-std::string LimitTraderFactory::GetName() const {
+std::string LimitTraderEmitter::GetName() const {
   std::stringstream ss;
   ss << std::fixed << std::setprecision(3) << "limit-trader["
      << trader_config_.alpha_per_hour() << "|"
@@ -83,16 +83,16 @@ std::string LimitTraderFactory::GetName() const {
   return ss.str();
 }
 
-std::unique_ptr<TraderInterface> LimitTraderFactory::NewTrader() const {
+std::unique_ptr<Trader> LimitTraderEmitter::NewTrader() const {
   return std::unique_ptr<LimitTrader>(new LimitTrader(trader_config_));
 }
 
-std::vector<std::unique_ptr<TraderFactoryInterface>>
-LimitTraderFactory::GetBatchOfTraders(
+std::vector<std::unique_ptr<TraderEmitter>>
+LimitTraderEmitter::GetBatchOfTraders(
     const std::vector<float>& alphas_per_hour,
     const std::vector<float>& limit_buy_margins,
     const std::vector<float>& limit_sell_margins) {
-  std::vector<std::unique_ptr<TraderFactoryInterface>> batch;
+  std::vector<std::unique_ptr<TraderEmitter>> batch;
   for (const float alpha_per_hour : alphas_per_hour)
     for (const float limit_buy_margin : limit_buy_margins)
       for (const float limit_sell_margin : limit_sell_margins) {
@@ -100,7 +100,7 @@ LimitTraderFactory::GetBatchOfTraders(
         trader_config.set_alpha_per_hour(alpha_per_hour);
         trader_config.set_limit_buy_margin(limit_buy_margin);
         trader_config.set_limit_sell_margin(limit_sell_margin);
-        batch.emplace_back(new LimitTraderFactory(trader_config));
+        batch.emplace_back(new LimitTraderEmitter(trader_config));
       }
   return batch;
 }

@@ -104,7 +104,7 @@ std::string StopTrader::GetInternalState() const {
   return ss.str();
 }
 
-std::string StopTraderFactory::GetName() const {
+std::string StopTraderEmitter::GetName() const {
   std::stringstream ss;
   ss << std::fixed << std::setprecision(3) << "stop-trader["
      << trader_config_.stop_order_margin() << "|"
@@ -114,17 +114,17 @@ std::string StopTraderFactory::GetName() const {
   return ss.str();
 }
 
-std::unique_ptr<TraderInterface> StopTraderFactory::NewTrader() const {
-  return std::unique_ptr<StopTrader>(new StopTrader(trader_config_));
+std::unique_ptr<Trader> StopTraderEmitter::NewTrader() const {
+  return std::unique_ptr<Trader>(new StopTrader(trader_config_));
 }
 
-std::vector<std::unique_ptr<TraderFactoryInterface>>
-StopTraderFactory::GetBatchOfTraders(
+std::vector<std::unique_ptr<TraderEmitter>>
+StopTraderEmitter::GetBatchOfTraders(
     const std::vector<float>& stop_order_margins,
     const std::vector<float>& stop_order_move_margins,
     const std::vector<float>& stop_order_increases_per_day,
     const std::vector<float>& stop_order_decreases_per_day) {
-  std::vector<std::unique_ptr<TraderFactoryInterface>> batch;
+  std::vector<std::unique_ptr<TraderEmitter>> batch;
   for (const float stop_order_margin : stop_order_margins)
     for (const float stop_order_move_margin : stop_order_move_margins)
       for (const float stop_order_increase_per_day :
@@ -138,7 +138,7 @@ StopTraderFactory::GetBatchOfTraders(
               stop_order_increase_per_day);
           trader_config.set_stop_order_decrease_per_day(
               stop_order_decrease_per_day);
-          batch.emplace_back(new StopTraderFactory(trader_config));
+          batch.emplace_back(new StopTraderEmitter(trader_config));
         }
   return batch;
 }

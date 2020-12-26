@@ -9,10 +9,10 @@
 namespace trader {
 
 // Interface for logging exchange movements and trader internal state(s).
-class LoggerInterface {
+class Logger {
  public:
-  LoggerInterface() {}
-  virtual ~LoggerInterface() {}
+  Logger() {}
+  virtual ~Logger() {}
 
   // Logs the current ohlc_tick and account.
   virtual void LogExchangeState(const OhlcTick& ohlc_tick,

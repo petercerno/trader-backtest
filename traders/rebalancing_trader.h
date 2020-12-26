@@ -10,7 +10,7 @@ namespace trader {
 
 // RebalancingTrader keeps the base (crypto) currency value to quote value
 // ratio constant.
-class RebalancingTrader : public TraderInterface {
+class RebalancingTrader : public Trader {
  public:
   explicit RebalancingTrader(const RebalancingTraderConfig& trader_config)
       : trader_config_(trader_config) {}
@@ -31,18 +31,18 @@ class RebalancingTrader : public TraderInterface {
   float last_close_ = 0.0f;
 };
 
-// Factory that emits RebalancingTraders.
-class RebalancingTraderFactory : public TraderFactoryInterface {
+// Emitter that emits RebalancingTraders.
+class RebalancingTraderEmitter : public TraderEmitter {
  public:
-  explicit RebalancingTraderFactory(
+  explicit RebalancingTraderEmitter(
       const RebalancingTraderConfig& trader_config)
       : trader_config_(trader_config) {}
-  virtual ~RebalancingTraderFactory() {}
+  virtual ~RebalancingTraderEmitter() {}
 
   std::string GetName() const override;
-  std::unique_ptr<TraderInterface> NewTrader() const override;
+  std::unique_ptr<Trader> NewTrader() const override;
 
-  static std::vector<std::unique_ptr<TraderFactoryInterface>> GetBatchOfTraders(
+  static std::vector<std::unique_ptr<TraderEmitter>> GetBatchOfTraders(
       const std::vector<float>& alphas, const std::vector<float>& deviations);
 
  private:
