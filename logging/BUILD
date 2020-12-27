@@ -20,3 +20,12 @@ cc_library(
     hdrs = ["csv_logger.h"],
     deps = [":logger"],
 )
+
+cc_test(
+    name = "csv_logger_test",
+    srcs = ["csv_logger_test.cc"],
+    deps = [
+        ":csv_logger",
+        "@googletest//:gtest_main",
+    ],
+)
