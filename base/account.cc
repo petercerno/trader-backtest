@@ -31,6 +31,16 @@ bool IsValidOrder(const Order& order) {
 }
 }  // namespace
 
+void Account::InitAccount(const AccountConfig& account_config) {
+  base_balance = account_config.start_base_balance();
+  quote_balance = account_config.start_quote_balance();
+  total_fee = 0;
+  base_unit = account_config.base_unit();
+  quote_unit = account_config.quote_unit();
+  market_liquidity = account_config.market_liquidity();
+  max_volume_ratio = account_config.max_volume_ratio();
+}
+
 float Account::GetFee(const FeeConfig& fee_config, float quote_amount) const {
   return Ceil(std::max(fee_config.minimum_fee(),
                        fee_config.fixed_fee() +

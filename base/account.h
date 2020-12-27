@@ -40,6 +40,9 @@ struct Account {
   // Not used if zero.
   float max_volume_ratio = 0.0f;
 
+  // Initializes the account based on the account_config.
+  void InitAccount(const AccountConfig& account_config);
+
   // Returns the fee (in quote currency) based on the provided fee_config and
   // the given quote currency amount involved in the transaction.
   float GetFee(const FeeConfig& fee_config, float quote_amount) const;
@@ -175,8 +178,8 @@ struct Account {
 
   // Executes the order over the given ohlc_tick.
   // Returns true iff the order was executed successfully.
-  bool ExecuteOrder(const AccountConfig& account_config,
-                    const Order& order, const OhlcTick& ohlc_tick);
+  bool ExecuteOrder(const AccountConfig& account_config, const Order& order,
+                    const OhlcTick& ohlc_tick);
 };
 
 }  // namespace trader

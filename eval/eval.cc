@@ -32,17 +32,6 @@ float GetGeometricAverage(const C& container, F selector) {
   assert(mul >= 0);
   return static_cast<float>(std::pow(mul, 1.0 / container.size()));
 }
-
-// Initializes the trader account based on the trader account configuration.
-void InitAccount(const AccountConfig& account_config, Account& account) {
-  account.base_balance = account_config.start_base_balance();
-  account.quote_balance = account_config.start_quote_balance();
-  account.total_fee = 0;
-  account.base_unit = account_config.base_unit();
-  account.quote_unit = account_config.quote_unit();
-  account.market_liquidity = account_config.market_liquidity();
-  account.max_volume_ratio = account_config.max_volume_ratio();
-}
 }  // namespace
 
 ExecutionResult ExecuteTrader(const AccountConfig& account_config,
@@ -54,7 +43,7 @@ ExecutionResult ExecuteTrader(const AccountConfig& account_config,
     return {};
   }
   Account account;
-  InitAccount(account_config, account);
+  account.InitAccount(account_config);
   std::vector<Order> orders;
   constexpr size_t kEmittedOrdersReserve = 8;
   orders.reserve(kEmittedOrdersReserve);

@@ -15,6 +15,34 @@ void SetupOhlcTick(OhlcTick& ohlc_tick) {
 }
 }  // namespace
 
+TEST(InitAccountTest, Basic) {
+  Account account;
+  EXPECT_FLOAT_EQ(0.0f, account.base_balance);
+  EXPECT_FLOAT_EQ(0.0f, account.quote_balance);
+  EXPECT_FLOAT_EQ(0.0f, account.total_fee);
+  EXPECT_FLOAT_EQ(0.0f, account.base_unit);
+  EXPECT_FLOAT_EQ(0.0f, account.quote_unit);
+  EXPECT_FLOAT_EQ(1.0f, account.market_liquidity);
+  EXPECT_FLOAT_EQ(0.0f, account.max_volume_ratio);
+
+  AccountConfig account_config;
+  account_config.set_start_base_balance(2.0f);
+  account_config.set_start_quote_balance(1000.0f);
+  account_config.set_base_unit(0.0001f);
+  account_config.set_quote_unit(0.01f);
+  account_config.set_market_liquidity(0.5f);
+  account_config.set_max_volume_ratio(0.9f);
+
+  account.InitAccount(account_config);
+  EXPECT_FLOAT_EQ(2.0f, account.base_balance);
+  EXPECT_FLOAT_EQ(1000.0f, account.quote_balance);
+  EXPECT_FLOAT_EQ(0.0f, account.total_fee);
+  EXPECT_FLOAT_EQ(0.0001f, account.base_unit);
+  EXPECT_FLOAT_EQ(0.01f, account.quote_unit);
+  EXPECT_FLOAT_EQ(0.5f, account.market_liquidity);
+  EXPECT_FLOAT_EQ(0.9f, account.max_volume_ratio);
+}
+
 TEST(GetFeeTest, RelativeFee) {
   Account account;
   FeeConfig fee_config;
