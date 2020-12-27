@@ -6,7 +6,7 @@ cc_binary(
         "//eval",
         "//external:gflags",
         "//logging:csv_logger",
-        "//traders",
+        "//traders:trader_factory",
         "//util:proto",
         "//util:time",
     ],

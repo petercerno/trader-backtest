@@ -29,3 +29,10 @@ cc_library(
         "//base:trader",
     ],
 )
+
+cc_library(
+    name = "trader_factory",
+    srcs = ["trader_factory.cc"],
+    hdrs = ["trader_factory.h"],
+    deps = [":traders"],
+)

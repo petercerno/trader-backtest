@@ -5,9 +5,7 @@
 #include "base/base.h"
 #include "eval/eval.h"
 #include "logging/csv_logger.h"
-#include "traders/limit_trader.h"
-#include "traders/rebalancing_trader.h"
-#include "traders/stop_trader.h"
+#include "traders/trader_factory.h"
 #include "util/proto.h"
 #include "util/time.h"
 
@@ -20,9 +18,9 @@ DEFINE_string(output_log_file, "",
 DEFINE_string(trader, "limit",
               "Trader to be executed. [limit, rebalancing, stop].");
 
-DEFINE_string(start_date_utc, "2016-01-01",
+DEFINE_string(start_date_utc, "2017-01-01",
               "Start date YYYY-MM-DD in UTC (included).");
-DEFINE_string(end_date_utc, "2017-01-01",
+DEFINE_string(end_date_utc, "2021-01-01",
               "End date YYYY-MM-DD in UTC (excluded).");
 DEFINE_int32(evaluation_period_months, 0, "Evaluation period in months.");
 
@@ -38,10 +36,6 @@ DEFINE_bool(evaluate_batch, false, "Batch evaluation.");
 using namespace trader;
 
 namespace {
-static constexpr char kLimitTraderName[] = "limit";
-static constexpr char kRebalancingTraderName[] = "rebalancing";
-static constexpr char kStopTraderName[] = "stop";
-
 // Returns the trader's AccountConfig based on the flags (and default values).
 AccountConfig GetAccountConfig() {
   AccountConfig config;
@@ -61,83 +55,6 @@ AccountConfig GetAccountConfig() {
   config.set_market_liquidity(FLAGS_market_liquidity);
   config.set_max_volume_ratio(FLAGS_max_volume_ratio);
   return config;
-}
-
-// Returns the default limit trader emitter.
-std::unique_ptr<TraderEmitter> GetDefaultLimitTraderEmitter() {
-  LimitTraderConfig config;
-  config.set_alpha_per_hour(0.03f);
-  config.set_limit_buy_margin(0.01f);
-  config.set_limit_sell_margin(0.01f);
-  return std::unique_ptr<TraderEmitter>(new LimitTraderEmitter(config));
-}
-
-// Returns the default batch of limit traders.
-std::vector<std::unique_ptr<TraderEmitter>> GetBatchOfLimitTraders() {
-  return LimitTraderEmitter::GetBatchOfTraders(
-      /* alphas_per_hour = */ {0.01f, 0.02f, 0.03f},
-      /* limit_buy_margins = */ {0.005f, 0.01f, 0.015f},
-      /* limit_sell_margins = */ {0.005f, 0.01f, 0.015f});
-}
-
-// Returns the default rebalancing trader emitter.
-std::unique_ptr<TraderEmitter> GetDefaultRebalancingTraderEmitter() {
-  RebalancingTraderConfig config;
-  config.set_alpha(4.0f);
-  config.set_beta(0.1f);
-  config.set_upper_deviation(0.2f);
-  config.set_lower_deviation(0.2f);
-  return std::unique_ptr<TraderEmitter>(new RebalancingTraderEmitter(config));
-}
-
-// Returns the default batch of rebalancing traders.
-std::vector<std::unique_ptr<TraderEmitter>> GetBatchOfRebalancingTraders() {
-  return RebalancingTraderEmitter::GetBatchOfTraders(
-      /* alphas = */ {0.5f, 1.0f, 2.0f, 4.0f, 9.0f},
-      /* deviations = */ {0.1f, 0.2f, 0.3f, 0.4f});
-}
-
-// Returns the default stop trader emitter.
-std::unique_ptr<TraderEmitter> GetDefaultStopTraderEmitter() {
-  StopTraderConfig config;
-  config.set_stop_order_margin(0.1f);
-  config.set_stop_order_move_margin(0.1f);
-  config.set_stop_order_increase_per_day(0.01f);
-  config.set_stop_order_decrease_per_day(0.1f);
-  return std::unique_ptr<TraderEmitter>(new StopTraderEmitter(config));
-}
-
-// Returns the default batch of stop traders.
-std::vector<std::unique_ptr<TraderEmitter>> GetBatchOfStopTraders() {
-  return StopTraderEmitter::GetBatchOfTraders(
-      /* stop_order_margins = */ {0.05, 0.1, 0.15, 0.2},
-      /* stop_order_move_margins = */ {0.05, 0.1, 0.15, 0.2},
-      /* stop_order_increases_per_day = */ {0.01, 0.05, 0.1},
-      /* stop_order_decreases_per_day = */ {0.01, 0.05, 0.1});
-}
-
-// Returns the default trader emitter.
-std::unique_ptr<TraderEmitter> GetDefaultTraderEmitter() {
-  if (FLAGS_trader == kLimitTraderName) {
-    return GetDefaultLimitTraderEmitter();
-  } else if (FLAGS_trader == kRebalancingTraderName) {
-    return GetDefaultRebalancingTraderEmitter();
-  } else {
-    assert(FLAGS_trader == kStopTraderName);
-    return GetDefaultStopTraderEmitter();
-  }
-}
-
-// Returns the default batch of traders.
-std::vector<std::unique_ptr<TraderEmitter>> GetDefaultBatchOfTraders() {
-  if (FLAGS_trader == kLimitTraderName) {
-    return GetBatchOfLimitTraders();
-  } else if (FLAGS_trader == kRebalancingTraderName) {
-    return GetBatchOfRebalancingTraders();
-  } else {
-    assert(FLAGS_trader == kStopTraderName);
-    return GetBatchOfStopTraders();
-  }
 }
 
 // Reads and returns the price / OHLC history.
@@ -236,7 +153,7 @@ int main(int argc, char* argv[]) {
   if (FLAGS_evaluate_batch) {
     std::cout << std::endl << "Batch evaluation:" << std::endl;
     std::vector<std::unique_ptr<TraderEmitter>> trader_emitters =
-        GetDefaultBatchOfTraders();
+        GetBatchOfTraders(FLAGS_trader);
     std::vector<EvaluationResult> eval_results = EvaluateBatchOfTraders(
         account_config, eval_config, ohlc_history, trader_emitters);
     std::sort(eval_results.begin(), eval_results.end(),
@@ -246,7 +163,7 @@ int main(int argc, char* argv[]) {
     PrintTraderEvalResults(eval_results, 20);
   } else {
     std::cout << std::endl << "Trader evaluation:" << std::endl;
-    std::unique_ptr<TraderEmitter> trader_emitter = GetDefaultTraderEmitter();
+    std::unique_ptr<TraderEmitter> trader_emitter = GetTrader(FLAGS_trader);
     std::unique_ptr<std::ofstream> exchange_log_stream =
         OpenLogFile(FLAGS_output_exchange_log_file);
     std::unique_ptr<std::ofstream> log_stream =
