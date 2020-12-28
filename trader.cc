@@ -13,7 +13,7 @@ DEFINE_string(input_ohlc_history_delimited_proto_file, "",
               "Input file containing the delimited OhlcRecord protos.");
 DEFINE_string(output_exchange_log_file, "",
               "Output CSV file containing the exchange log.");
-DEFINE_string(output_log_file, "",
+DEFINE_string(output_trader_log_file, "",
               "Output file containing the trader-dependent log.");
 DEFINE_string(trader, "limit",
               "Trader to be executed. [limit, rebalancing, stop].");
@@ -166,9 +166,9 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<TraderEmitter> trader_emitter = GetTrader(FLAGS_trader);
     std::unique_ptr<std::ofstream> exchange_log_stream =
         OpenLogFile(FLAGS_output_exchange_log_file);
-    std::unique_ptr<std::ofstream> log_stream =
-        OpenLogFile(FLAGS_output_log_file);
-    CsvLogger logger(exchange_log_stream.get(), log_stream.get());
+    std::unique_ptr<std::ofstream> trader_log_stream =
+        OpenLogFile(FLAGS_output_trader_log_file);
+    CsvLogger logger(exchange_log_stream.get(), trader_log_stream.get());
     EvaluationResult eval_result = EvaluateTrader(
         account_config, eval_config, ohlc_history, *trader_emitter, &logger);
     for (const EvaluationResult::Period& period : eval_result.period()) {
