@@ -12,13 +12,13 @@ void StopTrader::Update(const OhlcTick& ohlc_tick, float base_balance,
   assert(price > 0);
   assert(base_balance > 0 || quote_balance > 0);
   const Mode mode =
-      (base_balance * price >= quote_balance) ? Mode::IN_LONG : Mode::IN_CASH;
+      (base_balance * price >= quote_balance) ? Mode::LONG : Mode::CASH;
   if (timestamp_sec >= last_timestamp_sec_ + max_allowed_gap_sec_ ||
       mode != mode_) {
-    if (mode == Mode::IN_LONG) {
+    if (mode == Mode::LONG) {
       stop_order_price_ = (1 - trader_config_.stop_order_margin()) * price;
     } else {
-      assert(mode == Mode::IN_CASH);
+      assert(mode == Mode::CASH);
       stop_order_price_ = (1 + trader_config_.stop_order_margin()) * price;
     }
   } else {
@@ -38,7 +38,7 @@ void StopTrader::UpdateStopOrderPrice(Mode mode, int timestamp_sec,
   const float sampling_rate_sec =
       std::min(kSecondsPerDay, timestamp_sec - last_timestamp_sec_);
   const float ticks_per_day = kSecondsPerDay / sampling_rate_sec;
-  if (mode == Mode::IN_LONG) {
+  if (mode == Mode::LONG) {
     const float stop_order_increase_threshold =
         (1 - trader_config_.stop_order_move_margin()) * price;
     if (stop_order_price_ <= stop_order_increase_threshold) {
@@ -52,7 +52,7 @@ void StopTrader::UpdateStopOrderPrice(Mode mode, int timestamp_sec,
                    (1 + stop_order_increase_per_tick) * stop_order_price_));
     }
   } else {
-    assert(mode == Mode::IN_CASH);
+    assert(mode == Mode::CASH);
     const float stop_order_decrease_threshold =
         (1 + trader_config_.stop_order_move_margin()) * price;
     if (stop_order_price_ >= stop_order_decrease_threshold) {
@@ -72,11 +72,11 @@ void StopTrader::EmitStopOrder(float price, std::vector<Order>& orders) const {
   orders.emplace_back();
   Order& order = orders.back();
   order.set_type(Order_Type_STOP);
-  if (mode_ == Mode::IN_LONG) {
+  if (mode_ == Mode::LONG) {
     order.set_side(Order_Side_SELL);
     order.set_base_amount(last_base_balance_);
   } else {
-    assert(mode_ == Mode::IN_CASH);
+    assert(mode_ == Mode::CASH);
     order.set_side(Order_Side_BUY);
     order.set_quote_amount(last_quote_balance_);
   }
@@ -86,11 +86,11 @@ void StopTrader::EmitStopOrder(float price, std::vector<Order>& orders) const {
 std::string StopTrader::GetInternalState() const {
   std::stringstream ss;
   std::string mode;
-  if (mode_ == Mode::IN_LONG) {
-    mode = "IN_LONG";
+  if (mode_ == Mode::LONG) {
+    mode = "LONG";
   } else {
-    assert(mode_ == Mode::IN_CASH);
-    mode = "IN_CASH";
+    assert(mode_ == Mode::CASH);
+    mode = "CASH";
   }
   ss << std::fixed << std::setprecision(0)  // nowrap
      << last_timestamp_sec_ << ","          // nowrap

@@ -22,9 +22,9 @@ class StopTrader : public Trader {
  private:
   // Enumeration of possible trader modes.
   enum class Mode {
-    NONE,     // Undefined.
-    IN_LONG,  // Trader holds most of its assets in base (crypto) currency.
-    IN_CASH   // Trader holds most of its assets in base currency.
+    NONE,  // Undefined.
+    LONG,  // Trader holds most of its assets in the base (crypto) currency.
+    CASH   // Trader holds most of its assets in the quote currency.
   };
 
   StopTraderConfig trader_config_;
