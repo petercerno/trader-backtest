@@ -56,36 +56,29 @@ AccountConfig GetAccountConfig() {
   return config;
 }
 
-// Reads and returns the price / OHLC history.
-template <typename T>
-std::vector<T> ReadHistory(const std::string& file_name) {
-  std::vector<T> history;
+// Reads and returns the OHLC history based on the flags.
+OhlcHistory GetOhlcHistoryFromFlags(long start_timestamp_sec,
+                                    long end_timestamp_sec) {
+  if (FLAGS_input_ohlc_history_delimited_proto_file.empty()) {
+    return {};
+  }
+  OhlcHistory ohlc_history;
   auto start = std::chrono::high_resolution_clock::now();
-  if (!ReadDelimitedMessagesFromFile<T>(file_name, history)) {
+  if (!ReadDelimitedMessagesFromFile<OhlcTick>(
+          FLAGS_input_ohlc_history_delimited_proto_file, ohlc_history)) {
     return {};
   }
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::high_resolution_clock::now() - start);
-  std::cout << "Loaded " << history.size() << " records in "
+  std::cout << "Loaded " << ohlc_history.size() << " OHLC ticks in "
             << duration.count() / 1000.0 << " seconds" << std::endl;
-  return history;
-}
-
-// Gets the OHLC history based on flags.
-OhlcHistory GetOhlcHistoryFromFlags(long start_timestamp_sec,
-                                    long end_timestamp_sec) {
-  if (!FLAGS_input_ohlc_history_delimited_proto_file.empty()) {
-    OhlcHistory ohlc_history =
-        ReadHistory<OhlcTick>(FLAGS_input_ohlc_history_delimited_proto_file);
-    OhlcHistory ohlc_history_subset =
-        HistorySubsetCopy(ohlc_history, start_timestamp_sec, end_timestamp_sec);
-    std::cout << "Selected " << ohlc_history_subset.size()
-              << " OHLC ticks within the period: "
-              << TimestampPeriodToString(start_timestamp_sec, end_timestamp_sec)
-              << std::endl;
-    return ohlc_history_subset;
-  }
-  return {};
+  OhlcHistory ohlc_history_subset =
+      HistorySubsetCopy(ohlc_history, start_timestamp_sec, end_timestamp_sec);
+  std::cout << "Selected " << ohlc_history_subset.size()
+            << " OHLC ticks within the period: "
+            << TimestampPeriodToString(start_timestamp_sec, end_timestamp_sec)
+            << std::endl;
+  return ohlc_history_subset;
 }
 
 // Opens the file for logging purposes.
