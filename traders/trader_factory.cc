@@ -33,18 +33,16 @@ std::vector<std::unique_ptr<TraderEmitter>> GetBatchOfLimitTraders() {
 // Returns the default rebalancing trader emitter.
 std::unique_ptr<TraderEmitter> GetDefaultRebalancingTraderEmitter() {
   RebalancingTraderConfig config;
-  config.set_alpha(4.0f);
-  config.set_beta(0.1f);
-  config.set_upper_deviation(0.2f);
-  config.set_lower_deviation(0.2f);
+  config.set_alpha(0.7f);
+  config.set_epsilon(0.05f);
   return std::unique_ptr<TraderEmitter>(new RebalancingTraderEmitter(config));
 }
 
 // Returns the default batch of rebalancing traders.
 std::vector<std::unique_ptr<TraderEmitter>> GetBatchOfRebalancingTraders() {
   return RebalancingTraderEmitter::GetBatchOfTraders(
-      /* alphas = */ {0.5f, 1.0f, 2.0f, 4.0f, 9.0f},
-      /* deviations = */ {0.1f, 0.2f, 0.3f, 0.4f});
+      /* alphas = */ {0.1f, 0.3f, 0.5f, 0.7f, 0.9f},
+      /* epsilons = */ {0.01f, 0.05f, 0.1f, 0.2f});
 }
 
 // Returns the default stop trader emitter.

@@ -14,73 +14,44 @@ void RebalancingTrader::Update(const OhlcTick& ohlc_tick, float base_balance,
   assert(base_balance > 0 || quote_balance > 0);
   const float portfolio_value = base_balance * price + quote_balance;
   const float alpha = trader_config_.alpha();
-  const float beta = trader_config_.beta();
-  float upper_deviation = trader_config_.upper_deviation();
-  float lower_deviation = trader_config_.lower_deviation();
-  const float market_sell_base_amount =
-      base_balance / (1.0f + alpha) -
-      alpha / (1.0f + alpha) * quote_balance / price;
-  const float market_buy_base_amount =
-      alpha / (1.0f + alpha) * quote_balance / price -
-      base_balance / (1.0f + alpha);
-  if (base_balance * price > alpha * (1.0f + upper_deviation) * quote_balance &&
-      market_sell_base_amount * price >= beta * portfolio_value) {
+  const float epsilon = trader_config_.epsilon();
+  const float alpha_up = alpha * (1 + epsilon);
+  const float alpha_down = alpha * (1 - epsilon);
+  const float beta = base_balance * price / portfolio_value;
+  if (beta > alpha_up) {
+    const float market_sell_base_amount =
+        ((1 - alpha) * portfolio_value - quote_balance) / price;
     orders.emplace_back();
     Order& order = orders.back();
     order.set_type(Order_Type_MARKET);
     order.set_side(Order_Side_SELL);
     order.set_base_amount(market_sell_base_amount);
-  } else if (base_balance * price <
-                 alpha * (1.0f - lower_deviation) * quote_balance &&
-             market_buy_base_amount * price >= beta * portfolio_value) {
+  } else if (beta < alpha_down) {
+    const float market_buy_base_amount =
+        (quote_balance - (1 - alpha) * portfolio_value) / price;
     orders.emplace_back();
     Order& order = orders.back();
     order.set_type(Order_Type_MARKET);
     order.set_side(Order_Side_BUY);
     order.set_base_amount(market_buy_base_amount);
-  } else {
-    bool allow_limit_sell = true;
-    if (1.0f - (1.0f + alpha) * beta < 0.2) {
-      allow_limit_sell = false;
-    } else {
-      const float min_upper_deviation =
-          (1.0f + (1.0f + 1.0f / alpha) * beta) /  // nowrap
-              (1.0f - (1.0f + alpha) * beta) -
-          1.0f;
-      if (upper_deviation < min_upper_deviation) {
-        upper_deviation = min_upper_deviation;
+  } else if (base_balance > 1.0e-6f && quote_balance > 1.0e-6f) {
+    if (alpha * (1 + epsilon) < 1) {
+      const float sell_price =
+          (alpha * (1 + epsilon) * quote_balance) / (1 - alpha * (1 + epsilon));
+      if (sell_price > price && sell_price < 100.0f * price) {
+        const float sell_base_amount = base_balance * epsilon / (1 + epsilon);
+        orders.emplace_back();
+        Order& sell_order = orders.back();
+        sell_order.set_type(Order_Type_LIMIT);
+        sell_order.set_side(Order_Side_SELL);
+        sell_order.set_base_amount(sell_base_amount);
+        sell_order.set_price(sell_price);
       }
     }
-    bool allow_limit_buy = true;
-    const float min_lower_deviation =
-        1.0f - (1.0f - (1.0f + 1.0f / alpha) * beta) /  // nowrap
-                   (1.0f + (1.0f + alpha) * beta);
-    if (min_lower_deviation > 0.8) {
-      allow_limit_buy = false;
-    } else if (lower_deviation < min_lower_deviation) {
-      lower_deviation = min_lower_deviation;
-    }
-    if (allow_limit_sell) {
-      const float sell_base_amount = base_balance / (1.0f + alpha) *
-                                     upper_deviation / (1.0f + upper_deviation);
-      const float sell_price =
-          alpha * (1.0f + upper_deviation) * quote_balance / base_balance;
-      assert(sell_base_amount * sell_price >=
-             0.99f * beta * (base_balance * sell_price + quote_balance));
-      orders.emplace_back();
-      Order& sell_order = orders.back();
-      sell_order.set_type(Order_Type_LIMIT);
-      sell_order.set_side(Order_Side_SELL);
-      sell_order.set_base_amount(sell_base_amount);
-      sell_order.set_price(sell_price);
-    }
-    if (allow_limit_buy) {
-      const float buy_base_amount = base_balance / (1.0f + alpha) *
-                                    lower_deviation / (1.0f - lower_deviation);
-      const float buy_price =
-          alpha * (1.0f - lower_deviation) * quote_balance / base_balance;
-      assert(buy_base_amount * buy_price >=
-             0.99f * beta * (base_balance * buy_price + quote_balance));
+    const float buy_price =
+        (alpha * (1 - epsilon) * quote_balance) / (1 - alpha * (1 - epsilon));
+    if (buy_price < price && buy_price > price / 100.0f) {
+      const float buy_base_amount = base_balance * epsilon / (1 - epsilon);
       orders.emplace_back();
       Order& buy_order = orders.back();
       buy_order.set_type(Order_Type_LIMIT);
@@ -109,8 +80,7 @@ std::string RebalancingTrader::GetInternalState() const {
 std::string RebalancingTraderEmitter::GetName() const {
   std::stringstream ss;
   ss << std::fixed << std::setprecision(3) << "rebalancing-trader["
-     << trader_config_.alpha() << "|" << trader_config_.upper_deviation() << "|"
-     << trader_config_.lower_deviation() << "]";
+     << trader_config_.alpha() << "|" << trader_config_.epsilon() << "]";
   return ss.str();
 }
 
@@ -121,15 +91,13 @@ std::unique_ptr<Trader> RebalancingTraderEmitter::NewTrader() const {
 
 std::vector<std::unique_ptr<TraderEmitter>>
 RebalancingTraderEmitter::GetBatchOfTraders(
-    const std::vector<float>& alphas, const std::vector<float>& deviations) {
+    const std::vector<float>& alphas, const std::vector<float>& epsilons) {
   std::vector<std::unique_ptr<TraderEmitter>> batch;
   for (const float alpha : alphas)
-    for (const float deviation : deviations) {
+    for (const float epsilon : epsilons) {
       RebalancingTraderConfig trader_config;
       trader_config.set_alpha(alpha);
-      trader_config.set_beta(0.1f);
-      trader_config.set_upper_deviation(deviation);
-      trader_config.set_lower_deviation(deviation);
+      trader_config.set_epsilon(epsilon);
       batch.emplace_back(new RebalancingTraderEmitter(trader_config));
     }
   return batch;

@@ -43,7 +43,7 @@ class RebalancingTraderEmitter : public TraderEmitter {
   std::unique_ptr<Trader> NewTrader() const override;
 
   static std::vector<std::unique_ptr<TraderEmitter>> GetBatchOfTraders(
-      const std::vector<float>& alphas, const std::vector<float>& deviations);
+      const std::vector<float>& alphas, const std::vector<float>& epsilons);
 
  private:
   RebalancingTraderConfig trader_config_;
