@@ -15,8 +15,7 @@ DEFINE_string(output_exchange_log_file, "",
               "Output CSV file containing the exchange log.");
 DEFINE_string(output_trader_log_file, "",
               "Output file containing the trader-dependent log.");
-DEFINE_string(trader, "limit",
-              "Trader to be executed. [limit, rebalancing, stop].");
+DEFINE_string(trader, "stop", "Trader to be executed. [rebalancing, stop].");
 
 DEFINE_string(start_date_utc, "2017-01-01",
               "Start date YYYY-MM-DD in UTC (included).");

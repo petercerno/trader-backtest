@@ -15,12 +15,10 @@ cc_proto_library(
 cc_library(
     name = "traders",
     srcs = [
-        "limit_trader.cc",
         "rebalancing_trader.cc",
         "stop_trader.cc",
     ],
     hdrs = [
-        "limit_trader.h",
         "rebalancing_trader.h",
         "stop_trader.h",
     ],

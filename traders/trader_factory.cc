@@ -2,33 +2,14 @@
 
 #include "traders/trader_factory.h"
 
-#include "traders/limit_trader.h"
 #include "traders/rebalancing_trader.h"
 #include "traders/stop_trader.h"
 #include "traders/trader_config.pb.h"
 
 namespace trader {
 namespace {
-static constexpr char kLimitTraderName[] = "limit";
 static constexpr char kRebalancingTraderName[] = "rebalancing";
 static constexpr char kStopTraderName[] = "stop";
-
-// Returns the default limit trader emitter.
-std::unique_ptr<TraderEmitter> GetDefaultLimitTraderEmitter() {
-  LimitTraderConfig config;
-  config.set_alpha_per_hour(0.03f);
-  config.set_limit_buy_margin(0.01f);
-  config.set_limit_sell_margin(0.01f);
-  return std::unique_ptr<TraderEmitter>(new LimitTraderEmitter(config));
-}
-
-// Returns the default batch of limit traders.
-std::vector<std::unique_ptr<TraderEmitter>> GetBatchOfLimitTraders() {
-  return LimitTraderEmitter::GetBatchOfTraders(
-      /* alphas_per_hour = */ {0.01f, 0.02f, 0.03f},
-      /* limit_buy_margins = */ {0.005f, 0.01f, 0.015f},
-      /* limit_sell_margins = */ {0.005f, 0.01f, 0.015f});
-}
 
 // Returns the default rebalancing trader emitter.
 std::unique_ptr<TraderEmitter> GetDefaultRebalancingTraderEmitter() {
@@ -66,9 +47,7 @@ std::vector<std::unique_ptr<TraderEmitter>> GetBatchOfStopTraders() {
 }  // namespace
 
 std::unique_ptr<TraderEmitter> GetTrader(const std::string& trader_name) {
-  if (trader_name == kLimitTraderName) {
-    return GetDefaultLimitTraderEmitter();
-  } else if (trader_name == kRebalancingTraderName) {
+  if (trader_name == kRebalancingTraderName) {
     return GetDefaultRebalancingTraderEmitter();
   } else {
     assert(trader_name == kStopTraderName);
@@ -78,9 +57,7 @@ std::unique_ptr<TraderEmitter> GetTrader(const std::string& trader_name) {
 
 std::vector<std::unique_ptr<TraderEmitter>> GetBatchOfTraders(
     const std::string& trader_name) {
-  if (trader_name == kLimitTraderName) {
-    return GetBatchOfLimitTraders();
-  } else if (trader_name == kRebalancingTraderName) {
+  if (trader_name == kRebalancingTraderName) {
     return GetBatchOfRebalancingTraders();
   } else {
     assert(trader_name == kStopTraderName);

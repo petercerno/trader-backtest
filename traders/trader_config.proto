@@ -4,16 +4,6 @@ syntax = "proto2";
 
 package trader;
 
-// Limit trader configuration.
-message LimitTraderConfig {
-  // Blending factor for the exponential price smoothing.
-  optional float alpha_per_hour = 1;
-  // Margin for placing the limit buy order price w.r.t. the smoothed price.
-  optional float limit_buy_margin = 2;
-  // Margin for placing the limit sell order price w.r.t. the smoothed price.
-  optional float limit_sell_margin = 3;
-}
-
 // Rebalancing trader configuration.
 message RebalancingTraderConfig {
   // Desired alpha-allocation.
