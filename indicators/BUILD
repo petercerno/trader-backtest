@@ -147,3 +147,24 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "volatility",
+    srcs = ["volatility.cc"],
+    hdrs = ["volatility.h"],
+    deps = [
+        ":last_n_ohlc_ticks",
+        ":util",
+        "//base",
+    ],
+)
+
+cc_test(
+    name = "volatility_test",
+    srcs = ["volatility_test.cc"],
+    deps = [
+        ":volatility",
+        ":test_util",
+        "@googletest//:gtest_main",
+    ],
+)
