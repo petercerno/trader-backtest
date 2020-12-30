@@ -163,13 +163,22 @@ int main(int argc, char* argv[]) {
     CsvLogger logger(exchange_log_stream.get(), trader_log_stream.get());
     EvaluationResult eval_result = EvaluateTrader(
         account_config, eval_config, ohlc_history, *trader_emitter, &logger);
+    std::cout << "------------------ period ------------------"
+              << "    trader & base gain    score    t&b volatility"
+              << std::endl;
     for (const EvaluationResult::Period& period : eval_result.period()) {
       std::cout << "["
                 << ConvertTimestampSecToDateTimeUTC(
                        period.start_timestamp_sec())
                 << " - "
                 << ConvertTimestampSecToDateTimeUTC(period.end_timestamp_sec())
-                << "): " << period.final_gain() / period.base_final_gain()
+                << "):" << std::fixed << std::setprecision(2) << std::setw(10)
+                << (period.final_gain() - 1.0f) * 100.0f << "%" << std::setw(10)
+                << (period.base_final_gain() - 1.0f) * 100.0f << "%"
+                << std::setprecision(3) << std::setw(9)
+                << period.final_gain() / period.base_final_gain()
+                << std::setw(9) << period.result().trader_volatility()
+                << std::setw(9) << period.result().base_volatility()
                 << std::endl;
     }
   }
