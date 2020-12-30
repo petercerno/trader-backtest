@@ -8,8 +8,8 @@ StochasticOscillator::StochasticOscillator(int num_periods, int period_size_sec)
     : last_n_ohlc_ticks_(/*num_ohlc_ticks=*/1, period_size_sec),
       sliding_window_min_(/*window_size=*/num_periods),
       sliding_window_max_(/*window_size=*/num_periods),
-      sma_d_fast_(/*window_size=*/3),
-      sma_d_slow_(/*window_size=*/3) {
+      d_fast_(/*window_size=*/3),
+      d_slow_(/*window_size=*/3) {
   last_n_ohlc_ticks_.RegisterLastTickUpdatedCallback(
       [this](const OhlcTick& old_ohlc_tick, const OhlcTick& new_ohlc_tick) {
         // We have observed at least 1 OHLC tick.
@@ -42,13 +42,9 @@ float StochasticOscillator::GetHigh() const {
 
 float StochasticOscillator::GetK() const { return latest_k_; }
 
-float StochasticOscillator::GetFastD() const {
-  return sma_d_fast_.GetSimpleMovingAverage();
-}
+float StochasticOscillator::GetFastD() const { return d_fast_.GetMean(); }
 
-float StochasticOscillator::GetSlowD() const {
-  return sma_d_slow_.GetSimpleMovingAverage();
-}
+float StochasticOscillator::GetSlowD() const { return d_slow_.GetMean(); }
 
 int StochasticOscillator::GetNumOhlcTicks() const { return num_ohlc_ticks_; }
 
@@ -60,8 +56,8 @@ void StochasticOscillator::LastTickUpdated(const OhlcTick& ohlc_tick) {
   sliding_window_min_.UpdateCurrentValue(ohlc_tick.low());
   sliding_window_max_.UpdateCurrentValue(ohlc_tick.high());
   UpdateK(ohlc_tick.close());
-  sma_d_fast_.UpdateCurrentValue(GetK());
-  sma_d_slow_.UpdateCurrentValue(GetFastD());
+  d_fast_.UpdateCurrentValue(GetK());
+  d_slow_.UpdateCurrentValue(GetFastD());
 }
 
 void StochasticOscillator::NewTickAdded(const OhlcTick& ohlc_tick) {
@@ -69,8 +65,8 @@ void StochasticOscillator::NewTickAdded(const OhlcTick& ohlc_tick) {
   sliding_window_min_.AddNewValue(ohlc_tick.low());
   sliding_window_max_.AddNewValue(ohlc_tick.high());
   UpdateK(ohlc_tick.close());
-  sma_d_fast_.AddNewValue(GetK());
-  sma_d_slow_.AddNewValue(GetFastD());
+  d_fast_.AddNewValue(GetK());
+  d_slow_.AddNewValue(GetFastD());
 }
 
 void StochasticOscillator::UpdateK(const float latest_price) {

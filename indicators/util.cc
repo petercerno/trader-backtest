@@ -4,21 +4,39 @@
 
 namespace trader {
 
-float SimpleMovingAverageHelper::GetSimpleMovingAverage() const {
-  return num_values_ > 0 ? (current_value_ + window_sum_) / GetWindowSize() : 0;
+float SlidingWindowMeanAndVariance::GetMean() const {
+  if (num_values_ == 0) {
+    return 0;
+  }
+  return (current_value_ + window_sum_) / GetWindowSize();
 }
 
-int SimpleMovingAverageHelper::GetWindowSize() const {
+float SlidingWindowMeanAndVariance::GetVariance() const {
+  if (num_values_ == 0) {
+    return 0;
+  }
+  const int window_size = GetWindowSize();
+  const float mean = (current_value_ + window_sum_) / window_size;
+  return (std::pow(current_value_, 2) + window_sum_2_) / window_size -
+         std::pow(mean, 2);
+}
+
+float SlidingWindowMeanAndVariance::GetStandardDeviation() const {
+  return std::sqrt(GetVariance());
+}
+
+int SlidingWindowMeanAndVariance::GetWindowSize() const {
   if (window_size_ == 0) {
     return num_values_;
   }
   return std::min(num_values_, window_size_);
 }
 
-void SimpleMovingAverageHelper::AddNewValue(float value) {
+void SlidingWindowMeanAndVariance::AddNewValue(float value) {
   if (num_values_ == 0 || window_size_ <= 1) {
     if (window_size_ == 0) {
       window_sum_ += current_value_;
+      window_sum_2_ += std::pow(current_value_, 2);
     }
     current_value_ = value;
     ++num_values_;
@@ -26,15 +44,18 @@ void SimpleMovingAverageHelper::AddNewValue(float value) {
   }
   window_.push_back(current_value_);
   window_sum_ += current_value_;
+  window_sum_2_ += std::pow(current_value_, 2);
   current_value_ = value;
   ++num_values_;
   if (window_.size() >= window_size_) {
-    window_sum_ -= window_.front();
+    const float popped_value = window_.front();
+    window_sum_ -= popped_value;
+    window_sum_2_ -= std::pow(popped_value, 2);
     window_.pop_front();
   }
 }
 
-void SimpleMovingAverageHelper::UpdateCurrentValue(float value) {
+void SlidingWindowMeanAndVariance::UpdateCurrentValue(float value) {
   assert(num_values_ >= 1);
   current_value_ = value;
 }

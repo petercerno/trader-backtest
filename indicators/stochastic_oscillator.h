@@ -66,8 +66,8 @@ class StochasticOscillator {
 
   SlidingWindowMinimum sliding_window_min_;
   SlidingWindowMaximum sliding_window_max_;
-  SimpleMovingAverageHelper sma_d_fast_;
-  SimpleMovingAverageHelper sma_d_slow_;
+  SlidingWindowMeanAndVariance d_fast_;
+  SlidingWindowMeanAndVariance d_slow_;
 };
 
 }  // namespace trader

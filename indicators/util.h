@@ -5,23 +5,29 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <deque>
 #include <tuple>
 
 namespace trader {
 
-// Calculates the Simple Moving Average (SMA) over the provided values.
-// All methods run in O(1) time.
-class SimpleMovingAverageHelper {
+// Calculates sliding window mean and variance. All methods run in O(1) time.
+class SlidingWindowMeanAndVariance {
  public:
   // Constructor.
   // window_size: Size of the sliding window for the SMA. Ignored if zero.
-  explicit SimpleMovingAverageHelper(int window_size)
+  explicit SlidingWindowMeanAndVariance(int window_size)
       : window_size_(window_size) {}
-  ~SimpleMovingAverageHelper() {}
+  ~SlidingWindowMeanAndVariance() {}
 
-  // Returns the current Simple Moving Average.
-  float GetSimpleMovingAverage() const;
+  // Returns the mean of all values in the sliding window.
+  float GetMean() const;
+
+  // Returns the variance of all values in the sliding window.
+  float GetVariance() const;
+
+  // Returns the standard deviation of all values in the sliding window.
+  float GetStandardDeviation() const;
 
   // Returns the current size of the sliding window.
   // Returns the total number of added values if the sliding window is ignored.
@@ -46,6 +52,8 @@ class SimpleMovingAverageHelper {
   std::deque<float> window_;
   // Sum over all elements in the sliding window (excluding the current value).
   float window_sum_ = 0;
+  // Sum over all elements squared in the window (excluding the current value).
+  float window_sum_2_ = 0;
   // Total number of added values (including the current value).
   int num_values_ = 0;
 };
