@@ -152,6 +152,7 @@ cc_library(
     name = "volatility",
     srcs = ["volatility.cc"],
     hdrs = ["volatility.h"],
+    visibility = ["//eval:__pkg__"],
     deps = [
         ":last_n_ohlc_ticks",
         ":util",
@@ -163,8 +164,8 @@ cc_test(
     name = "volatility_test",
     srcs = ["volatility_test.cc"],
     deps = [
-        ":volatility",
         ":test_util",
+        ":volatility",
         "@googletest//:gtest_main",
     ],
 )

@@ -22,6 +22,7 @@ cc_library(
         "//base",
         "//base:account",
         "//base:trader",
+        "//indicators:volatility",
         "//logging:logger",
         "//util:time",
     ],

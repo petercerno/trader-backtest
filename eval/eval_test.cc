@@ -223,7 +223,9 @@ TEST(ExecuteTraderTest, LimitBuyAndSell) {
         start_value: 1200
         end_value: 1636
         total_executed_orders: 2
-        total_fee: 364   
+        total_fee: 364
+        base_volatility: 6.53697348
+        trader_volatility: 2.36517286
         )",
       &expected_result));
   ExpectProtoEq(expected_result, result);
@@ -337,6 +339,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
                 end_value: 5834
                 total_executed_orders: 3
                 total_fee: 1011
+                base_volatility: 1.63992178
+                trader_volatility: 1.3071624
             }
             final_gain: 4.86166668
             base_final_gain: 6.25
@@ -480,6 +484,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 end_value: 2605
                 total_executed_orders: 2
                 total_fee: 364
+                base_volatility: 1.47175908
+                trader_volatility: 1.6604414
             }
             final_gain: 2.17083335
             base_final_gain: 0.666666687
@@ -498,6 +504,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 end_value: 4866
                 total_executed_orders: 2
                 total_fee: 364
+                base_volatility: 1.74792
+                trader_volatility: 1.90313399
             }
             final_gain: 3.244
             base_final_gain: 1
@@ -516,6 +524,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 end_value: 1799
                 total_executed_orders: 1
                 total_fee: 201
+                base_volatility: 1.84354067
+                trader_volatility: 1.71938074
             }
             final_gain: 1.285
             base_final_gain: 1.71428573
@@ -534,6 +544,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 end_value: 1799
                 total_executed_orders: 1
                 total_fee: 201
+                base_volatility: 1.99806571
+                trader_volatility: 1.71596301
             }
             final_gain: 1.799
             base_final_gain: 4
@@ -552,6 +564,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 end_value: 1799
                 total_executed_orders: 1
                 total_fee: 201
+                base_volatility: 1.97951412
+                trader_volatility: 1.63458216
             }
             final_gain: 3.598
             base_final_gain: 6
@@ -570,6 +584,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 end_value: 1799
                 total_executed_orders: 1
                 total_fee: 201
+                base_volatility: 2.0282948
+                trader_volatility: 1.23012161
             }
             final_gain: 2.24875
             base_final_gain: 8.125
@@ -588,6 +604,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
                 end_value: 1799
                 total_executed_orders: 1
                 total_fee: 201
+                base_volatility: 1.91392529
+                trader_volatility: 1.0023737
             }
             final_gain: 1.19933331
             base_final_gain: 5

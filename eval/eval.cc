@@ -2,6 +2,7 @@
 
 #include "eval/eval.h"
 
+#include "indicators/volatility.h"
 #include "util/time.h"
 
 namespace trader {
@@ -48,6 +49,10 @@ ExecutionResult ExecuteTrader(const AccountConfig& account_config,
   constexpr size_t kEmittedOrdersReserve = 8;
   orders.reserve(kEmittedOrdersReserve);
   int total_executed_orders = 0;
+  Volatility base_volatility(/* window_size = */ 0,
+                             /* period_size_sec = */ kSecondsPerDay);
+  Volatility trader_volatility(/* window_size = */ 0,
+                               /* period_size_sec = */ kSecondsPerDay);
   for (auto ohlc_tick_it = ohlc_history_begin; ohlc_tick_it != ohlc_history_end;
        ++ohlc_tick_it) {
     const OhlcTick& ohlc_tick = *ohlc_tick_it;
@@ -84,6 +89,10 @@ ExecutionResult ExecuteTrader(const AccountConfig& account_config,
     if (logger != nullptr) {
       logger->LogTraderState(trader.GetInternalState());
     }
+    base_volatility.Update(ohlc_tick, /* base_balance = */ 1.0f,
+                           /* quote_balance = */ 0.0f);
+    trader_volatility.Update(ohlc_tick, account.base_balance,
+                             account.quote_balance);
   }
   result.set_start_base_balance(account_config.start_base_balance());
   result.set_start_quote_balance(account_config.start_quote_balance());
@@ -97,6 +106,10 @@ ExecutionResult ExecuteTrader(const AccountConfig& account_config,
                        result.end_price() * result.end_base_balance());
   result.set_total_executed_orders(total_executed_orders);
   result.set_total_fee(account.total_fee);
+  result.set_base_volatility(base_volatility.GetVolatility() *
+                             std::sqrt(365.0));
+  result.set_trader_volatility(trader_volatility.GetVolatility() *
+                               std::sqrt(365.0));
   return result;
 }
 

@@ -28,6 +28,14 @@ message ExecutionResult {
     optional int32 total_executed_orders = 9;
     // Total accumulated transaction fee (in quote currency).
     optional float total_fee = 10;
+    // Annual volatility of the baseline's (Buy and HODL) portfolio, defined as:
+    // Standard deviation of the baseline's daily logarithmic returns
+    // multiplied by std::sqrt(365).
+    optional float base_volatility = 11;
+    // Annual volatility of the trader's portfolio, defined as:
+    // Standard deviation of the trader's daily logarithmic returns
+    // multiplied by std::sqrt(365).
+    optional float trader_volatility = 12;
   }
   
   // Trader evaluation configuration.
