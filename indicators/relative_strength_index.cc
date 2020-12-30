@@ -80,7 +80,7 @@ float RelativeStrengthIndex::GetModifiedMovingAverageWeight() const {
 std::pair<float, float> RelativeStrengthIndex::GetUpwardDownwardChange() const {
   float upward_change = 0;
   float downward_change = 0;
-  const std::deque<OhlcTick> last_n_ohlc_ticks =
+  const std::deque<OhlcTick>& last_n_ohlc_ticks =
       last_n_ohlc_ticks_.GetLastNOhlcTicks();
   if (last_n_ohlc_ticks.size() == 1) {
     // We do not have a previous OHLC tick, so we use the opening and closing
