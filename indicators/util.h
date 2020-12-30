@@ -15,22 +15,20 @@ namespace trader {
 class SimpleMovingAverageHelper {
  public:
   // Constructor.
-  // window_size: Number of values in the sliding window for the SMA.
+  // window_size: Size of the sliding window for the SMA. Ignored if zero.
   explicit SimpleMovingAverageHelper(int window_size)
       : window_size_(window_size) {}
   ~SimpleMovingAverageHelper() {}
 
   // Returns the current Simple Moving Average.
-  float GetSimpleMovingAverage() const {
-    return num_values_ > 0 ? (current_value_ + window_sum_) / GetWindowSize()
-                           : 0;
-  }
+  float GetSimpleMovingAverage() const;
+
+  // Returns the current size of the sliding window.
+  // Returns the total number of added values if the sliding window is ignored.
+  int GetWindowSize() const;
 
   // Returns the total number of added values.
   int GetNumValues() const { return num_values_; }
-
-  // Returns the current size of the sliding window.
-  int GetWindowSize() const { return std::min(num_values_, window_size_); }
 
   // Adds a new value.
   void AddNewValue(float value);

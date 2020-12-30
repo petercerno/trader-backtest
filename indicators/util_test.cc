@@ -6,66 +6,220 @@
 
 namespace trader {
 
-TEST(SimpleMovingAverageHelperTest, GetSimpleMovingAverage) {
-  SimpleMovingAverageHelper sma_helper(/*window_size=*/4);
+TEST(SimpleMovingAverageHelperTest, GetSimpleMovingAverageWithoutWindow) {
+  SimpleMovingAverageHelper sma_helper(/*window_size=*/0);
   EXPECT_FLOAT_EQ(0, sma_helper.GetSimpleMovingAverage());
   EXPECT_EQ(0, sma_helper.GetNumValues());
+  EXPECT_EQ(0, sma_helper.GetWindowSize());
 
   sma_helper.AddNewValue(100.0f);
   EXPECT_FLOAT_EQ(100.0f, sma_helper.GetSimpleMovingAverage());
   EXPECT_EQ(1, sma_helper.GetNumValues());
+  EXPECT_EQ(1, sma_helper.GetWindowSize());
 
   sma_helper.UpdateCurrentValue(200.0f);
   EXPECT_FLOAT_EQ(200.0f, sma_helper.GetSimpleMovingAverage());
   EXPECT_EQ(1, sma_helper.GetNumValues());
+  EXPECT_EQ(1, sma_helper.GetWindowSize());
 
   sma_helper.AddNewValue(100.0f);
   EXPECT_FLOAT_EQ((200.0f + 100.0f) / 2, sma_helper.GetSimpleMovingAverage());
   EXPECT_EQ(2, sma_helper.GetNumValues());
+  EXPECT_EQ(2, sma_helper.GetWindowSize());
 
   sma_helper.UpdateCurrentValue(400.0f);
   EXPECT_FLOAT_EQ((200.0f + 400.0f) / 2, sma_helper.GetSimpleMovingAverage());
   EXPECT_EQ(2, sma_helper.GetNumValues());
+  EXPECT_EQ(2, sma_helper.GetWindowSize());
 
   sma_helper.AddNewValue(300.0f);
   EXPECT_FLOAT_EQ((200.0f + 400.0f + 300.0f) / 3,
                   sma_helper.GetSimpleMovingAverage());
   EXPECT_EQ(3, sma_helper.GetNumValues());
+  EXPECT_EQ(3, sma_helper.GetWindowSize());
 
   sma_helper.UpdateCurrentValue(600.0f);
   EXPECT_FLOAT_EQ((200.0f + 400.0f + 600.0f) / 3,
                   sma_helper.GetSimpleMovingAverage());
   EXPECT_EQ(3, sma_helper.GetNumValues());
+  EXPECT_EQ(3, sma_helper.GetWindowSize());
 
   sma_helper.AddNewValue(100.0f);
   EXPECT_FLOAT_EQ((200.0f + 400.0f + 600.0f + 100.0f) / 4,
                   sma_helper.GetSimpleMovingAverage());
   EXPECT_EQ(4, sma_helper.GetNumValues());
+  EXPECT_EQ(4, sma_helper.GetWindowSize());
 
   sma_helper.UpdateCurrentValue(200.0f);
   EXPECT_FLOAT_EQ((200.0f + 400.0f + 600.0f + 200.0f) / 4,
                   sma_helper.GetSimpleMovingAverage());
   EXPECT_EQ(4, sma_helper.GetNumValues());
+  EXPECT_EQ(4, sma_helper.GetWindowSize());
+
+  sma_helper.AddNewValue(400.0f);
+  EXPECT_FLOAT_EQ((200.0f + 400.0f + 600.0f + 200.0f + 400.0f) / 5,
+                  sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(5, sma_helper.GetNumValues());
+  EXPECT_EQ(5, sma_helper.GetWindowSize());
+
+  sma_helper.UpdateCurrentValue(100.0f);
+  EXPECT_FLOAT_EQ((200.0f + 400.0f + 600.0f + 200.0f + 100.0f) / 5,
+                  sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(5, sma_helper.GetNumValues());
+  EXPECT_EQ(5, sma_helper.GetWindowSize());
+
+  sma_helper.AddNewValue(500.0f);
+  EXPECT_FLOAT_EQ((200.0f + 400.0f + 600.0f + 200.0f + 100.0f + 500.0f) / 6,
+                  sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(6, sma_helper.GetNumValues());
+  EXPECT_EQ(6, sma_helper.GetWindowSize());
+
+  sma_helper.UpdateCurrentValue(300.0f);
+  EXPECT_FLOAT_EQ((200.0f + 400.0f + 600.0f + 200.0f + 100.0f + 300.0f) / 6,
+                  sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(6, sma_helper.GetNumValues());
+  EXPECT_EQ(6, sma_helper.GetWindowSize());
+}
+
+TEST(SimpleMovingAverageHelperTest, GetSimpleMovingAverageWithWindowSize1) {
+  SimpleMovingAverageHelper sma_helper(/*window_size=*/1);
+  EXPECT_FLOAT_EQ(0, sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(0, sma_helper.GetNumValues());
+  EXPECT_EQ(0, sma_helper.GetWindowSize());
+
+  sma_helper.AddNewValue(100.0f);
+  EXPECT_FLOAT_EQ(100.0f, sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(1, sma_helper.GetNumValues());
+  EXPECT_EQ(1, sma_helper.GetWindowSize());
+
+  sma_helper.UpdateCurrentValue(200.0f);
+  EXPECT_FLOAT_EQ(200.0f, sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(1, sma_helper.GetNumValues());
+  EXPECT_EQ(1, sma_helper.GetWindowSize());
+
+  sma_helper.AddNewValue(100.0f);
+  EXPECT_FLOAT_EQ(100.0f, sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(2, sma_helper.GetNumValues());
+  EXPECT_EQ(1, sma_helper.GetWindowSize());
+
+  sma_helper.UpdateCurrentValue(400.0f);
+  EXPECT_FLOAT_EQ(400.0f, sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(2, sma_helper.GetNumValues());
+  EXPECT_EQ(1, sma_helper.GetWindowSize());
+
+  sma_helper.AddNewValue(300.0f);
+  EXPECT_FLOAT_EQ(300.0f, sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(3, sma_helper.GetNumValues());
+  EXPECT_EQ(1, sma_helper.GetWindowSize());
+
+  sma_helper.UpdateCurrentValue(600.0f);
+  EXPECT_FLOAT_EQ(600.0f, sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(3, sma_helper.GetNumValues());
+
+  sma_helper.AddNewValue(100.0f);
+  EXPECT_FLOAT_EQ(100.0f, sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(4, sma_helper.GetNumValues());
+  EXPECT_EQ(1, sma_helper.GetWindowSize());
+
+  sma_helper.UpdateCurrentValue(200.0f);
+  EXPECT_FLOAT_EQ(200.0f, sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(4, sma_helper.GetNumValues());
+  EXPECT_EQ(1, sma_helper.GetWindowSize());
+
+  sma_helper.AddNewValue(400.0f);
+  EXPECT_FLOAT_EQ(400.0f, sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(5, sma_helper.GetNumValues());
+  EXPECT_EQ(1, sma_helper.GetWindowSize());
+
+  sma_helper.UpdateCurrentValue(100.0f);
+  EXPECT_FLOAT_EQ(100.0f, sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(5, sma_helper.GetNumValues());
+  EXPECT_EQ(1, sma_helper.GetWindowSize());
+
+  sma_helper.AddNewValue(500.0f);
+  EXPECT_FLOAT_EQ(500.0f, sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(6, sma_helper.GetNumValues());
+  EXPECT_EQ(1, sma_helper.GetWindowSize());
+
+  sma_helper.UpdateCurrentValue(300.0f);
+  EXPECT_FLOAT_EQ(300.0f, sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(6, sma_helper.GetNumValues());
+  EXPECT_EQ(1, sma_helper.GetWindowSize());
+}
+
+TEST(SimpleMovingAverageHelperTest, GetSimpleMovingAverageWithWindowSize4) {
+  SimpleMovingAverageHelper sma_helper(/*window_size=*/4);
+  EXPECT_FLOAT_EQ(0, sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(0, sma_helper.GetNumValues());
+  EXPECT_EQ(0, sma_helper.GetWindowSize());
+
+  sma_helper.AddNewValue(100.0f);
+  EXPECT_FLOAT_EQ(100.0f, sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(1, sma_helper.GetNumValues());
+  EXPECT_EQ(1, sma_helper.GetWindowSize());
+
+  sma_helper.UpdateCurrentValue(200.0f);
+  EXPECT_FLOAT_EQ(200.0f, sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(1, sma_helper.GetNumValues());
+  EXPECT_EQ(1, sma_helper.GetWindowSize());
+
+  sma_helper.AddNewValue(100.0f);
+  EXPECT_FLOAT_EQ((200.0f + 100.0f) / 2, sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(2, sma_helper.GetNumValues());
+  EXPECT_EQ(2, sma_helper.GetWindowSize());
+
+  sma_helper.UpdateCurrentValue(400.0f);
+  EXPECT_FLOAT_EQ((200.0f + 400.0f) / 2, sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(2, sma_helper.GetNumValues());
+  EXPECT_EQ(2, sma_helper.GetWindowSize());
+
+  sma_helper.AddNewValue(300.0f);
+  EXPECT_FLOAT_EQ((200.0f + 400.0f + 300.0f) / 3,
+                  sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(3, sma_helper.GetNumValues());
+  EXPECT_EQ(3, sma_helper.GetWindowSize());
+
+  sma_helper.UpdateCurrentValue(600.0f);
+  EXPECT_FLOAT_EQ((200.0f + 400.0f + 600.0f) / 3,
+                  sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(3, sma_helper.GetNumValues());
+  EXPECT_EQ(3, sma_helper.GetWindowSize());
+
+  sma_helper.AddNewValue(100.0f);
+  EXPECT_FLOAT_EQ((200.0f + 400.0f + 600.0f + 100.0f) / 4,
+                  sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(4, sma_helper.GetNumValues());
+  EXPECT_EQ(4, sma_helper.GetWindowSize());
+
+  sma_helper.UpdateCurrentValue(200.0f);
+  EXPECT_FLOAT_EQ((200.0f + 400.0f + 600.0f + 200.0f) / 4,
+                  sma_helper.GetSimpleMovingAverage());
+  EXPECT_EQ(4, sma_helper.GetNumValues());
+  EXPECT_EQ(4, sma_helper.GetWindowSize());
 
   sma_helper.AddNewValue(400.0f);
   EXPECT_FLOAT_EQ((400.0f + 600.0f + 200.0f + 400.0f) / 4,
                   sma_helper.GetSimpleMovingAverage());
   EXPECT_EQ(5, sma_helper.GetNumValues());
+  EXPECT_EQ(4, sma_helper.GetWindowSize());
 
   sma_helper.UpdateCurrentValue(100.0f);
   EXPECT_FLOAT_EQ((400.0f + 600.0f + 200.0f + 100.0f) / 4,
                   sma_helper.GetSimpleMovingAverage());
   EXPECT_EQ(5, sma_helper.GetNumValues());
+  EXPECT_EQ(4, sma_helper.GetWindowSize());
 
   sma_helper.AddNewValue(500.0f);
   EXPECT_FLOAT_EQ((600.0f + 200.0f + 100.0f + 500.0f) / 4,
                   sma_helper.GetSimpleMovingAverage());
   EXPECT_EQ(6, sma_helper.GetNumValues());
+  EXPECT_EQ(4, sma_helper.GetWindowSize());
 
   sma_helper.UpdateCurrentValue(300.0f);
   EXPECT_FLOAT_EQ((600.0f + 200.0f + 100.0f + 300.0f) / 4,
                   sma_helper.GetSimpleMovingAverage());
   EXPECT_EQ(6, sma_helper.GetNumValues());
+  EXPECT_EQ(4, sma_helper.GetWindowSize());
 }
 
 TEST(ExponentialMovingAverageHelperTest, GetExponentialMovingAverage) {

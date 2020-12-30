@@ -4,20 +4,34 @@
 
 namespace trader {
 
+float SimpleMovingAverageHelper::GetSimpleMovingAverage() const {
+  return num_values_ > 0 ? (current_value_ + window_sum_) / GetWindowSize() : 0;
+}
+
+int SimpleMovingAverageHelper::GetWindowSize() const {
+  if (window_size_ == 0) {
+    return num_values_;
+  }
+  return std::min(num_values_, window_size_);
+}
+
 void SimpleMovingAverageHelper::AddNewValue(float value) {
-  if (num_values_ == 0 || window_size_ == 1) {
+  if (num_values_ == 0 || window_size_ <= 1) {
+    if (window_size_ == 0) {
+      window_sum_ += current_value_;
+    }
     current_value_ = value;
     ++num_values_;
     return;
   }
   window_.push_back(current_value_);
   window_sum_ += current_value_;
+  current_value_ = value;
+  ++num_values_;
   if (window_.size() >= window_size_) {
     window_sum_ -= window_.front();
     window_.pop_front();
   }
-  current_value_ = value;
-  ++num_values_;
 }
 
 void SimpleMovingAverageHelper::UpdateCurrentValue(float value) {
