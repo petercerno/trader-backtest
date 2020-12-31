@@ -175,8 +175,9 @@ int main(int argc, char* argv[]) {
     PrintBatchEvalResults(eval_results, 20);
   } else {
     eval_config.set_fast_eval(false);
-    std::cout << std::endl << "Trader evaluation:" << std::endl;
     std::unique_ptr<TraderEmitter> trader_emitter = GetTrader(FLAGS_trader);
+    std::cout << std::endl
+              << trader_emitter->GetName() << " evaluation:" << std::endl;
     std::unique_ptr<std::ofstream> exchange_log_stream =
         OpenLogFile(FLAGS_output_exchange_log_file);
     std::unique_ptr<std::ofstream> trader_log_stream =
