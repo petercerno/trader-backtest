@@ -16,7 +16,7 @@ namespace trader {
 ExecutionResult ExecuteTrader(const AccountConfig& account_config,
                               OhlcHistory::const_iterator ohlc_history_begin,
                               OhlcHistory::const_iterator ohlc_history_end,
-                              Trader& trader, Logger* logger);
+                              bool fast_eval, Trader& trader, Logger* logger);
 
 // Evaluates a single (type of) trader (as emitted by the trader_emitter)
 // over one or more regions of the OHLC history (as defined by the

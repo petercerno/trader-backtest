@@ -38,7 +38,7 @@ float GetGeometricAverage(const C& container, F selector) {
 ExecutionResult ExecuteTrader(const AccountConfig& account_config,
                               OhlcHistory::const_iterator ohlc_history_begin,
                               OhlcHistory::const_iterator ohlc_history_end,
-                              Trader& trader, Logger* logger) {
+                              bool fast_eval, Trader& trader, Logger* logger) {
   ExecutionResult result;
   if (ohlc_history_begin == ohlc_history_end) {
     return {};
@@ -89,10 +89,12 @@ ExecutionResult ExecuteTrader(const AccountConfig& account_config,
     if (logger != nullptr) {
       logger->LogTraderState(trader.GetInternalState());
     }
-    base_volatility.Update(ohlc_tick, /* base_balance = */ 1.0f,
-                           /* quote_balance = */ 0.0f);
-    trader_volatility.Update(ohlc_tick, account.base_balance,
-                             account.quote_balance);
+    if (!fast_eval) {
+      base_volatility.Update(ohlc_tick, /* base_balance = */ 1.0f,
+                             /* quote_balance = */ 0.0f);
+      trader_volatility.Update(ohlc_tick, account.base_balance,
+                               account.quote_balance);
+    }
   }
   result.set_start_base_balance(account_config.start_base_balance());
   result.set_start_quote_balance(account_config.start_quote_balance());
@@ -106,10 +108,12 @@ ExecutionResult ExecuteTrader(const AccountConfig& account_config,
                        result.end_price() * result.end_base_balance());
   result.set_total_executed_orders(total_executed_orders);
   result.set_total_fee(account.total_fee);
-  result.set_base_volatility(base_volatility.GetVolatility() *
-                             std::sqrt(365.0));
-  result.set_trader_volatility(trader_volatility.GetVolatility() *
-                               std::sqrt(365.0));
+  if (!fast_eval) {
+    result.set_base_volatility(base_volatility.GetVolatility() *
+                               std::sqrt(365));
+    result.set_trader_volatility(trader_volatility.GetVolatility() *
+                                 std::sqrt(365));
+  }
   return result;
 }
 
@@ -141,9 +145,9 @@ EvaluationResult EvaluateTrader(const AccountConfig& account_config,
       continue;
     }
     std::unique_ptr<Trader> trader = trader_emitter.NewTrader();
-    ExecutionResult result =
-        ExecuteTrader(account_config, ohlc_history_subset.first,
-                      ohlc_history_subset.second, *trader, logger);
+    ExecutionResult result = ExecuteTrader(
+        account_config, ohlc_history_subset.first, ohlc_history_subset.second,
+        eval_config.fast_eval(), *trader, logger);
     EvaluationResult::Period* period = eval_result.add_period();
     period->set_start_timestamp_sec(start_eval_timestamp_sec);
     period->set_end_timestamp_sec(end_eval_timestamp_sec);

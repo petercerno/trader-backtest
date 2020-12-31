@@ -46,6 +46,9 @@ message ExecutionResult {
     optional int32 end_timestamp_sec = 2;
     // Length of evaluation period (in months).
     optional int32 evaluation_period_months = 3;
+    // When true, avoids computing volatility (to speed up the computation).
+    // This is useful when evaluating a batch of traders in parallel.
+    optional bool fast_eval = 4;
   }
   
   // Trader evaluation result for a given evaluation configuration.

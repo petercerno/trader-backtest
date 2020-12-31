@@ -208,8 +208,9 @@ TEST(ExecuteTraderTest, LimitBuyAndSell) {
   std::stringstream trader_os;
   CsvLogger logger(&exchange_os, &trader_os);
 
-  ExecutionResult result = ExecuteTrader(account_config, ohlc_history.begin(),
-                                         ohlc_history.end(), trader, &logger);
+  ExecutionResult result =
+      ExecuteTrader(account_config, ohlc_history.begin(), ohlc_history.end(),
+                    /* fast_eval = */ false, trader, &logger);
 
   ExecutionResult expected_result;
   ASSERT_TRUE(TextFormat::ParseFromString(
@@ -262,6 +263,50 @@ TEST(ExecuteTraderTest, LimitBuyAndSell) {
   EXPECT_EQ(expected_trader_os.str(), trader_os.str());
 }
 
+TEST(ExecuteTraderTest, LimitBuyAndSellFastEval) {
+  AccountConfig account_config;
+  ASSERT_TRUE(TextFormat::ParseFromString(
+      R"(
+        start_base_balance: 10
+        start_quote_balance: 0
+        base_unit: 0.1
+        quote_unit: 1
+        limit_order_fee_config {
+            relative_fee: 0.1
+            fixed_fee: 1
+            minimum_fee: 1.5
+        }
+        market_liquidity: 0.5
+        max_volume_ratio: 0.1)",
+      &account_config));
+
+  OhlcHistory ohlc_history;
+  SetupDailyOhlcHistory(ohlc_history);
+
+  TestTrader trader(/* buy_price = */ 50, /* sell_price = */ 200);
+
+  ExecutionResult result =
+      ExecuteTrader(account_config, ohlc_history.begin(), ohlc_history.end(),
+                    /* fast_eval = */ true, trader, /* logger = */ nullptr);
+
+  ExecutionResult expected_result;
+  ASSERT_TRUE(TextFormat::ParseFromString(
+      R"(
+        start_base_balance: 10
+        start_quote_balance: 0
+        end_base_balance: 32.3
+        end_quote_balance: 21
+        start_price: 120
+        end_price: 50
+        start_value: 1200
+        end_value: 1636
+        total_executed_orders: 2
+        total_fee: 364
+        )",
+      &expected_result));
+  ExpectProtoEq(expected_result, result);
+}
+
 TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
   AccountConfig account_config;
   ASSERT_TRUE(TextFormat::ParseFromString(
@@ -289,6 +334,7 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
         start_timestamp_sec: 1483228800
         end_timestamp_sec: 1514764800
         evaluation_period_months: 0
+        fast_eval: false
         )",
       &eval_config));
 
@@ -323,6 +369,7 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1514764800
             evaluation_period_months: 0
+            fast_eval: false
         }
         name: "test-trader[50|200]"
         period {
@@ -410,6 +457,96 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
   EXPECT_EQ(expected_trader_os.str(), trader_os.str());
 }
 
+TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriodFastEval) {
+  AccountConfig account_config;
+  ASSERT_TRUE(TextFormat::ParseFromString(
+      R"(
+        start_base_balance: 10
+        start_quote_balance: 0
+        base_unit: 0.1
+        quote_unit: 1
+        limit_order_fee_config {
+            relative_fee: 0.1
+            fixed_fee: 1
+            minimum_fee: 1.5
+        }
+        market_liquidity: 0.5
+        max_volume_ratio: 0.1
+        )",
+      &account_config));
+
+  OhlcHistory ohlc_history;
+  SetupMonthlyOhlcHistory(ohlc_history);
+
+  EvaluationConfig eval_config;
+  ASSERT_TRUE(TextFormat::ParseFromString(
+      R"(
+        start_timestamp_sec: 1483228800
+        end_timestamp_sec: 1514764800
+        evaluation_period_months: 0
+        fast_eval: true
+        )",
+      &eval_config));
+
+  TestTraderEmitter trader_emitter(/* buy_price = */ 50,
+                                   /* sell_price = */ 200);
+  EXPECT_EQ("test-trader[50|200]", trader_emitter.GetName());
+
+  EvaluationResult result =
+      EvaluateTrader(account_config, eval_config, ohlc_history, trader_emitter,
+                     /* logger = */ nullptr);
+
+  EvaluationResult expected_result;
+  ASSERT_TRUE(TextFormat::ParseFromString(
+      R"(
+        account_config {
+            start_base_balance: 10
+            start_quote_balance: 0
+            base_unit: 0.1
+            quote_unit: 1
+            limit_order_fee_config {
+                relative_fee: 0.1
+                fixed_fee: 1
+                minimum_fee: 1.5
+            }
+            market_liquidity: 0.5
+            max_volume_ratio: 0.1
+        }
+        eval_config {
+            start_timestamp_sec: 1483228800
+            end_timestamp_sec: 1514764800
+            evaluation_period_months: 0
+            fast_eval: true
+        }
+        name: "test-trader[50|200]"
+        period {
+            start_timestamp_sec: 1483228800
+            end_timestamp_sec: 1514764800
+            result {
+                start_base_balance: 10
+                start_quote_balance: 0
+                end_base_balance: 0
+                end_quote_balance: 5834
+                start_price: 120
+                end_price: 750
+                start_value: 1200
+                end_value: 5834
+                total_executed_orders: 3
+                total_fee: 1011
+            }
+            final_gain: 4.86166668
+            base_final_gain: 6.25
+        }
+        score: 0.777866662
+        avg_gain: 4.86166668
+        avg_base_gain: 6.25
+        avg_total_executed_orders: 3
+        avg_total_fee: 1011
+        )",
+      &expected_result));
+  ExpectProtoEq(expected_result, result);
+}
+
 TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
   AccountConfig account_config;
   ASSERT_TRUE(TextFormat::ParseFromString(
@@ -437,6 +574,7 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
         start_timestamp_sec: 1483228800
         end_timestamp_sec: 1514764800
         evaluation_period_months: 6
+        fast_eval: false
         )",
       &eval_config));
 
@@ -468,6 +606,7 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1514764800
             evaluation_period_months: 6
+            fast_eval: false
         }
         name: "test-trader[50|200]"
         period {
@@ -647,6 +786,7 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
         start_timestamp_sec: 1483228800
         end_timestamp_sec: 1514764800
         evaluation_period_months: 6
+        fast_eval: false
         )",
       &eval_config));
 
@@ -683,6 +823,7 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1514764800
             evaluation_period_months: 6
+            fast_eval: false
         }
         name: "test-trader[50|200]"
         period {
@@ -756,6 +897,7 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1514764800
             evaluation_period_months: 6
+            fast_eval: false
         }
         name: "test-trader[40|250]"
         period {
@@ -829,6 +971,7 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
             start_timestamp_sec: 1483228800
             end_timestamp_sec: 1514764800
             evaluation_period_months: 6
+            fast_eval: false
         }
         name: "test-trader[30|500]"
         period {

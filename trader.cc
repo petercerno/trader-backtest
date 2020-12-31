@@ -100,13 +100,31 @@ std::unique_ptr<std::ofstream> OpenLogFile(const std::string& log_filename) {
   return log_stream;
 }
 
-// Prints top_n evaluation results.
-void PrintTraderEvalResults(const std::vector<EvaluationResult>& eval_results,
-                            size_t top_n) {
+void PrintBatchEvalResults(const std::vector<EvaluationResult>& eval_results,
+                           size_t top_n) {
   const size_t eval_count = std::min(top_n, eval_results.size());
   for (int eval_index = 0; eval_index < eval_count; ++eval_index) {
     const EvaluationResult& eval_result = eval_results.at(eval_index);
-    std::cout << eval_result.name() << ": " << eval_result.score() << std::endl;
+    std::cout << eval_result.name() << ": " << std::setprecision(5)
+              << eval_result.score() << std::endl;
+  }
+}
+
+void PrintTraderEvalResult(const EvaluationResult& eval_result) {
+  std::cout << "------------------ period ------------------"
+            << "    trader & base gain    score    t&b volatility" << std::endl;
+  for (const EvaluationResult::Period& period : eval_result.period()) {
+    std::cout << "["
+              << ConvertTimestampSecToDateTimeUTC(period.start_timestamp_sec())
+              << " - "
+              << ConvertTimestampSecToDateTimeUTC(period.end_timestamp_sec())
+              << "):" << std::fixed << std::setprecision(2) << std::setw(10)
+              << (period.final_gain() - 1.0f) * 100.0f << "%" << std::setw(10)
+              << (period.base_final_gain() - 1.0f) * 100.0f << "%"
+              << std::setprecision(3) << std::setw(9)
+              << period.final_gain() / period.base_final_gain() << std::setw(9)
+              << period.result().trader_volatility() << std::setw(9)
+              << period.result().base_volatility() << std::endl;
   }
 }
 }  // namespace
@@ -142,7 +160,9 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  auto start = std::chrono::high_resolution_clock::now();
   if (FLAGS_evaluate_batch) {
+    eval_config.set_fast_eval(true);
     std::cout << std::endl << "Batch evaluation:" << std::endl;
     std::vector<std::unique_ptr<TraderEmitter>> trader_emitters =
         GetBatchOfTraders(FLAGS_trader);
@@ -152,8 +172,9 @@ int main(int argc, char* argv[]) {
               [](const EvaluationResult& lhs, const EvaluationResult& rhs) {
                 return lhs.score() > rhs.score();
               });
-    PrintTraderEvalResults(eval_results, 20);
+    PrintBatchEvalResults(eval_results, 20);
   } else {
+    eval_config.set_fast_eval(false);
     std::cout << std::endl << "Trader evaluation:" << std::endl;
     std::unique_ptr<TraderEmitter> trader_emitter = GetTrader(FLAGS_trader);
     std::unique_ptr<std::ofstream> exchange_log_stream =
@@ -163,25 +184,13 @@ int main(int argc, char* argv[]) {
     CsvLogger logger(exchange_log_stream.get(), trader_log_stream.get());
     EvaluationResult eval_result = EvaluateTrader(
         account_config, eval_config, ohlc_history, *trader_emitter, &logger);
-    std::cout << "------------------ period ------------------"
-              << "    trader & base gain    score    t&b volatility"
-              << std::endl;
-    for (const EvaluationResult::Period& period : eval_result.period()) {
-      std::cout << "["
-                << ConvertTimestampSecToDateTimeUTC(
-                       period.start_timestamp_sec())
-                << " - "
-                << ConvertTimestampSecToDateTimeUTC(period.end_timestamp_sec())
-                << "):" << std::fixed << std::setprecision(2) << std::setw(10)
-                << (period.final_gain() - 1.0f) * 100.0f << "%" << std::setw(10)
-                << (period.base_final_gain() - 1.0f) * 100.0f << "%"
-                << std::setprecision(3) << std::setw(9)
-                << period.final_gain() / period.base_final_gain()
-                << std::setw(9) << period.result().trader_volatility()
-                << std::setw(9) << period.result().base_volatility()
-                << std::endl;
-    }
+    PrintTraderEvalResult(eval_result);
   }
+  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::high_resolution_clock::now() - start);
+  std::cout << std::endl
+            << "Evaluated in " << duration.count() / 1000.0 << " seconds"
+            << std::endl;
 
   // Optional: Delete all global objects allocated by libprotobuf.
   google::protobuf::ShutdownProtobufLibrary();
