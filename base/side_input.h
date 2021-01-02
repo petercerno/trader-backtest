@@ -23,11 +23,10 @@ class SideInput {
     return timestamp_sec_history_.at(side_input_index);
   }
   // Returns the signal for the given side_input_index and signal_index.
-  float GetSideInputSignal(int side_input_index, int signal_index) const {
-    assert(side_input_index >= 0 && side_input_index < GetNumberOfRecords());
-    assert(signal_index >= 0 && signal_index < GetNumberOfSignals());
-    return data_.at(side_input_index * num_signals_ + signal_index);
-  }
+  float GetSideInputSignal(int side_input_index, int signal_index) const;
+  // Adds signals (at the side_input_index) to the side_input_signals vector.
+  void GetSideInputSignals(int side_input_index,
+                           std::vector<float>& side_input_signals) const;
   // Returns the latest side input index before (or at) the given timestamp.
   // Returns -1 if the first side input record is after the given timestamp.
   // This method runs in O(log N) where N is the number of side input records.

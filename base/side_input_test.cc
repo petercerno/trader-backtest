@@ -47,6 +47,11 @@ TEST(SideInputTest, OneSignalSingleRecord) {
   EXPECT_EQ(1483228800, trader_side_input.GetSideInputTimestamp(0));
   EXPECT_FLOAT_EQ(10.0f, trader_side_input.GetSideInputSignal(0, 0));
 
+  std::vector<float> side_input_signals;
+  trader_side_input.GetSideInputSignals(0, side_input_signals);
+  ASSERT_EQ(1, side_input_signals.size());
+  EXPECT_FLOAT_EQ(10.0f, side_input_signals[0]);
+
   // (-inf, 1483200000)
   EXPECT_EQ(-1, trader_side_input.GetSideInputIndex(1483200000));
   EXPECT_EQ(-1, trader_side_input.GetSideInputIndex(1483200000, -1));
@@ -66,6 +71,18 @@ TEST(SideInputTest, MultipleSignalsSingleRecord) {
   SideInput trader_side_input(side_history);
   ASSERT_EQ(1, trader_side_input.GetNumberOfRecords());
   ASSERT_EQ(3, trader_side_input.GetNumberOfSignals());
+
+  EXPECT_EQ(1483228800, trader_side_input.GetSideInputTimestamp(0));
+  EXPECT_FLOAT_EQ(10.0f, trader_side_input.GetSideInputSignal(0, 0));
+  EXPECT_FLOAT_EQ(20.0f, trader_side_input.GetSideInputSignal(0, 1));
+  EXPECT_FLOAT_EQ(5.0f, trader_side_input.GetSideInputSignal(0, 2));
+
+  std::vector<float> side_input_signals;
+  trader_side_input.GetSideInputSignals(0, side_input_signals);
+  ASSERT_EQ(3, side_input_signals.size());
+  EXPECT_FLOAT_EQ(10.0f, side_input_signals[0]);
+  EXPECT_FLOAT_EQ(20.0f, side_input_signals[1]);
+  EXPECT_FLOAT_EQ(5.0f, side_input_signals[2]);
 
   // (-inf, 1483200000)
   EXPECT_EQ(-1, trader_side_input.GetSideInputIndex(1483200000));
@@ -117,6 +134,15 @@ TEST(SideInputTest, OneSignalMultipleRecords) {
   EXPECT_FLOAT_EQ(15.0f, trader_side_input.GetSideInputSignal(7, 0));
   EXPECT_FLOAT_EQ(20.0f, trader_side_input.GetSideInputSignal(8, 0));
   EXPECT_FLOAT_EQ(5.0f, trader_side_input.GetSideInputSignal(9, 0));
+
+  std::vector<float> side_input_signals;
+  for (int side_input_index = 0; side_input_index < 10; ++side_input_index) {
+    trader_side_input.GetSideInputSignals(side_input_index, side_input_signals);
+    ASSERT_EQ(1, side_input_signals.size());
+    EXPECT_FLOAT_EQ(trader_side_input.GetSideInputSignal(side_input_index, 0),
+                    side_input_signals[0]);
+    side_input_signals.clear();
+  }
 
   // (-inf, 1483200000)
   EXPECT_EQ(-1, trader_side_input.GetSideInputIndex(1483200000));
@@ -231,6 +257,21 @@ TEST(SideInputTest, MultipleSignalsMultipleRecords) {
   EXPECT_FLOAT_EQ(30.0f, trader_side_input.GetSideInputSignal(7, 2));
   EXPECT_FLOAT_EQ(20.0f, trader_side_input.GetSideInputSignal(8, 2));
   EXPECT_FLOAT_EQ(10.0f, trader_side_input.GetSideInputSignal(9, 2));
+
+  std::vector<float> side_input_signals;
+  side_input_signals.reserve(3);
+  for (int side_input_index = 0; side_input_index < 10; ++side_input_index) {
+    trader_side_input.GetSideInputSignals(side_input_index, side_input_signals);
+    ASSERT_EQ(3, side_input_signals.size());
+    EXPECT_FLOAT_EQ(trader_side_input.GetSideInputSignal(side_input_index, 0),
+                    side_input_signals[0]);
+    EXPECT_FLOAT_EQ(trader_side_input.GetSideInputSignal(side_input_index, 1),
+                    side_input_signals[1]);
+    EXPECT_FLOAT_EQ(trader_side_input.GetSideInputSignal(side_input_index, 2),
+                    side_input_signals[2]);
+    side_input_signals.clear();
+    EXPECT_LE(3, side_input_signals.capacity());
+  }
 
   for (int expected_index = -1; expected_index < 10; ++expected_index) {
     EXPECT_EQ(expected_index,

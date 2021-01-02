@@ -20,6 +20,22 @@ SideInput::SideInput(const SideHistory& side_history)
   }
 }
 
+float SideInput::GetSideInputSignal(int side_input_index,
+                                    int signal_index) const {
+  assert(side_input_index >= 0 && side_input_index < GetNumberOfRecords());
+  assert(signal_index >= 0 && signal_index < GetNumberOfSignals());
+  return data_.at(side_input_index * num_signals_ + signal_index);
+}
+
+void SideInput::GetSideInputSignals(
+    int side_input_index, std::vector<float>& side_input_signals) const {
+  assert(side_input_index >= 0 && side_input_index < GetNumberOfRecords());
+  const int offset = side_input_index * num_signals_;
+  for (int signal_index = 0; signal_index < num_signals_; ++signal_index) {
+    side_input_signals.push_back(data_.at(offset + signal_index));
+  }
+}
+
 int SideInput::GetSideInputIndex(int timestamp_sec) const {
   return std::upper_bound(timestamp_sec_history_.begin(),
                           timestamp_sec_history_.end(), timestamp_sec) -
