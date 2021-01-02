@@ -211,6 +211,7 @@ TEST(ExecuteTraderTest, LimitBuyAndSell) {
 
   ExecutionResult result =
       ExecuteTrader(account_config, ohlc_history.begin(), ohlc_history.end(),
+                    /* side_input = */ nullptr,
                     /* fast_eval = */ false, trader, &logger);
 
   ExecutionResult expected_result;
@@ -288,7 +289,8 @@ TEST(ExecuteTraderTest, LimitBuyAndSellFastEval) {
 
   ExecutionResult result =
       ExecuteTrader(account_config, ohlc_history.begin(), ohlc_history.end(),
-                    /* fast_eval = */ true, trader, /* logger = */ nullptr);
+                    /* side_input = */ nullptr, /* fast_eval = */ true, trader,
+                    /* logger = */ nullptr);
 
   ExecutionResult expected_result;
   ASSERT_TRUE(TextFormat::ParseFromString(
@@ -347,8 +349,9 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
   std::stringstream trader_os;
   CsvLogger logger(&exchange_os, &trader_os);
 
-  EvaluationResult result = EvaluateTrader(
-      account_config, eval_config, ohlc_history, trader_emitter, &logger);
+  EvaluationResult result =
+      EvaluateTrader(account_config, eval_config, ohlc_history,
+                     /* side_input = */ nullptr, trader_emitter, &logger);
 
   EvaluationResult expected_result;
   ASSERT_TRUE(TextFormat::ParseFromString(
@@ -494,7 +497,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriodFastEval) {
   EXPECT_EQ("test-trader[50|200]", trader_emitter.GetName());
 
   EvaluationResult result =
-      EvaluateTrader(account_config, eval_config, ohlc_history, trader_emitter,
+      EvaluateTrader(account_config, eval_config, ohlc_history,
+                     /* side_input = */ nullptr, trader_emitter,
                      /* logger = */ nullptr);
 
   EvaluationResult expected_result;
@@ -584,7 +588,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
   EXPECT_EQ("test-trader[50|200]", trader_emitter.GetName());
 
   EvaluationResult result =
-      EvaluateTrader(account_config, eval_config, ohlc_history, trader_emitter,
+      EvaluateTrader(account_config, eval_config, ohlc_history,
+                     /* side_input = */ nullptr, trader_emitter,
                      /* logger = */ nullptr);
 
   EvaluationResult expected_result;
@@ -799,8 +804,9 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
   trader_emitters.emplace_back(new TestTraderEmitter(/* buy_price = */ 30,
                                                      /* sell_price = */ 500));
 
-  std::vector<EvaluationResult> eval_results = EvaluateBatchOfTraders(
-      account_config, eval_config, ohlc_history, trader_emitters);
+  std::vector<EvaluationResult> eval_results =
+      EvaluateBatchOfTraders(account_config, eval_config, ohlc_history,
+                             /* side_input = */ nullptr, trader_emitters);
 
   ASSERT_EQ(3, eval_results.size());
   EvaluationResult expected_result[3];
@@ -1026,6 +1032,217 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
       &expected_result[2]));
   ExpectProtoEq(expected_result[2], eval_results[2],
                 /* full_scope = */ false);
+}
+
+namespace {
+// Adds signals to the side_history.
+void AddSignals(const std::vector<float>& signals, int timestamp_sec,
+                SideHistory& side_history) {
+  side_history.emplace_back();
+  SideInputRecord& side_input = side_history.back();
+  side_input.set_timestamp_sec(timestamp_sec);
+  for (const float signal : signals) {
+    side_input.add_signal(signal);
+  }
+}
+
+// Trader that buys and sells the base (crypto) currency based on a side input.
+class TestTraderWithSideInput : public Trader {
+ public:
+  TestTraderWithSideInput() {}
+  virtual ~TestTraderWithSideInput() {}
+
+  void Update(const OhlcTick& ohlc_tick,
+              const std::vector<float>& side_input_signals, float base_balance,
+              float quote_balance, std::vector<Order>& orders) override {
+    last_base_balance_ = base_balance;
+    last_quote_balance_ = quote_balance;
+    last_timestamp_sec_ = ohlc_tick.timestamp_sec();
+    last_close_ = ohlc_tick.close();
+    if (side_input_signals.empty()) {
+      return;
+    }
+    // The first signal is a buy/sell recommendation:
+    // 0: DO_NOTHING, 1: SHOULD_BUY, 2: SHOULD_SELL.
+    // The second signal is the age (in seconds) of the side input.
+    assert(side_input_signals.size() == 2);
+    last_buy_sell_recommendation_ = static_cast<int>(side_input_signals[0]);
+    last_side_input_age_sec_ = static_cast<int>(side_input_signals[1]);
+    assert(last_buy_sell_recommendation_ >= 0 &&
+           last_buy_sell_recommendation_ <= 2);
+    assert(last_side_input_age_sec_ >= 0);
+    if (last_buy_sell_recommendation_ == 1 &&
+        last_side_input_age_sec_ <= kSecondsPerHour &&
+        last_quote_balance_ > 0) {
+      orders.emplace_back();
+      Order& order = orders.back();
+      order.set_type(Order_Type_MARKET);
+      order.set_side(Order_Side_BUY);
+      order.set_quote_amount(last_quote_balance_);
+    } else if (last_buy_sell_recommendation_ == 2 &&
+               last_side_input_age_sec_ <= kSecondsPerHour &&
+               last_base_balance_ > 0) {
+      orders.emplace_back();
+      Order& order = orders.back();
+      order.set_type(Order_Type_MARKET);
+      order.set_side(Order_Side_SELL);
+      order.set_base_amount(last_base_balance_);
+    }
+  }
+
+  std::string GetInternalState() const override {
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(0)  // nowrap
+       << last_timestamp_sec_ << ","          // nowrap
+       << std::setprecision(3)                // nowrap
+       << last_base_balance_ << ","           // nowrap
+       << last_quote_balance_ << ","          // nowrap
+       << last_close_ << ",";                 // nowrap
+    if (last_buy_sell_recommendation_ == -1) {
+      ss << "UNKNOWN,";
+    } else if (last_side_input_age_sec_ > kSecondsPerHour) {
+      ss << "TOO_OLD,";
+    } else {
+      switch (last_buy_sell_recommendation_) {
+        case 0:
+          ss << "DO_NOTHING,";
+          break;
+        case 1:
+          ss << "SHOULD_BUY,";
+          break;
+        case 2:
+          ss << "SHOULD_SELL,";
+          break;
+        default:
+          assert(false);
+      }
+    }
+    ss << last_side_input_age_sec_;
+    return ss.str();
+  }
+
+ private:
+  // Last seen trader account balance.
+  float last_base_balance_ = 0.0f;
+  float last_quote_balance_ = 0.0f;
+  // Last seen UNIX timestamp (in seconds).
+  int last_timestamp_sec_ = 0;
+  // Last seen close price.
+  float last_close_ = 0.0f;
+  // Last seen side input signal.
+  int last_buy_sell_recommendation_ = -1;
+  // Last seen side input age (in seconds).
+  int last_side_input_age_sec_ = -1;
+};
+
+// Emitter that emits TestTrader as defined above.
+class TestTraderWithSideInputEmitter : public TraderEmitter {
+ public:
+  TestTraderWithSideInputEmitter() {}
+  virtual ~TestTraderWithSideInputEmitter() {}
+
+  std::string GetName() const override { return "test-trader-with-side-input"; }
+
+  std::unique_ptr<Trader> NewTrader() const override {
+    // Note: std::make_unique is C++14 feature.
+    return std::unique_ptr<TestTraderWithSideInput>(
+        new TestTraderWithSideInput());
+  }
+};
+}  // namespace
+
+TEST(ExecuteTraderWithSideInputTest, MarketBuyAndSell) {
+  AccountConfig account_config;
+  ASSERT_TRUE(TextFormat::ParseFromString(
+      R"(
+        start_base_balance: 10
+        start_quote_balance: 0
+        base_unit: 0.1
+        quote_unit: 1
+        market_order_fee_config {
+            relative_fee: 0.1
+            fixed_fee: 1
+            minimum_fee: 1.5
+        }
+        market_liquidity: 0.8
+        max_volume_ratio: 0.5)",
+      &account_config));
+
+  OhlcHistory ohlc_history;
+  AddDailyOhlcTick(100, 150, 80, 120, ohlc_history);   // 2017-01-01
+  AddDailyOhlcTick(120, 180, 100, 150, ohlc_history);  // 2017-01-02
+  AddDailyOhlcTick(150, 250, 100, 140, ohlc_history);  // 2017-01-03
+  AddDailyOhlcTick(140, 150, 80, 100, ohlc_history);   // 2017-01-04
+  AddDailyOhlcTick(100, 120, 20, 50, ohlc_history);    // 2017-01-05
+
+  SideHistory side_history;
+  AddSignals(/* signals = */ {2},
+             /* timestamp_sec = */ 1483315200 - kSecondsPerHour,
+             side_history);  // SHOULD_SELL on 2017-01-02 -1h
+  AddSignals(/* signals = */ {1}, /* timestamp_sec = */ 1483488000,
+             side_history);  // SHOULD_BUY on 2017-01-04
+  AddSignals(/* signals = */ {0},
+             /* timestamp_sec = */ 1483574400,
+             side_history);  // DO_NOTHING on 2017-01-05
+  SideInput side_input(side_history);
+
+  TestTraderWithSideInput trader;
+
+  std::stringstream exchange_os;
+  std::stringstream trader_os;
+  CsvLogger logger(&exchange_os, &trader_os);
+
+  ExecutionResult result = ExecuteTrader(
+      account_config, ohlc_history.begin(), ohlc_history.end(), &side_input,
+      /* fast_eval = */ false, trader, &logger);
+
+  ExecutionResult expected_result;
+  ASSERT_TRUE(TextFormat::ParseFromString(
+      R"(
+        start_base_balance: 10
+        start_quote_balance: 0
+        end_base_balance: 10.8
+        end_quote_balance: 21
+        start_price: 120
+        end_price: 50
+        start_value: 1200
+        end_value: 561
+        total_executed_orders: 2
+        total_fee: 255
+        base_volatility: 6.53697348
+        trader_volatility: 7.15005541
+        )",
+      &expected_result));
+  ExpectProtoEq(expected_result, result);
+
+  std::stringstream expected_exchange_os;
+  std::stringstream expected_trader_os;
+
+  expected_exchange_os  // nowrap
+      << "1483228800,100.000,150.000,80.000,120.000,"
+      << "1000.000,10.000,0.000,0.000,,,,," << std::endl
+      << "1483315200,120.000,180.000,100.000,150.000,"
+      << "1000.000,10.000,0.000,0.000,,,,," << std::endl
+      << "1483401600,150.000,250.000,100.000,140.000,"
+      << "1000.000,10.000,0.000,0.000,,,,," << std::endl
+      << "1483401600,150.000,250.000,100.000,140.000,"
+      << "1000.000,0.000,1259.000,141.000,MARKET,SELL,10.000,," << std::endl
+      << "1483488000,140.000,150.000,80.000,100.000,"
+      << "1000.000,0.000,1259.000,141.000,,,,," << std::endl
+      << "1483574400,100.000,120.000,20.000,50.000,"
+      << "1000.000,0.000,1259.000,141.000,,,,," << std::endl
+      << "1483574400,100.000,120.000,20.000,50.000,"
+      << "1000.000,10.800,21.000,255.000,MARKET,BUY,,1259.000," << std::endl;
+
+  expected_trader_os  // nowrap
+      << "1483228800,10.000,0.000,120.000,UNKNOWN,-1" << std::endl
+      << "1483315200,10.000,0.000,150.000,SHOULD_SELL,3600" << std::endl
+      << "1483401600,0.000,1259.000,140.000,TOO_OLD,90000" << std::endl
+      << "1483488000,0.000,1259.000,100.000,SHOULD_BUY,0" << std::endl
+      << "1483574400,10.800,21.000,50.000,DO_NOTHING,0" << std::endl;
+
+  EXPECT_EQ(expected_exchange_os.str(), exchange_os.str());
+  EXPECT_EQ(expected_trader_os.str(), trader_os.str());
 }
 
 }  // namespace trader

@@ -5,6 +5,7 @@
 
 #include "base/account.h"
 #include "base/base.h"
+#include "base/side_input.h"
 #include "base/trader.h"
 #include "eval/eval.pb.h"
 #include "logging/logger.h"
@@ -16,7 +17,8 @@ namespace trader {
 ExecutionResult ExecuteTrader(const AccountConfig& account_config,
                               OhlcHistory::const_iterator ohlc_history_begin,
                               OhlcHistory::const_iterator ohlc_history_end,
-                              bool fast_eval, Trader& trader, Logger* logger);
+                              const SideInput* side_input, bool fast_eval,
+                              Trader& trader, Logger* logger);
 
 // Evaluates a single (type of) trader (as emitted by the trader_emitter)
 // over one or more regions of the OHLC history (as defined by the
@@ -24,6 +26,7 @@ ExecutionResult ExecuteTrader(const AccountConfig& account_config,
 EvaluationResult EvaluateTrader(const AccountConfig& account_config,
                                 const EvaluationConfig& eval_config,
                                 const OhlcHistory& ohlc_history,
+                                const SideInput* side_input,
                                 const TraderEmitter& trader_emitter,
                                 Logger* logger);
 
@@ -31,7 +34,7 @@ EvaluationResult EvaluateTrader(const AccountConfig& account_config,
 // trader_emitters) over one or more regions of the OHLC history.
 std::vector<EvaluationResult> EvaluateBatchOfTraders(
     const AccountConfig& account_config, const EvaluationConfig& eval_config,
-    const OhlcHistory& ohlc_history,
+    const OhlcHistory& ohlc_history, const SideInput* side_input,
     const std::vector<std::unique_ptr<TraderEmitter>>& trader_emitters);
 
 }  // namespace trader

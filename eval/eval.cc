@@ -38,7 +38,8 @@ float GetGeometricAverage(const C& container, F selector) {
 ExecutionResult ExecuteTrader(const AccountConfig& account_config,
                               OhlcHistory::const_iterator ohlc_history_begin,
                               OhlcHistory::const_iterator ohlc_history_end,
-                              bool fast_eval, Trader& trader, Logger* logger) {
+                              const SideInput* side_input, bool fast_eval,
+                              Trader& trader, Logger* logger) {
   ExecutionResult result;
   if (ohlc_history_begin == ohlc_history_end) {
     return {};
@@ -46,8 +47,11 @@ ExecutionResult ExecuteTrader(const AccountConfig& account_config,
   Account account;
   account.InitAccount(account_config);
   std::vector<float> side_input_signals;
-  constexpr size_t kSideInputSignalsReserve = 8;
-  side_input_signals.reserve(kSideInputSignalsReserve);
+  if (side_input != nullptr) {
+    // The last signal is the age (in seconds) of the side input signals.
+    side_input_signals.reserve(side_input->GetNumberOfSignals() + 1);
+  }
+  int prev_side_input_index = -1;
   std::vector<Order> orders;
   constexpr size_t kEmittedOrdersReserve = 8;
   orders.reserve(kEmittedOrdersReserve);
@@ -59,7 +63,23 @@ ExecutionResult ExecuteTrader(const AccountConfig& account_config,
   for (auto ohlc_tick_it = ohlc_history_begin; ohlc_tick_it != ohlc_history_end;
        ++ohlc_tick_it) {
     const OhlcTick& ohlc_tick = *ohlc_tick_it;
+    if (side_input != nullptr) {
+      const int side_input_index = side_input->GetSideInputIndex(
+          ohlc_tick.timestamp_sec(), prev_side_input_index);
+      if (side_input_index >= 0) {
+        const int side_input_timestamp_sec =
+            side_input->GetSideInputTimestamp(side_input_index);
+        side_input_signals.clear();
+        side_input->GetSideInputSignals(side_input_index, side_input_signals);
+        // Adding the age (in seconds) of the side input signals.
+        side_input_signals.push_back(ohlc_tick.timestamp_sec() -
+                                     side_input_timestamp_sec);
+        prev_side_input_index = side_input_index;
+      }
+    }
     // Log the current OHLC tick T[i] and the trader account.
+    // Note: We do not explicitly log the side_input_signals as those can be
+    // easily logged through trader internal state.
     if (logger != nullptr) {
       logger->LogExchangeState(ohlc_tick, account);
     }
@@ -123,6 +143,7 @@ ExecutionResult ExecuteTrader(const AccountConfig& account_config,
 EvaluationResult EvaluateTrader(const AccountConfig& account_config,
                                 const EvaluationConfig& eval_config,
                                 const OhlcHistory& ohlc_history,
+                                const SideInput* side_input,
                                 const TraderEmitter& trader_emitter,
                                 Logger* logger) {
   EvaluationResult eval_result;
@@ -150,7 +171,7 @@ EvaluationResult EvaluateTrader(const AccountConfig& account_config,
     std::unique_ptr<Trader> trader = trader_emitter.NewTrader();
     ExecutionResult result = ExecuteTrader(
         account_config, ohlc_history_subset.first, ohlc_history_subset.second,
-        eval_config.fast_eval(), *trader, logger);
+        side_input, eval_config.fast_eval(), *trader, logger);
     EvaluationResult::Period* period = eval_result.add_period();
     period->set_start_timestamp_sec(start_eval_timestamp_sec);
     period->set_end_timestamp_sec(end_eval_timestamp_sec);
@@ -188,16 +209,17 @@ EvaluationResult EvaluateTrader(const AccountConfig& account_config,
 
 std::vector<EvaluationResult> EvaluateBatchOfTraders(
     const AccountConfig& account_config, const EvaluationConfig& eval_config,
-    const OhlcHistory& ohlc_history,
+    const OhlcHistory& ohlc_history, const SideInput* side_input,
     const std::vector<std::unique_ptr<TraderEmitter>>& trader_emitters) {
   std::vector<EvaluationResult> eval_results;
   std::vector<std::future<EvaluationResult>> eval_result_futures;
   for (const auto& trader_emitter_ptr : trader_emitters) {
     const TraderEmitter& trader_emitter = *trader_emitter_ptr;
-    eval_result_futures.emplace_back(std::async(
-        [&account_config, &eval_config, &ohlc_history, &trader_emitter]() {
+    eval_result_futures.emplace_back(
+        std::async([&account_config, &eval_config, &ohlc_history, side_input,
+                    &trader_emitter]() {
           return EvaluateTrader(account_config, eval_config, ohlc_history,
-                                trader_emitter,
+                                side_input, trader_emitter,
                                 /* logger = */ nullptr);
         }));
   }

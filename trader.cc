@@ -166,8 +166,9 @@ int main(int argc, char* argv[]) {
     std::cout << std::endl << "Batch evaluation:" << std::endl;
     std::vector<std::unique_ptr<TraderEmitter>> trader_emitters =
         GetBatchOfTraders(FLAGS_trader);
-    std::vector<EvaluationResult> eval_results = EvaluateBatchOfTraders(
-        account_config, eval_config, ohlc_history, trader_emitters);
+    std::vector<EvaluationResult> eval_results =
+        EvaluateBatchOfTraders(account_config, eval_config, ohlc_history,
+                               /* side_input = */ nullptr, trader_emitters);
     std::sort(eval_results.begin(), eval_results.end(),
               [](const EvaluationResult& lhs, const EvaluationResult& rhs) {
                 return lhs.score() > rhs.score();
@@ -183,8 +184,9 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<std::ofstream> trader_log_stream =
         OpenLogFile(FLAGS_output_trader_log_file);
     CsvLogger logger(exchange_log_stream.get(), trader_log_stream.get());
-    EvaluationResult eval_result = EvaluateTrader(
-        account_config, eval_config, ohlc_history, *trader_emitter, &logger);
+    EvaluationResult eval_result =
+        EvaluateTrader(account_config, eval_config, ohlc_history,
+                       /* side_input = */ nullptr, *trader_emitter, &logger);
     PrintTraderEvalResult(eval_result);
   }
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(

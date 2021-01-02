@@ -21,6 +21,7 @@ cc_library(
         ":eval_cc_proto",
         "//base",
         "//base:account",
+        "//base:side_input",
         "//base:trader",
         "//indicators:volatility",
         "//logging:logger",
