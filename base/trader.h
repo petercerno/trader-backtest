@@ -8,17 +8,19 @@
 namespace trader {
 
 // The trader is executed as follows:
-// - At every step the trader receives the latest OHLC tick `T[i]`, current
-//   account balances, and updates its internal state. The current time is at
-//   the end of the OHLC tick `T[i]` time period. (The trader does not receive
+// - At every step the trader receives the latest OHLC tick T[i], some
+//   additional side input signals (possibly an empty vector), and current
+//   account balances. Based on this information the trader updates its own
+//   internal state and data-structures. The current time of the trader is at
+//   the end of the OHLC tick T[i] time period. (The trader does not receive
 //   zero volume OHLC ticks. These OHLC ticks indicate a gap in a price history,
 //   which could have been caused by an unresponsive exchange or its API.)
 // - Then the trader needs to decide what orders to emit. There are no other
 //   active orders on the exchange at this moment (see the explanation below).
 // - Once the trader decides what orders to emit, the exchange will execute
 //   (or cancel) all these orders on the follow-up OHLC tick T[i+1]. The trader
-//   does not see the follow-up OHLC tick T[i+1], so there is no peeking into
-//   the future.
+//   does not see the follow-up OHLC tick T[i+1] (nor any follow-up side input),
+//   so it cannot peek into the future by design.
 // - Once all orders are executed (or canceled) by the exchange, the trader
 //   receives the follow-up OHLC tick T[i+1] and the whole process repeats.
 // Note that at every step every order gets either executed or canceled by the
@@ -47,8 +49,10 @@ class Trader {
   // Trader can assume that there are no active orders when this method is
   // called. The emitted orders will be either executed or cancelled by the
   // exchange at the next OHLC tick.
-  virtual void Update(const OhlcTick& ohlc_tick, float base_balance,
-                      float quote_balance, std::vector<Order>& orders) = 0;
+  virtual void Update(const OhlcTick& ohlc_tick,
+                      const std::vector<float>& side_input_signals,
+                      float base_balance, float quote_balance,
+                      std::vector<Order>& orders) = 0;
 
   // Returns the internal trader state (as a string).
   // Note that it is recommended to represent the internal state as a string of

@@ -4,8 +4,9 @@
 
 namespace trader {
 
-void RebalancingTrader::Update(const OhlcTick& ohlc_tick, float base_balance,
-                               float quote_balance,
+void RebalancingTrader::Update(const OhlcTick& ohlc_tick,
+                               const std::vector<float>& side_input_signals,
+                               float base_balance, float quote_balance,
                                std::vector<Order>& orders) {
   const int timestamp_sec = ohlc_tick.timestamp_sec();
   const float price = ohlc_tick.close();

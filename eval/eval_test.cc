@@ -99,7 +99,8 @@ class TestTrader : public Trader {
       : buy_price_(buy_price), sell_price_(sell_price) {}
   virtual ~TestTrader() {}
 
-  void Update(const OhlcTick& ohlc_tick, float base_balance,
+  void Update(const OhlcTick& ohlc_tick,
+              const std::vector<float>& side_input_signals, float base_balance,
               float quote_balance, std::vector<Order>& orders) override {
     last_base_balance_ = base_balance;
     last_quote_balance_ = quote_balance;

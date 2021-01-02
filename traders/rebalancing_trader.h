@@ -16,7 +16,8 @@ class RebalancingTrader : public Trader {
       : trader_config_(trader_config) {}
   virtual ~RebalancingTrader() {}
 
-  void Update(const OhlcTick& ohlc_tick, float base_balance,
+  void Update(const OhlcTick& ohlc_tick,
+              const std::vector<float>& side_input_signals, float base_balance,
               float quote_balance, std::vector<Order>& orders) override;
   std::string GetInternalState() const override;
 

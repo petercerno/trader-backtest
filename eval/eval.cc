@@ -45,6 +45,9 @@ ExecutionResult ExecuteTrader(const AccountConfig& account_config,
   }
   Account account;
   account.InitAccount(account_config);
+  std::vector<float> side_input_signals;
+  constexpr size_t kSideInputSignalsReserve = 8;
+  side_input_signals.reserve(kSideInputSignalsReserve);
   std::vector<Order> orders;
   constexpr size_t kEmittedOrdersReserve = 8;
   orders.reserve(kEmittedOrdersReserve);
@@ -84,8 +87,8 @@ ExecutionResult ExecuteTrader(const AccountConfig& account_config,
     // Update the trader internal state on the current OHLC tick T[i].
     // Emit a new set of "orders" for the next OHLC tick T[i+1].
     orders.clear();
-    trader.Update(ohlc_tick, account.base_balance, account.quote_balance,
-                  orders);
+    trader.Update(ohlc_tick, side_input_signals, account.base_balance,
+                  account.quote_balance, orders);
     if (logger != nullptr) {
       logger->LogTraderState(trader.GetInternalState());
     }
