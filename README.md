@@ -62,7 +62,7 @@ In addition to limit orders and market orders, exchanges typically provide also 
 
 Unfortunately, we do not have access to (the historical updates to) the order book and all historical orders that happened on the exchange. Instead, we have access only to the so-called price history. The price history is defined as follows: Whenever a transaction (market order) was executed, in which some party and counter-party exchanged some amount `V` of cryptocurrency at price `P` and at time `T` , the triple `(T,P,V)` would be added to the price history. (In our case we do not know whether this was a buy or sell order. Thus sometimes we observe sequences of rather jumpy prices, especially when there was a wide [bid-ask spread](https://en.wikipedia.org/wiki/Bid%E2%80%93ask_spread).) In general, it is not possible to reconstruct the order book based only on the price history. The price (e.g. if defined as the highest bid) might change suddenly without any market orders being executed. (Imagine that all participants withdrew all their bids. That would essentially crash the price to zero without a single market sell order being submitted.) To complicate matters even more, the trader's actions might impact the actions of other market participants (and the price itself).
 
-The price history is still a rather inconvenient data structure for fast processing. Therefore, we aggregate (re-sample) it into the so-called [OHLC (Open High Low Close) history](https://en.wikipedia.org/wiki/Open-high-low-close_chart) with some fixed aggregation (sampling) period (e.g. 5 minutes per OHLC tick). An OHLC tick covering the time-period `[T, T+dT)` is a tuple `(T,O,H,L,C,V)` defined as follows: Let `(T[i],P[i],V[i])` be all price history triples from the time-period `[T, T+dT)` for `i = 0 ... k-1` , such that `T <= T[0] <= ... <= T[k-1] < T + dT` . Then:
+The price history is still a rather inconvenient data structure for fast processing. Therefore, we aggregate (resample) it into the so-called [OHLC (Open High Low Close) history](https://en.wikipedia.org/wiki/Open-high-low-close_chart) with some fixed aggregation (sampling) period (e.g. 5 minutes per OHLC tick). An OHLC tick covering the time-period `[T, T+dT)` is a tuple `(T,O,H,L,C,V)` defined as follows: Let `(T[i],P[i],V[i])` be all price history triples from the time-period `[T, T+dT)` for `i = 0 ... k-1` , such that `T <= T[0] <= ... <= T[k-1] < T + dT` . Then:
 
 * `O := P[0]`
 * `H := max(P[i])`
@@ -98,7 +98,7 @@ bazel test ...
 
 There are two main binaries you can run:
 
-* `convert.cc` : Converts a CSV file into a more compact delimited protocol buffer file. Allows re-sampling price history into OHLC (Open High Low Close) history with fixed sampling rate.
+* `convert.cc` : Converts a CSV file into a more compact delimited protocol buffer file. Allows resampling price history into OHLC (Open High Low Close) history with fixed sampling rate.
 * `trader.cc` : Loads OHLC history (in delimited protocol buffer file format), optionally loads a side input history (containing additional signals), and evaluates one or more traders over it.
 
 The source code is structured as follows:
@@ -160,12 +160,12 @@ bazel run :convert -- \
   --end_date_utc="2021-01-01"
 ```
 
-Note: The `start_date_utc` and `end_date_utc` dates are optional. We use them to reduce the output delimited_proto_file size.
+Note: The `start_date_utc` and `end_date_utc` dates are optional. We use them to reduce the output `delimited_proto_file` size.
 
 Output (shortened):
 
 ```
-Reading price history from CSV file: //Users/petercerno/Documents/trader-backtest/trader-backtest/data/bitstampUSD.csv
+Reading price history from CSV file: .../data/bitstampUSD.csv
 Loaded 34946779 records in 243.778 seconds
 Top 50 gaps:
 1483250945 [2017-01-01 06:09:05] - 1483252128 [2017-01-01 06:28:48]: 0:19:43
@@ -179,13 +179,13 @@ Top 50 gaps:
 1598436188 [2020-08-26 10:03:08] - 1598442747 [2020-08-26 11:52:27]: 1:49:19
 1600855314 [2020-09-23 10:01:54] - 1600857660 [2020-09-23 10:41:00]: 0:39:06
 1600858960 [2020-09-23 11:02:40] - 1600860317 [2020-09-23 11:25:17]: 0:22:37
-Writing 34946779 records to //Users/petercerno/Documents/trader-backtest/trader-backtest/data/bitstampUSD.dpb
+Writing 34946779 records to .../data/bitstampUSD.dpb
 Finished in 91.889 seconds
 ```
 
 As you can see, reading the full CSV file is prohibitively slow.
 
-For trader evaluation we need even more compressed form: an OHLC history. To get this we need to re-sample the price history. Although it is possible to re-sample the original CSV file, the delimited protocol buffer file will be much faster to read:
+For trader evaluation we need even more compressed form: an OHLC history. To get this we need to resample the price history. Although it is possible to resample the original CSV file, the delimited protocol buffer file will be much faster to read:
 
 ```
 bazel run :convert -- \
@@ -405,7 +405,7 @@ Output (shortened):
 
 ```
 ...
-Reading OHLC history from: //Users/petercerno/Documents/trader-backtest/trader-backtest/data/bitstampUSD_1h.dpb
+Reading OHLC history from: .../data/bitstampUSD_1h.dpb
 - Loaded 35064 records in 0.056 seconds
 - Selected 35064 records within the time period: [2017-01-01 00:00:00 - 2021-01-01 00:00:00)
 
