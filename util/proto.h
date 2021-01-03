@@ -45,8 +45,11 @@ bool ReadDelimitedMessagesFromFile(
   {
     google::protobuf::io::FileInputStream file_stream(fd);
     google::protobuf::io::GzipInputStream gzip_stream(&file_stream);
-    T message;
-    while (ReadDelimitedFrom(gzip_stream, message)) {
+    while (true) {
+      T message;
+      if (!ReadDelimitedFrom(gzip_stream, message)) {
+        break;
+      }
       const ReaderStatus reader_status = reader(message);
       if (reader_status == ReaderStatus::kContinue) {
         continue;
