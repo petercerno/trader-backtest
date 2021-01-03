@@ -3,6 +3,7 @@
 #include <gflags/gflags.h>
 
 #include "base/base.h"
+#include "base/side_input.h"
 #include "eval/eval.h"
 #include "logging/csv_logger.h"
 #include "traders/trader_factory.h"
@@ -11,6 +12,8 @@
 
 DEFINE_string(input_ohlc_history_delimited_proto_file, "",
               "Input file containing the delimited OhlcRecord protos.");
+DEFINE_string(input_side_history_delimited_proto_file, "",
+              "Input file containing the delimited SideInputRecord protos.");
 DEFINE_string(output_exchange_log_file, "",
               "Output CSV file containing the exchange log.");
 DEFINE_string(output_trader_log_file, "",
@@ -56,29 +59,29 @@ AccountConfig GetAccountConfig() {
   return config;
 }
 
-// Reads and returns the OHLC history based on the flags.
-OhlcHistory GetOhlcHistoryFromFlags(long start_timestamp_sec,
-                                    long end_timestamp_sec) {
-  if (FLAGS_input_ohlc_history_delimited_proto_file.empty()) {
+// Returns a vector of records of type T read from the delimited_proto_file.
+template <typename T>
+std::vector<T> ReadHistory(const std::string& delimited_proto_file,
+                           long start_timestamp_sec, long end_timestamp_sec) {
+  if (delimited_proto_file.empty()) {
     return {};
   }
-  OhlcHistory ohlc_history;
+  std::vector<T> history;
   auto start = std::chrono::high_resolution_clock::now();
-  if (!ReadDelimitedMessagesFromFile<OhlcTick>(
-          FLAGS_input_ohlc_history_delimited_proto_file, ohlc_history)) {
+  if (!ReadDelimitedMessagesFromFile<T>(delimited_proto_file, history)) {
     return {};
   }
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::high_resolution_clock::now() - start);
-  std::cout << "Loaded " << ohlc_history.size() << " OHLC ticks in "
+  std::cout << "- Loaded " << history.size() << " records in "
             << duration.count() / 1000.0 << " seconds" << std::endl;
-  OhlcHistory ohlc_history_subset =
-      HistorySubsetCopy(ohlc_history, start_timestamp_sec, end_timestamp_sec);
-  std::cout << "Selected " << ohlc_history_subset.size()
-            << " OHLC ticks within the period: "
+  std::vector<T> history_subset =
+      HistorySubsetCopy<T>(history, start_timestamp_sec, end_timestamp_sec);
+  std::cout << "- Selected " << history_subset.size()
+            << " records within the time period: "
             << TimestampPeriodToString(start_timestamp_sec, end_timestamp_sec)
             << std::endl;
-  return ohlc_history_subset;
+  return history_subset;
 }
 
 // Opens the file for logging purposes.
@@ -137,6 +140,8 @@ int main(int argc, char* argv[]) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   AccountConfig account_config = GetAccountConfig();
+  std::cout << "Trader AccountConfig:" << std::endl
+            << account_config.DebugString();
 
   long start_timestamp_sec = 0;
   long end_timestamp_sec = 0;
@@ -147,17 +152,41 @@ int main(int argc, char* argv[]) {
     std::cerr << "Invalid time period" << std::endl;
     return 1;
   }
+  std::cout << std::endl
+            << "Selected time period:" << std::endl
+            << TimestampPeriodToString(start_timestamp_sec, end_timestamp_sec)
+            << std::endl;
 
   EvaluationConfig eval_config;
   eval_config.set_start_timestamp_sec(start_timestamp_sec);
   eval_config.set_end_timestamp_sec(end_timestamp_sec);
   eval_config.set_evaluation_period_months(FLAGS_evaluation_period_months);
+  std::cout << std::endl
+            << "Trader EvaluationConfig:" << std::endl
+            << eval_config.DebugString();
 
+  std::cout << std::endl
+            << "Reading OHLC history from: "
+            << FLAGS_input_ohlc_history_delimited_proto_file << std::endl;
   OhlcHistory ohlc_history =
-      GetOhlcHistoryFromFlags(start_timestamp_sec, end_timestamp_sec);
+      ReadHistory<OhlcTick>(FLAGS_input_ohlc_history_delimited_proto_file,
+                            start_timestamp_sec, end_timestamp_sec);
   if (ohlc_history.empty()) {
     std::cerr << "No input history" << std::endl;
     return 1;
+  }
+
+  std::unique_ptr<SideInput> side_input;
+  if (!FLAGS_input_side_history_delimited_proto_file.empty()) {
+    std::cout << std::endl
+              << "Reading side history from: "
+              << FLAGS_input_side_history_delimited_proto_file << std::endl;
+    SideHistory side_history = ReadHistory<SideInputRecord>(
+        FLAGS_input_side_history_delimited_proto_file, start_timestamp_sec,
+        end_timestamp_sec);
+    if (!side_history.empty()) {
+      side_input.reset(new SideInput(side_history));
+    }
   }
 
   auto start = std::chrono::high_resolution_clock::now();
@@ -168,7 +197,7 @@ int main(int argc, char* argv[]) {
         GetBatchOfTraders(FLAGS_trader);
     std::vector<EvaluationResult> eval_results =
         EvaluateBatchOfTraders(account_config, eval_config, ohlc_history,
-                               /* side_input = */ nullptr, trader_emitters);
+                               side_input.get(), trader_emitters);
     std::sort(eval_results.begin(), eval_results.end(),
               [](const EvaluationResult& lhs, const EvaluationResult& rhs) {
                 return lhs.score() > rhs.score();
@@ -186,7 +215,7 @@ int main(int argc, char* argv[]) {
     CsvLogger logger(exchange_log_stream.get(), trader_log_stream.get());
     EvaluationResult eval_result =
         EvaluateTrader(account_config, eval_config, ohlc_history,
-                       /* side_input = */ nullptr, *trader_emitter, &logger);
+                       side_input.get(), *trader_emitter, &logger);
     PrintTraderEvalResult(eval_result);
   }
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(

@@ -3,6 +3,7 @@ cc_binary(
     srcs = ["trader.cc"],
     deps = [
         "//base",
+        "//base:side_input",
         "//eval",
         "//external:gflags",
         "//logging:csv_logger",
