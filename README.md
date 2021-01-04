@@ -141,7 +141,7 @@ There are several options how to evaluate a trader:
 
 ## Example
 
-Download BTC/USD historical prices from [bitcoincharts](http://bitcoincharts.com/):
+First, download BTC/USD historical prices from [bitcoincharts](http://bitcoincharts.com/) as follows:
 
 ``` 
 mkdir -p data
@@ -150,7 +150,7 @@ curl -o $(pwd)/data/bitstampUSD.csv.gz \
 gunzip $(pwd)/data/bitstampUSD.csv.gz
 ```
 
-Convert the `bitstampUSD.csv` file into a more compact (delimited protocol buffer) representation:
+Then convert the `bitstampUSD.csv` file into a more compact (delimited protocol buffer) representation as follows:
 
 ``` 
 bazel run :convert -- \
@@ -160,7 +160,7 @@ bazel run :convert -- \
   --end_date_utc="2021-01-01"
 ```
 
-Note: The `start_date_utc` and `end_date_utc` dates are optional. We use them to reduce the output `delimited_proto_file` size.
+**Note**: The `start_date_utc` and `end_date_utc` dates are optional. We use them to reduce the output `delimited_proto_file` size.
 
 Output (shortened):
 
@@ -183,9 +183,9 @@ Writing 34946779 records to .../data/bitstampUSD.dpb
 Finished in 91.889 seconds
 ```
 
-As you can see, reading the full CSV file is prohibitively slow.
+As you can see, reading the full CSV file is prohibitively slow. It would be impractical to wait so long every time we wanted to evaluate the trader.
 
-For trader evaluation we need even more compressed form: an OHLC history. To get this we need to resample the price history. Although it is possible to resample the original CSV file, the delimited protocol buffer file will be much faster to read:
+For trader evaluation, however, we need even more compressed form: an OHLC history. To get this we need to resample the price history into OHLC ticks. Although it is possible to resample the original CSV file, the delimited protocol buffer file will be much faster to read. One can resample the price history into 5 minute OHLC ticks as follows:
 
 ```
 bazel run :convert -- \
@@ -231,7 +231,7 @@ Writing 420768 records to .../data/bitstampUSD_5min.dpb
 Finished in 2.4770 seconds
 ```
 
-It is a good idea to evaluate traders over multiple OHLC histories with different sampling rates.
+In general, it is a good idea to evaluate traders over OHLC histories with different sampling rates. To this end we will also resample the price history into the OHLC history with 1 hour sampling rate as follows:
 
 ```
 bazel run :convert -- \
@@ -253,21 +253,19 @@ Writing 35064 records to .../data/bitstampUSD_1h.dpb
 Finished in 0.1980 seconds
 ```
 
-Now we can evaluate a simple *rebalancing* trader over a single time period and log both the exchange states and also the trader internal states:
+Now we can evaluate a simple `rebalancing` trader over a 4 year time period: `[2017-01-01 - 2021-01-01)` (and log both the exchange states and also the trader internal states) as follows:
 
 ```
 bazel run :trader -- \
   --input_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_5min.dpb" \
   --trader="rebalancing" \
-  --output_exchange_log_file="/$(pwd)/data/bitstampUSD_5min.out.csv" \
-  --output_trader_log_file="/$(pwd)/data/rebalancing_5min_log.csv" \
+  --output_exchange_log_file="/$(pwd)/data/bitstampUSD_5min_rebalancing_exchange_log.out.csv" \
+  --output_trader_log_file="/$(pwd)/data/bitstampUSD_5min_rebalancing_trader_log.csv" \
   --start_date_utc="2017-01-01" \
   --end_date_utc="2021-01-01" \
   --start_base_balance=1.0 \
   --start_quote_balance=0.0
 ```
-
-You can learn more about the rebalancing trader in `//traders/rebalancing_trader.ipynb` notebook.
 
 Output:
 
@@ -314,18 +312,46 @@ rebalancing-trader[0.700|0.050] evaluation:
 Evaluated in 7.223 seconds
 ```
 
-You can inspect the trader's actions in detail in the log files.
+To put it simply, the `rebalancing` trader tries to maintain a constant portfolio allocation (in our case 70% in BTC and 30% in USD with at most ±5% error). You can learn more about the `rebalancing` trader in the `//traders/rebalancing_trader.ipynb` notebook.
 
 As you can see, the trader underperforms the baseline *Buy And HODL* strategy quite significantly. On the other hand, it has lower volatility, which is a positive sign.
 
-We can also evaluate the trader over the 1-hour OHLC history as follows:
+You can inspect the trader's actions in detail in the log files. For example, the `data/bitstampUSD_5min_rebalancing_exchange_log.out.csv` looks as follows:
+
+```
+1483228800,966.340,966.370,966.160,966.370,15.697,1.000,0.000,0.000,,,,,
+1483229100,966.430,966.580,966.430,966.580,0.439,1.000,0.000,0.000,,,,,
+1483229100,966.430,966.580,966.430,966.580,0.439,0.700,288.470,1.450,MARKET,SELL,0.300,,
+1483229400,966.570,966.570,964.600,965.550,6.662,0.700,288.470,1.450,,,,,
+1483229700,965.590,966.570,965.550,965.550,20.773,0.700,288.470,1.450,,,,,
+...
+```
+
+The columns are: `timestamp_sec`, `open`, `high`, `low`, `close`, `volume`, `base_balance`, `quote_balance`, `total_fee`, `order_type`, `order_side`, `security_amount`, `cash_amount`, `price`.
+
+As you can see, on the first OHLC tick (at timestamp `1483228800`) the trader has 100% allocation in BTC. Immediately after observing this OHLC tick the `rebalancing` trader emits a market sell order to restore the 70% allocation. This order is executed on the follow-up OHLC tick at timestamp `1483229100` (5 minutes later). There are two records corresponding to the timestamp `1483229100`. The first one represents the state before executing the order and the second one represents the state after executing the order. (Only successfully executed orders are logged.)
+
+One can also inspect the trader internal states in: `data/bitstampUSD_5min_rebalancing_trader_log.csv`.
+
+```
+1483228800,1.000,0.000,966.370
+1483229100,0.700,288.470,966.580
+1483229400,0.700,288.470,965.550
+1483229700,0.700,288.470,965.550
+1483230000,0.700,288.470,964.870
+...
+```
+
+Note, however, that the logged trader internal states can have an arbitrary (trader-specific) structure. They are mostly used for debugging the trader.
+
+We can also evaluate the trader over 1 hour OHLC history as follows:
 
 ```
 bazel run :trader -- \
   --input_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_1h.dpb" \
   --trader="rebalancing" \
-  --output_exchange_log_file="/$(pwd)/data/bitstampUSD_1h.out.csv" \
-  --output_trader_log_file="/$(pwd)/data/rebalancing_1h_log.csv" \
+  --output_exchange_log_file="/$(pwd)/data/bitstampUSD_1h_rebalancing_exchange_log.out.csv" \
+  --output_trader_log_file="/$(pwd)/data/bitstampUSD_1h_rebalancing_trader_log.csv" \
   --start_date_utc="2017-01-01" \
   --end_date_utc="2021-01-01" \
   --start_base_balance=1.0 \
@@ -347,9 +373,9 @@ rebalancing-trader[0.700|0.050] evaluation:
 Evaluated in 1.339 seconds
 ```
 
-As you can see, it has a very similar performance. This, however, does not hold for every trader. For example, the `stop` trader has much better performance over the 5-min OHLC history than over the 1-hour OHLC history.
+As you can see, it has a very similar performance. This, however, does not need to be true for every trader. For example, the `stop` trader has much better performance over the 5-min OHLC history than over the 1-hour OHLC history. You can learn more about the `stop` trader in the `//traders/stop_trader.ipynb` notebook.
 
-We can also evaluate the trader over multiple time periods:
+We can also evaluate the `rebalancing` trader over multiple 6 month time periods:
 
 ```
 bazel run :trader -- \
@@ -361,6 +387,8 @@ bazel run :trader -- \
   --start_base_balance=1.0 \
   --start_quote_balance=0.0
 ```
+
+This time, however, we are not allowed to log the exchange nor trader states.
 
 Output (shortened):
 
@@ -385,9 +413,11 @@ rebalancing-trader[0.700|0.050] evaluation:
 Evaluated in 8.461 seconds
 ```
 
-Finally, we can find the "optimal" hyper-parameters by doing a grid search (i.e. evaluating a batch of traders with different hyper-parameters and selecting the best one). For the `rebalancing` trader we can use the 1-hour sampling rate (which will significantly speed-up the computation).
+It is good to see that the `rebalancing` trader is very consistent in its performance.
 
-Note: Usually one would split the input history into two halves (one for tuning the hyper-parameters and the other one for evaluating the "optimal" trader).
+Finally, we can find the "optimal" hyper-parameters by doing a grid search (i.e. evaluating a batch of traders with different hyper-parameters and then selecting the best one). Also in this case we cannot log the exchange nor trader states. The `rebalancing` trader has only two hyper-parameters: the percentual allocation (`alpha`) and the maximum allowed error of the actual allocation (`epsilon`), see the `RebalancingTraderConfig` in the `//traders/trader_config.proto`. We can use the 1 hour sampling rate for batch evaluation (which will significantly speed-up the computation).
+
+**Note**: Normally, one would split the input history into two halves (one for tuning the hyper-parameters and the other one for evaluating the selected trader).
 
 ```
 bazel run :trader -- \
