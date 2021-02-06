@@ -1,54 +1,33 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #include "util/proto.h"
 
 #include <sstream>
-#include <string>
 
 #include "gtest/gtest.h"
 #include "util/example.pb.h"
 
-using google::protobuf::io::IstreamInputStream;
-using google::protobuf::io::OstreamOutputStream;
-
 namespace trader {
 
 TEST(ReadWriteDelimitedTest, ReadWriteEmptyStream) {
-  std::ostringstream oss;
-  { OstreamOutputStream output_stream(&oss); }
-
-  std::istringstream iss(oss.str());
+  std::istringstream iss;
   std::vector<PriceRecord> messages;
-  {
-    IstreamInputStream input_stream(&iss);
-    PriceRecord message;
-    while (ReadDelimitedFrom(input_stream, message)) {
-      messages.emplace_back(message);
-    }
-  }
+  ASSERT_TRUE(ReadDelimitedMessagesFromIStream(iss, messages));
   ASSERT_EQ(0, messages.size());
 }
 
 TEST(ReadWriteDelimitedTest, ReadWriteSinglePriceRecord) {
   std::ostringstream oss;
-  {
-    OstreamOutputStream output_stream(&oss);
-    PriceRecord price_record;
-    price_record.set_timestamp_sec(1483228800);
-    price_record.set_price(700.0f);
-    price_record.set_volume(1.5e4f);
-    ASSERT_TRUE(WriteDelimitedTo(price_record, output_stream));
-  }
-
+  std::vector<PriceRecord> input_messages;
+  input_messages.emplace_back();
+  input_messages.back().set_timestamp_sec(1483228800);
+  input_messages.back().set_price(700.0f);
+  input_messages.back().set_volume(1.5e4f);
+  WriteDelimitedMessagesToOStream(input_messages.begin(), input_messages.end(),
+                                  oss, /* compress = */ true);
   std::istringstream iss(oss.str());
   std::vector<PriceRecord> messages;
-  {
-    IstreamInputStream input_stream(&iss);
-    PriceRecord message;
-    while (ReadDelimitedFrom(input_stream, message)) {
-      messages.emplace_back(message);
-    }
-  }
+  ReadDelimitedMessagesFromIStream(iss, messages);
   ASSERT_EQ(1, messages.size());
   EXPECT_EQ(1483228800, messages[0].timestamp_sec());
   EXPECT_FLOAT_EQ(700.0f, messages[0].price());
@@ -56,30 +35,22 @@ TEST(ReadWriteDelimitedTest, ReadWriteSinglePriceRecord) {
 }
 
 TEST(ReadWriteDelimitedTest, ReadWriteMultipleOhlcTicks) {
-  constexpr int kNumTicks = 10;
+  static constexpr int kNumTicks = 10;
   std::ostringstream oss;
-  {
-    OstreamOutputStream output_stream(&oss);
-    for (int i = 0; i < kNumTicks; ++i) {
-      OhlcTick ohlc_tick;
-      ohlc_tick.set_open(100.0f + 10.0f * i);
-      ohlc_tick.set_high(120.0f + 20.0f * i);
-      ohlc_tick.set_low(80.0f + 10.0f * i);
-      ohlc_tick.set_close(110.0f + 10.0f * i);
-      ohlc_tick.set_volume(1.5e4f + 1.0e3f * i);
-      ASSERT_TRUE(WriteDelimitedTo(ohlc_tick, output_stream));
-    }
+  std::vector<OhlcTick> input_messages;
+  for (int i = 0; i < kNumTicks; ++i) {
+    input_messages.emplace_back();
+    input_messages.back().set_open(100.0f + 10.0f * i);
+    input_messages.back().set_high(120.0f + 20.0f * i);
+    input_messages.back().set_low(80.0f + 10.0f * i);
+    input_messages.back().set_close(110.0f + 10.0f * i);
+    input_messages.back().set_volume(1.5e4f + 1.0e3f * i);
   }
-
+  WriteDelimitedMessagesToOStream(input_messages.begin(), input_messages.end(),
+                                  oss, /* compress = */ true);
   std::istringstream iss(oss.str());
   std::vector<OhlcTick> messages;
-  {
-    IstreamInputStream input_stream(&iss);
-    OhlcTick message;
-    while (ReadDelimitedFrom(input_stream, message)) {
-      messages.emplace_back(message);
-    }
-  }
+  ReadDelimitedMessagesFromIStream(iss, messages);
   ASSERT_EQ(kNumTicks, messages.size());
   for (int i = 0; i < kNumTicks; ++i) {
     EXPECT_FLOAT_EQ(100.0f + 10.0f * i, messages[i].open());

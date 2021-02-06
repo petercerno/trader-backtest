@@ -83,7 +83,23 @@ As discussed before, a stop order can be thought of as a promise by the exchange
 
 ## Installation
 
-First, install [Bazel](https://bazel.build/). Build everything (inside the project source code directory) by running:
+First, you need to install [Bazel](https://bazel.build/).
+
+**Note**: This code was tested on [Ubuntu](https://ubuntu.com/), [macOS](https://www.apple.com/macos), and [Windows](https://www.microsoft.com/en-us/windows). However, there are few caveats on Windows:
+
+* [Protocol Buffers](https://github.com/protocolbuffers/protobuf) come without [zlib](https://zlib.net/), which means that the output delimited protocol buffer files are not compressed.
+* You need to follow [these instructions](https://docs.bazel.build/versions/master/install-windows.html) to install [Bazel](https://bazel.build/). In particular, I would recommend to install [MSYS2 x86_64](https://www.msys2.org/) to get Bash and some common Unix tools (like `grep`, `tar`, `git`, `curl`, `gzip`, etc.). You also need to install [Build Tools for Visual Studio 2019](https://aka.ms/buildtools) in order to build C++ code on Windows.
+* The syntax for Windows Command Prompt is slightly different from Linux / macOS. I have tried to highlight the differences.
+
+You can download the code from [GitHub](https://github.com/petercerno/trader-backtest) as follows:
+
+```
+git clone https://github.com/petercerno/trader-backtest.git
+```
+
+Navigate to the main project directory (i.e. where the `WORKSPACE` file is located).
+
+Assuming you have [Bazel](https://bazel.build/) installed, build everything by running:
 
 ``` 
 bazel build ... 
@@ -142,22 +158,45 @@ There are several options how to evaluate a trader:
 
 ## Example
 
-First, download BTC/USD historical prices from [bitcoincharts](http://bitcoincharts.com/) as follows:
+First, starting from the main project directory download BTC/USD historical prices from [bitcoincharts](http://bitcoincharts.com/) as follows:
+
+Linux / macOS:
 
 ``` 
-mkdir -p data
-curl -o $(pwd)/data/bitstampUSD.csv.gz \
+mkdir data
+curl -o "$(pwd)/data/bitstampUSD.csv.gz" \
   "https://api.bitcoincharts.com/v1/csv/bitstampUSD.csv.gz"
-gunzip $(pwd)/data/bitstampUSD.csv.gz
+gunzip "$(pwd)/data/bitstampUSD.csv.gz"
+```
+
+Windows:
+
+``` 
+mkdir data
+curl -o "%cd%\data\bitstampUSD.csv.gz" ^
+  "https://api.bitcoincharts.com/v1/csv/bitstampUSD.csv.gz"
+gzip -d "%cd%\data\bitstampUSD.csv.gz"
 ```
 
 Then convert the `bitstampUSD.csv` file into a more compact (delimited protocol buffer) representation as follows:
+
+Linux / macOS:
 
 ``` 
 bazel run :convert -- \
   --input_price_history_csv_file="/$(pwd)/data/bitstampUSD.csv" \
   --output_price_history_delimited_proto_file="/$(pwd)/data/bitstampUSD.dpb" \
   --start_date_utc="2017-01-01" \
+  --end_date_utc="2021-01-01"
+```
+
+Windows:
+
+``` 
+bazel run :convert -- ^
+  --input_price_history_csv_file="%cd%\data\bitstampUSD.csv" ^
+  --output_price_history_delimited_proto_file="%cd%\data\bitstampUSD.dpb" ^
+  --start_date_utc="2017-01-01" ^
   --end_date_utc="2021-01-01"
 ```
 
@@ -188,12 +227,25 @@ As you can see, reading the full CSV file is prohibitively slow. It would be imp
 
 For trader evaluation, however, we need even more compressed form: an OHLC history. To get this we need to resample the price history into OHLC ticks. Although it is possible to resample the original CSV file, the delimited protocol buffer file will be much faster to read. One can resample the price history into 5 minute OHLC ticks as follows:
 
+Linux / macOS:
+
 ```
 bazel run :convert -- \
   --input_price_history_delimited_proto_file="/$(pwd)/data/bitstampUSD.dpb" \
   --output_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_5min.dpb" \
   --start_date_utc="2017-01-01" \
   --end_date_utc="2021-01-01" \
+  --sampling_rate_sec=300
+```
+
+Windows:
+
+```
+bazel run :convert -- ^
+  --input_price_history_delimited_proto_file="%cd%\data\bitstampUSD.dpb" ^
+  --output_ohlc_history_delimited_proto_file="%cd%\data\bitstampUSD_5min.dpb" ^
+  --start_date_utc="2017-01-01" ^
+  --end_date_utc="2021-01-01" ^
   --sampling_rate_sec=300
 ```
 
@@ -234,12 +286,25 @@ Finished in 2.4770 seconds
 
 In general, it is a good idea to evaluate traders over OHLC histories with different sampling rates. To this end we will also resample the price history into the OHLC history with 1 hour sampling rate as follows:
 
+Linux / macOS:
+
 ```
 bazel run :convert -- \
   --input_price_history_delimited_proto_file="/$(pwd)/data/bitstampUSD.dpb" \
   --output_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_1h.dpb" \
   --start_date_utc="2017-01-01" \
   --end_date_utc="2021-01-01" \
+  --sampling_rate_sec=3600
+```
+
+Windows:
+
+```
+bazel run :convert -- ^
+  --input_price_history_delimited_proto_file="%cd%\data\bitstampUSD.dpb" ^
+  --output_ohlc_history_delimited_proto_file="%cd%\data\bitstampUSD_1h.dpb" ^
+  --start_date_utc="2017-01-01" ^
+  --end_date_utc="2021-01-01" ^
   --sampling_rate_sec=3600
 ```
 
@@ -256,11 +321,23 @@ Finished in 0.1980 seconds
 
 It is also possible to provide an additional side history to the trader. For example, one can use the `fear_and_greed_index.ipynb` notebook to download the [Crypto Fear & Greed Index](https://alternative.me/crypto/fear-and-greed-index/) into a CSV file: `data/fear_and_greed_index.csv` and then convert it into the delimited proto file as follows:
 
+Linux / macOS:
+
 ```
 bazel run :convert -- \
   --input_side_history_csv_file="/$(pwd)/data/fear_and_greed_index.csv" \
   --output_side_history_delimited_proto_file="/$(pwd)/data/fear_and_greed_index.dpb" \
   --start_date_utc="2018-01-01" \
+  --end_date_utc="2021-01-01"
+```
+
+Windows:
+
+```
+bazel run :convert -- ^
+  --input_side_history_csv_file="%cd%\data\fear_and_greed_index.csv" ^
+  --output_side_history_delimited_proto_file="%cd%\data\fear_and_greed_index.dpb" ^
+  --start_date_utc="2018-01-01" ^
   --end_date_utc="2021-01-01"
 ```
 
@@ -277,6 +354,8 @@ Finished in 0.002 seconds
 
 Now we can evaluate a simple `rebalancing` trader over a 4 year time period: `[2017-01-01 - 2021-01-01)` (and log both the exchange states and also the trader internal states) as follows:
 
+Linux / macOS:
+
 ```
 bazel run :trader -- \
   --input_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_5min.dpb" \
@@ -286,6 +365,20 @@ bazel run :trader -- \
   --start_date_utc="2017-01-01" \
   --end_date_utc="2021-01-01" \
   --start_base_balance=1.0 \
+  --start_quote_balance=0.0
+```
+
+Windows:
+
+```
+bazel run :trader -- ^
+  --input_ohlc_history_delimited_proto_file="%cd%\data\bitstampUSD_5min.dpb" ^
+  --trader="rebalancing" ^
+  --output_exchange_log_file="%cd%\data\bitstampUSD_5min_rebalancing_exchange_log.out.csv" ^
+  --output_trader_log_file="%cd%\data\bitstampUSD_5min_rebalancing_trader_log.csv" ^
+  --start_date_utc="2017-01-01" ^
+  --end_date_utc="2021-01-01" ^
+  --start_base_balance=1.0 ^
   --start_quote_balance=0.0
 ```
 
@@ -368,6 +461,8 @@ Note, however, that the logged trader internal states can have an arbitrary (tra
 
 We can also evaluate the trader over 1 hour OHLC history as follows:
 
+Linux / macOS:
+
 ```
 bazel run :trader -- \
   --input_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_1h.dpb" \
@@ -377,6 +472,20 @@ bazel run :trader -- \
   --start_date_utc="2017-01-01" \
   --end_date_utc="2021-01-01" \
   --start_base_balance=1.0 \
+  --start_quote_balance=0.0
+```
+
+Windows:
+
+```
+bazel run :trader -- ^
+  --input_ohlc_history_delimited_proto_file="%cd%\data\bitstampUSD_1h.dpb" ^
+  --trader="rebalancing" ^
+  --output_exchange_log_file="%cd%\data\bitstampUSD_1h_rebalancing_exchange_log.out.csv" ^
+  --output_trader_log_file="%cd%\data\bitstampUSD_1h_rebalancing_trader_log.csv" ^
+  --start_date_utc="2017-01-01" ^
+  --end_date_utc="2021-01-01" ^
+  --start_base_balance=1.0 ^
   --start_quote_balance=0.0
 ```
 
@@ -399,6 +508,8 @@ As you can see, it has a very similar performance. This, however, does not need 
 
 We can also evaluate the `rebalancing` trader over multiple 6 month time periods:
 
+Linux / macOS:
+
 ```
 bazel run :trader -- \
   --input_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_5min.dpb" \
@@ -407,6 +518,19 @@ bazel run :trader -- \
   --end_date_utc="2021-01-01" \
   --evaluation_period_months=6 \
   --start_base_balance=1.0 \
+  --start_quote_balance=0.0
+```
+
+Windows:
+
+```
+bazel run :trader -- ^
+  --input_ohlc_history_delimited_proto_file="%cd%\data\bitstampUSD_5min.dpb" ^
+  --trader="rebalancing" ^
+  --start_date_utc="2017-01-01" ^
+  --end_date_utc="2021-01-01" ^
+  --evaluation_period_months=6 ^
+  --start_base_balance=1.0 ^
   --start_quote_balance=0.0
 ```
 
@@ -441,6 +565,8 @@ Finally, we can find the "optimal" hyper-parameters by doing a grid search (i.e.
 
 **Note**: Normally, one would split the input history into two halves (one for tuning the hyper-parameters and the other one for evaluating the selected trader).
 
+Linux / macOS:
+
 ```
 bazel run :trader -- \
   --input_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_1h.dpb" \
@@ -450,6 +576,20 @@ bazel run :trader -- \
   --evaluation_period_months=6 \
   --start_base_balance=1.0 \
   --start_quote_balance=0.0 \
+  --evaluate_batch=true
+```
+
+Windows:
+
+```
+bazel run :trader -- ^
+  --input_ohlc_history_delimited_proto_file="%cd%\data\bitstampUSD_1h.dpb" ^
+  --trader="rebalancing" ^
+  --start_date_utc="2017-01-01" ^
+  --end_date_utc="2021-01-01" ^
+  --evaluation_period_months=6 ^
+  --start_base_balance=1.0 ^
+  --start_quote_balance=0.0 ^
   --evaluate_batch=true
 ```
 

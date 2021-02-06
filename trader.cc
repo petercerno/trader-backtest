@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #include <gflags/gflags.h>
 
@@ -62,7 +62,8 @@ AccountConfig GetAccountConfig() {
 // Returns a vector of records of type T read from the delimited_proto_file.
 template <typename T>
 std::vector<T> ReadHistory(const std::string& delimited_proto_file,
-                           long start_timestamp_sec, long end_timestamp_sec) {
+                           std::time_t start_timestamp_sec,
+                           std::time_t end_timestamp_sec) {
   if (delimited_proto_file.empty()) {
     return {};
   }
@@ -143,8 +144,8 @@ int main(int argc, char* argv[]) {
   std::cout << "Trader AccountConfig:" << std::endl
             << account_config.DebugString();
 
-  long start_timestamp_sec = 0;
-  long end_timestamp_sec = 0;
+  std::time_t start_timestamp_sec = 0;
+  std::time_t end_timestamp_sec = 0;
   if (FLAGS_start_date_utc.empty() || FLAGS_end_date_utc.empty() ||
       !ConvertDateUTCToTimestampSec(FLAGS_start_date_utc,
                                     start_timestamp_sec) ||

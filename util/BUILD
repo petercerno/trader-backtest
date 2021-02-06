@@ -29,7 +29,6 @@ cc_test(
 
 cc_library(
     name = "proto",
-    srcs = ["proto.cc"],
     hdrs = ["proto.h"],
     deps = ["@com_google_protobuf//:protobuf_lite"],
 )

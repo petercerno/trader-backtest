@@ -1,10 +1,10 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 syntax = "proto2";
 
 package trader;
 
-// Base (crypto) currency price at a specific time.
+// Base (crypto) currency traded at at a specific price and time.
 message PriceRecord {
   // UNIX timestamp (in seconds).
   optional int32 timestamp_sec = 1;

@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #include "util/time.h"
 
@@ -7,7 +7,7 @@
 namespace trader {
 
 TEST(ConvertDateUTCToTimestampSecTest, Basic) {
-  long timestamp_sec = -1;
+  std::time_t timestamp_sec = -1;
   ASSERT_FALSE(ConvertDateUTCToTimestampSec("Hello World!", timestamp_sec));
   EXPECT_EQ(-1, timestamp_sec);
   ASSERT_TRUE(ConvertDateUTCToTimestampSec("1970-01-01", timestamp_sec));
@@ -16,8 +16,6 @@ TEST(ConvertDateUTCToTimestampSecTest, Basic) {
   EXPECT_EQ(951782400, timestamp_sec);
   ASSERT_TRUE(ConvertDateUTCToTimestampSec("2017-01-01", timestamp_sec));
   EXPECT_EQ(1483228800, timestamp_sec);
-  ASSERT_TRUE(ConvertDateUTCToTimestampSec("2050-12-31", timestamp_sec));
-  EXPECT_EQ(2556057600, timestamp_sec);
   ASSERT_TRUE(ConvertDateUTCToTimestampSec("", timestamp_sec));
   EXPECT_EQ(0, timestamp_sec);
   timestamp_sec = -1;
@@ -34,7 +32,7 @@ TEST(ConvertDateUTCToTimestampSecTest, Basic) {
 }
 
 TEST(ConvertDateUTCToTimestampSecTest, Extended) {
-  long timestamp_sec = -1;
+  std::time_t timestamp_sec = -1;
   ASSERT_FALSE(ConvertDateUTCToTimestampSec("1970-01-01 ", timestamp_sec));
   EXPECT_EQ(-1, timestamp_sec);
   ASSERT_FALSE(ConvertDateUTCToTimestampSec(" 2000-02-29", timestamp_sec));
@@ -51,9 +49,6 @@ TEST(ConvertDateUTCToTimestampSecTest, Extended) {
   ASSERT_TRUE(
       ConvertDateUTCToTimestampSec("2017-01-01 00:05:00", timestamp_sec));
   EXPECT_EQ(1483229100, timestamp_sec);
-  ASSERT_TRUE(
-      ConvertDateUTCToTimestampSec("2050-12-31 01:00:00", timestamp_sec));
-  EXPECT_EQ(2556061200, timestamp_sec);
   timestamp_sec = -1;
   ASSERT_FALSE(
       ConvertDateUTCToTimestampSec("1970-01-01 24:00:00", timestamp_sec));
@@ -73,8 +68,6 @@ TEST(ConvertTimestampSecToDateUTCTest, Basic) {
   EXPECT_EQ("2000-02-29", ConvertTimestampSecToDateUTC(951786000));
   EXPECT_EQ("2017-01-01", ConvertTimestampSecToDateUTC(1483228800));
   EXPECT_EQ("2017-01-01", ConvertTimestampSecToDateUTC(1483229100));
-  EXPECT_EQ("2050-12-30", ConvertTimestampSecToDateUTC(2556057599));
-  EXPECT_EQ("2050-12-31", ConvertTimestampSecToDateUTC(2556057600));
 }
 
 TEST(ConvertTimestampSecToDateTimeUTCTest, Basic) {
@@ -83,8 +76,6 @@ TEST(ConvertTimestampSecToDateTimeUTCTest, Basic) {
   EXPECT_EQ("2000-02-29 00:00:10", ConvertTimestampSecToDateTimeUTC(951782410));
   EXPECT_EQ("2017-01-01 00:05:00",
             ConvertTimestampSecToDateTimeUTC(1483229100));
-  EXPECT_EQ("2050-12-31 01:00:00",
-            ConvertTimestampSecToDateTimeUTC(2556061200));
 }
 
 TEST(DurationToStringTest, Basic) {

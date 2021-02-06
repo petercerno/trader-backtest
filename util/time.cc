@@ -1,37 +1,24 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #include "util/time.h"
 
 #include <algorithm>
 #include <cassert>
-#include <chrono>
-#include <ctime>
 #include <iomanip>
 #include <sstream>
 
+// According to https://en.cppreference.com/w/cpp/chrono/c/mktime
+// std::mktime converts local calendar time to a time since epoch as a time_t
+// object. However, we need to convert UTC calendar time, for which there is no
+// convenient std function. Thus we have decided to use a non-standard (i.e. not
+// in POSIX or C standard) function timegm. This function is defined as
+// _mkgmtime in Windows.
+#ifdef _WIN32
+#define timegm _mkgmtime
+#endif
+
 namespace trader {
 namespace {
-// UNIX epoch, 00:00:00 UTC, Thursday, 1 January 1970.
-static const std::chrono::system_clock::time_point kEpoch =
-    std::chrono::system_clock::from_time_t(0);
-
-// Converts struct tm to UNIX timestamp (in seconds).
-long ConvertTmToTimestampSec(struct std::tm& tm) {
-  const std::chrono::system_clock::time_point time =
-      std::chrono::system_clock::from_time_t(timegm(&tm));
-  return std::chrono::duration_cast<std::chrono::seconds>(time - kEpoch)
-      .count();
-}
-
-// Converts UNIX timestamp (in seconds) to struct tm.
-struct std::tm ConvertTimestampSecToTm(long timestamp_sec) {
-  struct std::tm tm_result = {0};
-  std::time_t time = std::chrono::system_clock::to_time_t(
-      kEpoch + std::chrono::seconds(timestamp_sec));
-  gmtime_r(&time, &tm_result);
-  return tm_result;
-}
-
 // Returns true if the given year is a leap year.
 bool IsLeapYear(int year) {
   if (year % 4 != 0) return false;
@@ -75,7 +62,7 @@ std::tm AddMonthsToTm(const struct std::tm& tm, int months) {
 }  // namespace
 
 bool ConvertDateUTCToTimestampSec(const std::string& datetime_utc,
-                                  long& timestamp_sec) {
+                                  std::time_t& timestamp_sec) {
   if (datetime_utc.empty()) {
     timestamp_sec = 0;
     return true;
@@ -112,26 +99,24 @@ bool ConvertDateUTCToTimestampSec(const std::string& datetime_utc,
   }
   tm.tm_mon -= 1;
   tm.tm_year -= 1900;
-  timestamp_sec = ConvertTmToTimestampSec(tm);
+  timestamp_sec = timegm(&tm);
   return true;
 }
 
-std::string ConvertTimestampSecToDateUTC(long timestamp_sec) {
-  struct std::tm tm(ConvertTimestampSecToTm(timestamp_sec));
+std::string ConvertTimestampSecToDateUTC(std::time_t timestamp_sec) {
   std::stringstream ss;
-  ss << std::put_time(&tm, "%Y-%m-%d");
+  ss << std::put_time(std::gmtime(&timestamp_sec), "%Y-%m-%d");
   return ss.str();
 }
 
-std::string ConvertTimestampSecToDateTimeUTC(long timestamp_sec) {
-  struct std::tm tm(ConvertTimestampSecToTm(timestamp_sec));
+std::string ConvertTimestampSecToDateTimeUTC(std::time_t timestamp_sec) {
   std::stringstream ss;
-  ss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
+  ss << std::put_time(std::gmtime(&timestamp_sec), "%Y-%m-%d %H:%M:%S");
   return ss.str();
 }
 
-std::string TimestampPeriodToString(long start_timestamp_sec,
-                                    long end_timestamp_sec) {
+std::string TimestampPeriodToString(std::time_t start_timestamp_sec,
+                                    std::time_t end_timestamp_sec) {
   std::stringstream ss;
   const std::string start_str =
       start_timestamp_sec > 0
@@ -156,10 +141,9 @@ std::string DurationToString(long duration_sec) {
   return ss.str();
 }
 
-long AddMonthsToTimestampSec(long timestamp_sec, int months) {
-  struct std::tm tm(
-      AddMonthsToTm(ConvertTimestampSecToTm(timestamp_sec), months));
-  return ConvertTmToTimestampSec(tm);
+std::time_t AddMonthsToTimestampSec(std::time_t timestamp_sec, int months) {
+  struct std::tm tm(AddMonthsToTm(*std::gmtime(&timestamp_sec), months));
+  return timegm(&tm);
 }
 
 }  // namespace trader

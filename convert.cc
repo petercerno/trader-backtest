@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #include <gflags/gflags.h>
 
@@ -44,8 +44,8 @@ namespace {
 // Reads the input CSV file containing the historical prices and saves them
 // into the given price_history vector.
 bool ReadPriceHistoryFromCsvFile(const std::string& file_name,
-                                 long start_timestamp_sec,
-                                 long end_timestamp_sec,
+                                 std::time_t start_timestamp_sec,
+                                 std::time_t end_timestamp_sec,
                                  PriceHistory& price_history) {
   std::cout << "Reading price history from CSV file: " << file_name << std::endl
             << std::flush;
@@ -106,8 +106,8 @@ bool ReadPriceHistoryFromCsvFile(const std::string& file_name,
 // Reads the input CSV file containing the OHLC prices and saves them into the
 // given ohlc_history vector.
 bool ReadOhlcHistoryFromCsvFile(const std::string& file_name,
-                                long start_timestamp_sec,
-                                long end_timestamp_sec,
+                                std::time_t start_timestamp_sec,
+                                std::time_t end_timestamp_sec,
                                 OhlcHistory& ohlc_history) {
   std::cout << "Reading OHLC history from CSV file: " << file_name << std::endl
             << std::flush;
@@ -176,8 +176,8 @@ bool ReadOhlcHistoryFromCsvFile(const std::string& file_name,
 // Reads the input CSV file containing the historical side inputs and saves them
 // into the given side_history vector.
 bool ReadSideHistoryFromCsvFile(const std::string& file_name,
-                                long start_timestamp_sec,
-                                long end_timestamp_sec,
+                                std::time_t start_timestamp_sec,
+                                std::time_t end_timestamp_sec,
                                 SideHistory& side_history) {
   std::cout << "Reading side history from CSV file: " << file_name << std::endl
             << std::flush;
@@ -239,8 +239,8 @@ bool ReadSideHistoryFromCsvFile(const std::string& file_name,
 // Reads and returns the price / OHLC history.
 template <typename T>
 bool ReadHistoryFromDelimitedProtoFile(
-    const std::string& file_name, long start_timestamp_sec,
-    long end_timestamp_sec, std::function<bool(int, const T&)> validate,
+    const std::string& file_name, std::time_t start_timestamp_sec,
+    std::time_t end_timestamp_sec, std::function<bool(int, const T&)> validate,
     std::vector<T>& history) {
   std::cout << "Reading history from delimited proto file: " << file_name
             << std::endl
@@ -290,8 +290,8 @@ bool ReadHistoryFromDelimitedProtoFile(
 // Reads the input delimited proto file containing the PriceRecord protos and
 // saves them into the given price_history vector.
 bool ReadPriceHistoryFromDelimitedProtoFile(const std::string& file_name,
-                                            long start_timestamp_sec,
-                                            long end_timestamp_sec,
+                                            std::time_t start_timestamp_sec,
+                                            std::time_t end_timestamp_sec,
                                             PriceHistory& price_history) {
   return ReadHistoryFromDelimitedProtoFile<PriceRecord>(
       file_name, start_timestamp_sec, end_timestamp_sec,
@@ -313,8 +313,8 @@ bool ReadPriceHistoryFromDelimitedProtoFile(const std::string& file_name,
 // Reads the input delimited proto file containing the OhlcTick protos and
 // saves them into the given ohlc_history vector.
 bool ReadOhlcHistoryFromDelimitedProtoFile(const std::string& file_name,
-                                           long start_timestamp_sec,
-                                           long end_timestamp_sec,
+                                           std::time_t start_timestamp_sec,
+                                           std::time_t end_timestamp_sec,
                                            OhlcHistory& ohlc_history) {
   return ReadHistoryFromDelimitedProtoFile<OhlcTick>(
       file_name, start_timestamp_sec, end_timestamp_sec,
@@ -446,8 +446,8 @@ int main(int argc, char* argv[]) {
 
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  long start_timestamp_sec = 0;
-  long end_timestamp_sec = 0;
+  std::time_t start_timestamp_sec = 0;
+  std::time_t end_timestamp_sec = 0;
   if (!ConvertDateUTCToTimestampSec(FLAGS_start_date_utc,
                                     start_timestamp_sec)) {
     std::cerr << "Invalid start date: " << FLAGS_start_date_utc << std::endl;
@@ -457,6 +457,10 @@ int main(int argc, char* argv[]) {
     std::cerr << "Invalid end date: " << FLAGS_end_date_utc << std::endl;
     return 1;
   }
+  std::cout << std::endl
+            << "Selected time period:" << std::endl
+            << TimestampPeriodToString(start_timestamp_sec, end_timestamp_sec)
+            << std::endl;
 
   if (!FLAGS_input_price_history_csv_file.empty() &&
       !FLAGS_input_price_history_delimited_proto_file.empty()) {
