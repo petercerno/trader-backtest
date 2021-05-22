@@ -25,9 +25,9 @@ git_repository(
 
 http_archive(
     name = "com_google_protobuf",
-    sha256 = "bf0e5070b4b99240183b29df78155eee335885e53a8af8683964579c214ad301",
-    strip_prefix = "protobuf-3.14.0",
-    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.14.0.zip"],
+    sha256 = "543cac2905c7f583dead64ed85dae726cfc75ace56c4fb74c148b151c2597035",
+    strip_prefix = "protobuf-3.17.0",
+    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.17.0.zip"],
 )
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
