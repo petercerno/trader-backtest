@@ -29,7 +29,7 @@ cc_test(
     srcs = ["base_test.cc"],
     deps = [
         ":base",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -45,7 +45,7 @@ cc_test(
     srcs = ["account_test.cc"],
     deps = [
         ":account",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -67,7 +67,7 @@ cc_test(
     srcs = ["history_test.cc"],
     deps = [
         ":history",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -83,6 +83,6 @@ cc_test(
     srcs = ["side_input_test.cc"],
     deps = [
         ":side_input",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )

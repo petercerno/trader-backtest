@@ -5,11 +5,11 @@ cc_binary(
         "//base",
         "//base:side_input",
         "//eval",
-        "//external:gflags",
         "//logging:csv_logger",
         "//traders:trader_factory",
         "//util:proto",
         "//util:time",
+        "@com_github_gflags_gflags//:gflags",
     ],
 )
 
@@ -19,8 +19,8 @@ cc_binary(
     deps = [
         "//base",
         "//base:history",
-        "//external:gflags",
         "//util:proto",
         "//util:time",
+        "@com_github_gflags_gflags//:gflags",
     ],
 )

@@ -23,7 +23,7 @@ cc_test(
     srcs = ["time_test.cc"],
     deps = [
         ":time",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -39,6 +39,6 @@ cc_test(
     deps = [
         ":example_cc_proto",
         ":proto",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )

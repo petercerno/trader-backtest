@@ -36,6 +36,6 @@ cc_test(
         ":eval",
         "//logging:csv_logger",
         "//util:time",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )

@@ -13,7 +13,7 @@ cc_test(
     srcs = ["util_test.cc"],
     deps = [
         ":util",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -23,7 +23,7 @@ cc_library(
     hdrs = ["test_util.h"],
     deps = [
         "//base",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -40,7 +40,7 @@ cc_test(
     deps = [
         ":last_n_ohlc_ticks",
         ":test_util",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -60,7 +60,7 @@ cc_test(
     deps = [
         ":simple_moving_average",
         ":test_util",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -81,7 +81,7 @@ cc_test(
     deps = [
         ":exponential_moving_average",
         ":test_util",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -102,7 +102,7 @@ cc_test(
     deps = [
         ":moving_average_convergence_divergence",
         ":test_util",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -123,7 +123,7 @@ cc_test(
     deps = [
         ":relative_strength_index",
         ":test_util",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -144,7 +144,7 @@ cc_test(
     deps = [
         ":stochastic_oscillator",
         ":test_util",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -166,6 +166,6 @@ cc_test(
     deps = [
         ":test_util",
         ":volatility",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
