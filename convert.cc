@@ -1,42 +1,46 @@
 // Copyright © 2021 Peter Cerno. All rights reserved.
 
-#include <gflags/gflags.h>
-
+#include "absl/flags/flag.h"
+#include "absl/flags/parse.h"
 #include "base/base.h"
 #include "base/history.h"
 #include "util/proto.h"
 #include "util/time.h"
 
-DEFINE_string(input_price_history_csv_file, "",
-              "Input CSV file containing the historical prices.");
-DEFINE_string(input_price_history_delimited_proto_file, "",
-              "Input file containing the delimited PriceRecord protos.");
-DEFINE_string(output_price_history_delimited_proto_file, "",
-              "Output file containing the delimited PriceRecord protos.");
+ABSL_FLAG(std::string, input_price_history_csv_file, "",
+          "Input CSV file containing the historical prices.");
+ABSL_FLAG(std::string, input_price_history_delimited_proto_file, "",
+          "Input file containing the delimited PriceRecord protos.");
+ABSL_FLAG(std::string, output_price_history_delimited_proto_file, "",
+          "Output file containing the delimited PriceRecord protos.");
 
-DEFINE_string(input_ohlc_history_csv_file, "",
-              "Input CSV file containing the OHLC prices.");
-DEFINE_string(input_ohlc_history_delimited_proto_file, "",
-              "Input file containing the delimited OhlcRecord protos.");
-DEFINE_string(output_ohlc_history_delimited_proto_file, "",
-              "Output file containing the delimited OhlcRecord protos.");
+ABSL_FLAG(std::string, input_ohlc_history_csv_file, "",
+          "Input CSV file containing the OHLC prices.");
+ABSL_FLAG(std::string, input_ohlc_history_delimited_proto_file, "",
+          "Input file containing the delimited OhlcRecord protos.");
+ABSL_FLAG(std::string, output_ohlc_history_delimited_proto_file, "",
+          "Output file containing the delimited OhlcRecord protos.");
 
-DEFINE_string(input_side_history_csv_file, "",
-              "Input CSV file containing the historical side inputs.");
-DEFINE_string(output_side_history_delimited_proto_file, "",
-              "Output file containing the delimited SideInputRecord protos.");
+ABSL_FLAG(std::string, input_side_history_csv_file, "",
+          "Input CSV file containing the historical side inputs.");
+ABSL_FLAG(std::string, output_side_history_delimited_proto_file, "",
+          "Output file containing the delimited SideInputRecord protos.");
 
-DEFINE_string(start_date_utc, "", "Start date YYYY-MM-DD in UTC (included).");
-DEFINE_string(end_date_utc, "", "End date YYYY-MM-DD in UTC (excluded).");
+ABSL_FLAG(std::string, start_date_utc, "",
+          "Start date YYYY-MM-DD in UTC (included).");
+ABSL_FLAG(std::string, end_date_utc, "",
+          "End date YYYY-MM-DD in UTC (excluded).");
 
-DEFINE_double(max_price_deviation_per_min, 0.05,
-              "Maximum allowed price deviation per minute.");
-DEFINE_int32(sampling_rate_sec, 300, "Sampling rate in seconds.");
+ABSL_FLAG(double, max_price_deviation_per_min, 0.05,
+          "Maximum allowed price deviation per minute.");
+ABSL_FLAG(int, sampling_rate_sec, 300, "Sampling rate in seconds.");
 
-DEFINE_int32(top_n_gaps, 50, "Number of top biggest gaps to print.");
-DEFINE_int32(last_n_outliers, 20, "Number of last removed outliers to print.");
+ABSL_FLAG(int, top_n_gaps, 50, "Number of top biggest gaps to print.");
+ABSL_FLAG(int, last_n_outliers, 20,
+          "Number of last removed outliers to print.");
 
-DEFINE_bool(compress, true, "Whether to compress the output protobuf file.");
+ABSL_FLAG(bool, compress, true,
+          "Whether to compress the output protobuf file.");
 
 using namespace trader;
 
@@ -398,18 +402,20 @@ OhlcHistory ConvertPriceHistoryToOhlcHistory(
   std::vector<size_t> outlier_indices;
   const PriceHistory price_history_clean = RemoveOutliers(
       /* begin = */ price_history.begin(),
-      /* end = */ price_history.end(), FLAGS_max_price_deviation_per_min,
-      &outlier_indices);
+      /* end = */ price_history.end(),
+      absl::GetFlag(FLAGS_max_price_deviation_per_min), &outlier_indices);
   std::cout << "Removed " << outlier_indices.size() << " outliers" << std::endl;
-  std::cout << "Last " << FLAGS_last_n_outliers << " outliers:" << std::endl;
+  std::cout << "Last " << absl::GetFlag(FLAGS_last_n_outliers)
+            << " outliers:" << std::endl;
   PrintOutliersWithContext(
       /* begin = */ price_history.begin(),
       /* end = */ price_history.end(), outlier_indices,
       /* left_context_size = */ 5,
-      /* right_context_size = */ 5, /* last_n = */ FLAGS_last_n_outliers);
+      /* right_context_size = */ 5,
+      /* last_n = */ absl::GetFlag(FLAGS_last_n_outliers));
   const OhlcHistory ohlc_history =
       Resample(price_history_clean.begin(), price_history_clean.end(),
-               FLAGS_sampling_rate_sec);
+               absl::GetFlag(FLAGS_sampling_rate_sec));
   std::cout << "Resampled " << price_history_clean.size() << " records to "
             << ohlc_history.size() << " OHLC ticks" << std::endl;
   return ohlc_history;
@@ -425,7 +431,7 @@ bool WriteHistoryToDelimitedProtoFile(
             << output_history_delimited_proto_file << std::endl;
   if (!WriteDelimitedMessagesToFile(history.begin(), history.end(),
                                     output_history_delimited_proto_file,
-                                    FLAGS_compress)) {
+                                    absl::GetFlag(FLAGS_compress))) {
     std::cerr << "Failed to write history file: "
               << output_history_delimited_proto_file << std::endl;
     return false;
@@ -444,17 +450,20 @@ int main(int argc, char* argv[]) {
   // compatible with the version of the headers we compiled against.
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  absl::ParseCommandLine(argc, argv);
 
   std::time_t start_timestamp_sec = 0;
   std::time_t end_timestamp_sec = 0;
-  if (!ConvertDateUTCToTimestampSec(FLAGS_start_date_utc,
+  if (!ConvertDateUTCToTimestampSec(absl::GetFlag(FLAGS_start_date_utc),
                                     start_timestamp_sec)) {
-    std::cerr << "Invalid start date: " << FLAGS_start_date_utc << std::endl;
+    std::cerr << "Invalid start date: " << absl::GetFlag(FLAGS_start_date_utc)
+              << std::endl;
     return 1;
   }
-  if (!ConvertDateUTCToTimestampSec(FLAGS_end_date_utc, end_timestamp_sec)) {
-    std::cerr << "Invalid end date: " << FLAGS_end_date_utc << std::endl;
+  if (!ConvertDateUTCToTimestampSec(absl::GetFlag(FLAGS_end_date_utc),
+                                    end_timestamp_sec)) {
+    std::cerr << "Invalid end date: " << absl::GetFlag(FLAGS_end_date_utc)
+              << std::endl;
     return 1;
   }
   std::cout << std::endl
@@ -462,27 +471,28 @@ int main(int argc, char* argv[]) {
             << TimestampPeriodToString(start_timestamp_sec, end_timestamp_sec)
             << std::endl;
 
-  if (!FLAGS_input_price_history_csv_file.empty() &&
-      !FLAGS_input_price_history_delimited_proto_file.empty()) {
+  if (!absl::GetFlag(FLAGS_input_price_history_csv_file).empty() &&
+      !absl::GetFlag(FLAGS_input_price_history_delimited_proto_file).empty()) {
     std::cerr << "Cannot have two input price history files" << std::endl;
     return 1;
   }
 
-  if (!FLAGS_input_ohlc_history_csv_file.empty() &&
-      !FLAGS_input_ohlc_history_delimited_proto_file.empty()) {
+  if (!absl::GetFlag(FLAGS_input_ohlc_history_csv_file).empty() &&
+      !absl::GetFlag(FLAGS_input_ohlc_history_delimited_proto_file).empty()) {
     std::cerr << "Cannot have two input OHLC history files" << std::endl;
     return 1;
   }
 
   const bool read_price_history =
-      !FLAGS_input_price_history_csv_file.empty() ||
-      !FLAGS_input_price_history_delimited_proto_file.empty();
+      !absl::GetFlag(FLAGS_input_price_history_csv_file).empty() ||
+      !absl::GetFlag(FLAGS_input_price_history_delimited_proto_file).empty();
 
   const bool read_ohlc_history =
-      !FLAGS_input_ohlc_history_csv_file.empty() ||
-      !FLAGS_input_ohlc_history_delimited_proto_file.empty();
+      !absl::GetFlag(FLAGS_input_ohlc_history_csv_file).empty() ||
+      !absl::GetFlag(FLAGS_input_ohlc_history_delimited_proto_file).empty();
 
-  const bool read_side_history = !FLAGS_input_side_history_csv_file.empty();
+  const bool read_side_history =
+      !absl::GetFlag(FLAGS_input_side_history_csv_file).empty();
 
   const int num_history_files = (read_price_history ? 1 : 0) +
                                 (read_ohlc_history ? 1 : 0) +
@@ -499,75 +509,81 @@ int main(int argc, char* argv[]) {
   }
 
   PriceHistory price_history;
-  if (!FLAGS_input_price_history_csv_file.empty()) {
-    if (!ReadPriceHistoryFromCsvFile(FLAGS_input_price_history_csv_file,
-                                     start_timestamp_sec, end_timestamp_sec,
-                                     price_history)) {
+  if (!absl::GetFlag(FLAGS_input_price_history_csv_file).empty()) {
+    if (!ReadPriceHistoryFromCsvFile(
+            absl::GetFlag(FLAGS_input_price_history_csv_file),
+            start_timestamp_sec, end_timestamp_sec, price_history)) {
       return 1;
     }
-  } else if (!FLAGS_input_price_history_delimited_proto_file.empty()) {
+  } else if (!absl::GetFlag(FLAGS_input_price_history_delimited_proto_file)
+                  .empty()) {
     if (!ReadPriceHistoryFromDelimitedProtoFile(
-            FLAGS_input_price_history_delimited_proto_file, start_timestamp_sec,
-            end_timestamp_sec, price_history)) {
+            absl::GetFlag(FLAGS_input_price_history_delimited_proto_file),
+            start_timestamp_sec, end_timestamp_sec, price_history)) {
       return 1;
     }
   }
 
   OhlcHistory ohlc_history;
-  if (!FLAGS_input_ohlc_history_csv_file.empty()) {
-    if (!ReadOhlcHistoryFromCsvFile(FLAGS_input_ohlc_history_csv_file,
-                                    start_timestamp_sec, end_timestamp_sec,
-                                    ohlc_history)) {
+  if (!absl::GetFlag(FLAGS_input_ohlc_history_csv_file).empty()) {
+    if (!ReadOhlcHistoryFromCsvFile(
+            absl::GetFlag(FLAGS_input_ohlc_history_csv_file),
+            start_timestamp_sec, end_timestamp_sec, ohlc_history)) {
       return 1;
     }
-  } else if (!FLAGS_input_ohlc_history_delimited_proto_file.empty()) {
+  } else if (!absl::GetFlag(FLAGS_input_ohlc_history_delimited_proto_file)
+                  .empty()) {
     if (!ReadOhlcHistoryFromDelimitedProtoFile(
-            FLAGS_input_ohlc_history_delimited_proto_file, start_timestamp_sec,
-            end_timestamp_sec, ohlc_history)) {
+            absl::GetFlag(FLAGS_input_ohlc_history_delimited_proto_file),
+            start_timestamp_sec, end_timestamp_sec, ohlc_history)) {
       return 1;
     }
   }
 
   SideHistory side_history;
-  if (!FLAGS_input_side_history_csv_file.empty()) {
-    if (!ReadSideHistoryFromCsvFile(FLAGS_input_side_history_csv_file,
-                                    start_timestamp_sec, end_timestamp_sec,
-                                    side_history)) {
+  if (!absl::GetFlag(FLAGS_input_side_history_csv_file).empty()) {
+    if (!ReadSideHistoryFromCsvFile(
+            absl::GetFlag(FLAGS_input_side_history_csv_file),
+            start_timestamp_sec, end_timestamp_sec, side_history)) {
       return 1;
     }
   }
 
   if (!price_history.empty()) {
-    std::cout << "Top " << FLAGS_top_n_gaps << " gaps:" << std::endl;
+    std::cout << "Top " << absl::GetFlag(FLAGS_top_n_gaps)
+              << " gaps:" << std::endl;
     PrintPriceHistoryGaps(price_history,
-                          /* top_n = */ FLAGS_top_n_gaps);
+                          /* top_n = */ absl::GetFlag(FLAGS_top_n_gaps));
   }
 
   if (!price_history.empty() && ohlc_history.empty() &&
-      !FLAGS_output_ohlc_history_delimited_proto_file.empty()) {
+      !absl::GetFlag(FLAGS_output_ohlc_history_delimited_proto_file).empty()) {
     ohlc_history = ConvertPriceHistoryToOhlcHistory(price_history);
   }
 
   if (!price_history.empty() &&
-      !FLAGS_output_price_history_delimited_proto_file.empty()) {
+      !absl::GetFlag(FLAGS_output_price_history_delimited_proto_file).empty()) {
     if (!WriteHistoryToDelimitedProtoFile(
-            price_history, FLAGS_output_price_history_delimited_proto_file)) {
+            price_history,
+            absl::GetFlag(FLAGS_output_price_history_delimited_proto_file))) {
       return 1;
     }
   }
 
   if (!ohlc_history.empty() &&
-      !FLAGS_output_ohlc_history_delimited_proto_file.empty()) {
+      !absl::GetFlag(FLAGS_output_ohlc_history_delimited_proto_file).empty()) {
     if (!WriteHistoryToDelimitedProtoFile(
-            ohlc_history, FLAGS_output_ohlc_history_delimited_proto_file)) {
+            ohlc_history,
+            absl::GetFlag(FLAGS_output_ohlc_history_delimited_proto_file))) {
       return 1;
     }
   }
 
   if (!side_history.empty() &&
-      !FLAGS_output_side_history_delimited_proto_file.empty()) {
+      !absl::GetFlag(FLAGS_output_side_history_delimited_proto_file).empty()) {
     if (!WriteHistoryToDelimitedProtoFile(
-            side_history, FLAGS_output_side_history_delimited_proto_file)) {
+            side_history,
+            absl::GetFlag(FLAGS_output_side_history_delimited_proto_file))) {
       return 1;
     }
   }

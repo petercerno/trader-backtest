@@ -2,8 +2,8 @@
 
 High-performance backtesting engine written in C++ for evaluating trading strategies restricted to a single trading pair (e.g. BTC/USD) and finding their optimal hyper-parameters. Licensed under [MIT](http://opensource.org/licenses/MIT).
 
- * **Dependencies**: [Protocol Buffers](https://github.com/protocolbuffers/protobuf), [GFlags](https://github.com/gflags/gflags), [Google Test](https://github.com/google/googletest), [Bazel](https://bazel.build/).
- * **Data Analysis Tools**: [Python3](https://www.python.org/), [Jupyter](https://jupyter.org/), [matplotlib](https://matplotlib.org/), [NumPy](https://numpy.org/), [Pandas](https://pandas.pydata.org/).
+ * **Dependencies**: [Bazel](https://bazel.build/), [Google Test](https://github.com/google/googletest), [Google Benchmark](https://github.com/google/benchmark), [Abseil](https://github.com/abseil/abseil-cpp), [Protocol Buffers](https://github.com/protocolbuffers/protobuf).
+ * **Data Analysis Tools**: [Jupyter](https://jupyter.org/), [matplotlib](https://matplotlib.org/), [NumPy](https://numpy.org/), [Pandas](https://pandas.pydata.org/).
 
 [Visual Studio Code](https://code.visualstudio.com/) is recommended for code editing.
 

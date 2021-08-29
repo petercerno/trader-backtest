@@ -9,7 +9,8 @@ cc_binary(
         "//traders:trader_factory",
         "//util:proto",
         "//util:time",
-        "@com_github_gflags_gflags//:gflags",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/flags:parse",
     ],
 )
 
@@ -21,6 +22,7 @@ cc_binary(
         "//base:history",
         "//util:proto",
         "//util:time",
-        "@com_github_gflags_gflags//:gflags",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/flags:parse",
     ],
 )

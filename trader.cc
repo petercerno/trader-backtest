@@ -1,7 +1,7 @@
 // Copyright © 2021 Peter Cerno. All rights reserved.
 
-#include <gflags/gflags.h>
-
+#include "absl/flags/flag.h"
+#include "absl/flags/parse.h"
 #include "base/base.h"
 #include "base/side_input.h"
 #include "eval/eval.h"
@@ -10,30 +10,31 @@
 #include "util/proto.h"
 #include "util/time.h"
 
-DEFINE_string(input_ohlc_history_delimited_proto_file, "",
-              "Input file containing the delimited OhlcRecord protos.");
-DEFINE_string(input_side_history_delimited_proto_file, "",
-              "Input file containing the delimited SideInputRecord protos.");
-DEFINE_string(output_exchange_log_file, "",
-              "Output CSV file containing the exchange log.");
-DEFINE_string(output_trader_log_file, "",
-              "Output file containing the trader-dependent log.");
-DEFINE_string(trader, "stop", "Trader to be executed. [rebalancing, stop].");
+ABSL_FLAG(std::string, input_ohlc_history_delimited_proto_file, "",
+          "Input file containing the delimited OhlcRecord protos.");
+ABSL_FLAG(std::string, input_side_history_delimited_proto_file, "",
+          "Input file containing the delimited SideInputRecord protos.");
+ABSL_FLAG(std::string, output_exchange_log_file, "",
+          "Output CSV file containing the exchange log.");
+ABSL_FLAG(std::string, output_trader_log_file, "",
+          "Output file containing the trader-dependent log.");
+ABSL_FLAG(std::string, trader, "stop",
+          "Trader to be executed. [rebalancing, stop].");
 
-DEFINE_string(start_date_utc, "2017-01-01",
-              "Start date YYYY-MM-DD in UTC (included).");
-DEFINE_string(end_date_utc, "2021-01-01",
-              "End date YYYY-MM-DD in UTC (excluded).");
-DEFINE_int32(evaluation_period_months, 0, "Evaluation period in months.");
+ABSL_FLAG(std::string, start_date_utc, "2017-01-01",
+          "Start date YYYY-MM-DD in UTC (included).");
+ABSL_FLAG(std::string, end_date_utc, "2021-01-01",
+          "End date YYYY-MM-DD in UTC (excluded).");
+ABSL_FLAG(int, evaluation_period_months, 0, "Evaluation period in months.");
 
-DEFINE_double(start_base_balance, 1.0, "Starting base amount.");
-DEFINE_double(start_quote_balance, 0.0, "Starting quote amount.");
+ABSL_FLAG(double, start_base_balance, 1.0, "Starting base amount.");
+ABSL_FLAG(double, start_quote_balance, 0.0, "Starting quote amount.");
 
-DEFINE_double(market_liquidity, 0.5,
-              "Liquidity for executing market (stop) orders.");
-DEFINE_double(max_volume_ratio, 0.5,
-              "Fraction of tick volume used to fill the limit order.");
-DEFINE_bool(evaluate_batch, false, "Batch evaluation.");
+ABSL_FLAG(double, market_liquidity, 0.5,
+          "Liquidity for executing market (stop) orders.");
+ABSL_FLAG(double, max_volume_ratio, 0.5,
+          "Fraction of tick volume used to fill the limit order.");
+ABSL_FLAG(bool, evaluate_batch, false, "Batch evaluation.");
 
 using namespace trader;
 
@@ -41,8 +42,8 @@ namespace {
 // Returns the trader's AccountConfig based on the flags (and default values).
 AccountConfig GetAccountConfig() {
   AccountConfig config;
-  config.set_start_base_balance(FLAGS_start_base_balance);
-  config.set_start_quote_balance(FLAGS_start_quote_balance);
+  config.set_start_base_balance(absl::GetFlag(FLAGS_start_base_balance));
+  config.set_start_quote_balance(absl::GetFlag(FLAGS_start_quote_balance));
   config.set_base_unit(0.00001f);
   config.set_quote_unit(0.01f);
   config.mutable_market_order_fee_config()->set_relative_fee(0.005f);
@@ -54,8 +55,8 @@ AccountConfig GetAccountConfig() {
   config.mutable_stop_order_fee_config()->set_relative_fee(0.005f);
   config.mutable_stop_order_fee_config()->set_fixed_fee(0);
   config.mutable_stop_order_fee_config()->set_minimum_fee(0);
-  config.set_market_liquidity(FLAGS_market_liquidity);
-  config.set_max_volume_ratio(FLAGS_max_volume_ratio);
+  config.set_market_liquidity(absl::GetFlag(FLAGS_market_liquidity));
+  config.set_max_volume_ratio(absl::GetFlag(FLAGS_max_volume_ratio));
   return config;
 }
 
@@ -90,7 +91,7 @@ std::unique_ptr<std::ofstream> OpenLogFile(const std::string& log_filename) {
   if (log_filename.empty()) {
     return nullptr;
   }
-  if (FLAGS_evaluation_period_months > 0) {
+  if (absl::GetFlag(FLAGS_evaluation_period_months) > 0) {
     std::cerr << "Logging disabled when evaluating multiple periods"
               << std::endl;
     return nullptr;
@@ -138,7 +139,7 @@ int main(int argc, char* argv[]) {
   // compatible with the version of the headers we compiled against.
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  absl::ParseCommandLine(argc, argv);
 
   AccountConfig account_config = GetAccountConfig();
   std::cout << "Trader AccountConfig:" << std::endl
@@ -146,10 +147,12 @@ int main(int argc, char* argv[]) {
 
   std::time_t start_timestamp_sec = 0;
   std::time_t end_timestamp_sec = 0;
-  if (FLAGS_start_date_utc.empty() || FLAGS_end_date_utc.empty() ||
-      !ConvertDateUTCToTimestampSec(FLAGS_start_date_utc,
+  if (absl::GetFlag(FLAGS_start_date_utc).empty() ||
+      absl::GetFlag(FLAGS_end_date_utc).empty() ||
+      !ConvertDateUTCToTimestampSec(absl::GetFlag(FLAGS_start_date_utc),
                                     start_timestamp_sec) ||
-      !ConvertDateUTCToTimestampSec(FLAGS_end_date_utc, end_timestamp_sec)) {
+      !ConvertDateUTCToTimestampSec(absl::GetFlag(FLAGS_end_date_utc),
+                                    end_timestamp_sec)) {
     std::cerr << "Invalid time period" << std::endl;
     return 1;
   }
@@ -161,41 +164,44 @@ int main(int argc, char* argv[]) {
   EvaluationConfig eval_config;
   eval_config.set_start_timestamp_sec(start_timestamp_sec);
   eval_config.set_end_timestamp_sec(end_timestamp_sec);
-  eval_config.set_evaluation_period_months(FLAGS_evaluation_period_months);
+  eval_config.set_evaluation_period_months(
+      absl::GetFlag(FLAGS_evaluation_period_months));
   std::cout << std::endl
             << "Trader EvaluationConfig:" << std::endl
             << eval_config.DebugString();
 
   std::cout << std::endl
             << "Reading OHLC history from: "
-            << FLAGS_input_ohlc_history_delimited_proto_file << std::endl;
-  OhlcHistory ohlc_history =
-      ReadHistory<OhlcTick>(FLAGS_input_ohlc_history_delimited_proto_file,
-                            start_timestamp_sec, end_timestamp_sec);
+            << absl::GetFlag(FLAGS_input_ohlc_history_delimited_proto_file)
+            << std::endl;
+  OhlcHistory ohlc_history = ReadHistory<OhlcTick>(
+      absl::GetFlag(FLAGS_input_ohlc_history_delimited_proto_file),
+      start_timestamp_sec, end_timestamp_sec);
   if (ohlc_history.empty()) {
     std::cerr << "No input history" << std::endl;
     return 1;
   }
 
   std::unique_ptr<SideInput> side_input;
-  if (!FLAGS_input_side_history_delimited_proto_file.empty()) {
+  if (!absl::GetFlag(FLAGS_input_side_history_delimited_proto_file).empty()) {
     std::cout << std::endl
               << "Reading side history from: "
-              << FLAGS_input_side_history_delimited_proto_file << std::endl;
+              << absl::GetFlag(FLAGS_input_side_history_delimited_proto_file)
+              << std::endl;
     SideHistory side_history = ReadHistory<SideInputRecord>(
-        FLAGS_input_side_history_delimited_proto_file, start_timestamp_sec,
-        end_timestamp_sec);
+        absl::GetFlag(FLAGS_input_side_history_delimited_proto_file),
+        start_timestamp_sec, end_timestamp_sec);
     if (!side_history.empty()) {
       side_input.reset(new SideInput(side_history));
     }
   }
 
   auto start = std::chrono::high_resolution_clock::now();
-  if (FLAGS_evaluate_batch) {
+  if (absl::GetFlag(FLAGS_evaluate_batch)) {
     eval_config.set_fast_eval(true);
     std::cout << std::endl << "Batch evaluation:" << std::endl;
     std::vector<std::unique_ptr<TraderEmitter>> trader_emitters =
-        GetBatchOfTraders(FLAGS_trader);
+        GetBatchOfTraders(absl::GetFlag(FLAGS_trader));
     std::vector<EvaluationResult> eval_results =
         EvaluateBatchOfTraders(account_config, eval_config, ohlc_history,
                                side_input.get(), trader_emitters);
@@ -206,13 +212,14 @@ int main(int argc, char* argv[]) {
     PrintBatchEvalResults(eval_results, 20);
   } else {
     eval_config.set_fast_eval(false);
-    std::unique_ptr<TraderEmitter> trader_emitter = GetTrader(FLAGS_trader);
+    std::unique_ptr<TraderEmitter> trader_emitter =
+        GetTrader(absl::GetFlag(FLAGS_trader));
     std::cout << std::endl
               << trader_emitter->GetName() << " evaluation:" << std::endl;
     std::unique_ptr<std::ofstream> exchange_log_stream =
-        OpenLogFile(FLAGS_output_exchange_log_file);
+        OpenLogFile(absl::GetFlag(FLAGS_output_exchange_log_file));
     std::unique_ptr<std::ofstream> trader_log_stream =
-        OpenLogFile(FLAGS_output_trader_log_file);
+        OpenLogFile(absl::GetFlag(FLAGS_output_trader_log_file));
     CsvLogger logger(exchange_log_stream.get(), trader_log_stream.get());
     EvaluationResult eval_result =
         EvaluateTrader(account_config, eval_config, ohlc_history,
