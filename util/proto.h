@@ -19,16 +19,20 @@
 #include <string>
 #include <vector>
 
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_format.h"
+
 namespace trader {
-// Status returned by the reader (see below).
-enum class ReaderStatus { kContinue, kBreak, kFailure };
+// Signal returned by the reader (see below).
+enum class ReaderSignal { kContinue, kBreak };
+using ReaderStatus = absl::StatusOr<ReaderSignal>;
 
 // Reads delimited messages from the (compressed) input stream and applies the
 // function "reader" on them.
 template <typename T>
-bool ReadDelimitedMessagesFromIStream(
+absl::Status ReadDelimitedMessagesFromIStream(
     std::istream& stream, std::function<ReaderStatus(const T&)> reader) {
-  bool success = true;
   google::protobuf::io::IstreamInputStream in_stream(&stream);
 #ifdef HAVE_ZLIB
   google::protobuf::io::GzipInputStream gzip_stream(&in_stream);
@@ -42,67 +46,66 @@ bool ReadDelimitedMessagesFromIStream(
         &message, &gzip_stream, &clean_eof);
     if (!parsed) {
       if (clean_eof) {
-        break;
+        return absl::OkStatus();
       }
-      std::cerr << "Cannot parse the input stream" << std::endl;
-      success = false;
-      break;
+      return absl::InvalidArgumentError("Cannot parse the input stream");
     }
-    const ReaderStatus reader_status = reader(message);
-    if (reader_status == ReaderStatus::kContinue) {
-      continue;
-    } else if (reader_status == ReaderStatus::kBreak) {
-      break;
-    } else {
-      assert(reader_status == ReaderStatus::kFailure);
-      success = false;
-      break;
+    ReaderStatus reader_status = reader(message);
+    if (!reader_status.ok()) {
+      return absl::AbortedError(reader_status.status().message());
+    }
+    switch (reader_status.value()) {
+      case ReaderSignal::kContinue:
+        break;
+      case ReaderSignal::kBreak:
+        return absl::OkStatus();
     }
   }
-  return success;
+  return absl::OkStatus();
 }
 
 // Reads delimited messages from the (compressed) input stream.
 template <typename T>
-bool ReadDelimitedMessagesFromIStream(std::istream& stream,
-                                      std::vector<T>& messages) {
+absl::Status ReadDelimitedMessagesFromIStream(std::istream& stream,
+                                              std::vector<T>& messages) {
   return ReadDelimitedMessagesFromIStream<T>(
       stream, [&messages](const T& message) -> ReaderStatus {
         messages.push_back(message);
-        return ReaderStatus::kContinue;
+        return ReaderSignal::kContinue;
       });
 }
 
 // Reads delimited messages from the (compressed) input file and applies the
 // function "reader" on them.
 template <typename T>
-bool ReadDelimitedMessagesFromFile(
+absl::Status ReadDelimitedMessagesFromFile(
     const std::string& file_name,
     std::function<ReaderStatus(const T&)> reader) {
   std::fstream in_fstream(file_name, std::ios::in | std::ios::binary);
   if (!in_fstream) {
-    std::cerr << "Cannot open file: " << file_name << std::endl;
-    return false;
+    return absl::InvalidArgumentError(
+        absl::StrFormat("Cannot open the input file: %s", file_name));
   }
   return ReadDelimitedMessagesFromIStream(in_fstream, reader);
 }
 
 // Reads delimited messages from the (compressed) input file.
 template <typename T>
-bool ReadDelimitedMessagesFromFile(const std::string& file_name,
-                                   std::vector<T>& messages) {
+absl::Status ReadDelimitedMessagesFromFile(const std::string& file_name,
+                                           std::vector<T>& messages) {
   return ReadDelimitedMessagesFromFile<T>(
       file_name, [&messages](const T& message) -> ReaderStatus {
         messages.push_back(message);
-        return ReaderStatus::kContinue;
+        return ReaderSignal::kContinue;
       });
 }
 
 // Writes (and compresses) delimited messages to the output file.
 template <class InputIterator>
-bool WriteDelimitedMessagesToOStream(InputIterator first, InputIterator last,
-                                     std::ostream& stream, bool compress) {
-  bool success = true;
+absl::Status WriteDelimitedMessagesToOStream(InputIterator first,
+                                             InputIterator last,
+                                             std::ostream& stream,
+                                             bool compress) {
   google::protobuf::io::OstreamOutputStream out_stream(&stream);
 #ifdef HAVE_ZLIB
   google::protobuf::io::GzipOutputStream::Options options;
@@ -117,25 +120,25 @@ bool WriteDelimitedMessagesToOStream(InputIterator first, InputIterator last,
         google::protobuf::util::SerializeDelimitedToZeroCopyStream(
             *first, &gzip_stream);
     if (!serialized) {
-      std::cerr << "Cannot serialize message: " << first->DebugString()
-                << std::endl;
-      success = false;
-      break;
+      return absl::InvalidArgumentError(absl::StrFormat(
+          "Cannot serialize the message:\n%s", first->DebugString()));
     }
     ++first;
   }
-  return success;
+  return absl::OkStatus();
 }
 
 // Writes (and compresses) delimited messages to the output file.
 template <class InputIterator>
-bool WriteDelimitedMessagesToFile(InputIterator first, InputIterator last,
-                                  const std::string& file_name, bool compress) {
+absl::Status WriteDelimitedMessagesToFile(InputIterator first,
+                                          InputIterator last,
+                                          const std::string& file_name,
+                                          bool compress) {
   std::fstream out_fstream(file_name,
                            std::ios::out | std::ios::trunc | std::ios::binary);
   if (!out_fstream) {
-    std::cerr << "Cannot open file: " << file_name << std::endl;
-    return false;
+    return absl::InvalidArgumentError(
+        absl::StrFormat("Cannot open the input file: %s", file_name));
   }
   return WriteDelimitedMessagesToOStream(first, last, out_fstream, compress);
 }

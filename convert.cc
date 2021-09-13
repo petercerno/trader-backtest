@@ -2,6 +2,10 @@
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_format.h"
+#include "absl/time/time.h"
 #include "base/base.h"
 #include "base/history.h"
 #include "util/proto.h"
@@ -26,10 +30,10 @@ ABSL_FLAG(std::string, input_side_history_csv_file, "",
 ABSL_FLAG(std::string, output_side_history_delimited_proto_file, "",
           "Output file containing the delimited SideInputRecord protos.");
 
-ABSL_FLAG(std::string, start_date_utc, "",
-          "Start date YYYY-MM-DD in UTC (included).");
-ABSL_FLAG(std::string, end_date_utc, "",
-          "End date YYYY-MM-DD in UTC (excluded).");
+ABSL_FLAG(std::string, start_time, "2017-01-01",
+          "Start date-time YYYY-MM-DD [hh:mm:ss] (included).");
+ABSL_FLAG(std::string, end_time, "2021-01-01",
+          "End date-time YYYY-MM-DD [hh:mm:ss] (excluded).");
 
 ABSL_FLAG(double, max_price_deviation_per_min, 0.05,
           "Maximum allowed price deviation per minute.");
@@ -45,33 +49,43 @@ ABSL_FLAG(bool, compress, true,
 using namespace trader;
 
 namespace {
-// Reads the input CSV file containing the historical prices and saves them
-// into the given price_history vector.
-bool ReadPriceHistoryFromCsvFile(const std::string& file_name,
-                                 std::time_t start_timestamp_sec,
-                                 std::time_t end_timestamp_sec,
-                                 PriceHistory& price_history) {
-  std::cout << "Reading price history from CSV file: " << file_name << std::endl
-            << std::flush;
-  auto start = std::chrono::high_resolution_clock::now();
+void LogInfo(absl::string_view str) { std::cout << str << std::endl; }
+void LogError(absl::string_view str) { std::cerr << str << std::endl; }
+void CheckOk(const absl::Status status) {
+  if (!status.ok()) {
+    LogError(status.message());
+    std::exit(EXIT_FAILURE);
+  }
+}
+
+// Reads the input CSV file containing the historical prices.
+absl::StatusOr<PriceHistory> ReadPriceHistoryFromCsvFile(
+    const std::string& file_name, const absl::Time start_time,
+    const absl::Time end_time) {
+  const absl::Time latency_start_time = absl::Now();
+  LogInfo(
+      absl::StrFormat("Reading price history from CSV file: %s", file_name));
   std::ifstream infile(file_name);
   if (!infile.is_open()) {
-    std::cerr << "Cannot open file: " << file_name << std::endl;
-    return false;
+    return absl::InvalidArgumentError(
+        absl::StrFormat("Cannot open the file: %s", file_name));
   }
   int row = 0;
   std::string line;
-  int timestamp_sec_prev = 0;
-  int timestamp_sec = 0;
+  const int64_t start_timestamp_sec = absl::ToUnixSeconds(start_time);
+  const int64_t end_timestamp_sec = absl::ToUnixSeconds(end_time);
+  int64_t timestamp_sec_prev = 0;
+  int64_t timestamp_sec = 0;
   float price = 0;
   float volume = 0;
+  PriceHistory price_history;
   while (std::getline(infile, line)) {
     ++row;
     std::replace(line.begin(), line.end(), ',', ' ');
     std::istringstream iss(line);
     if (!(iss >> timestamp_sec >> price >> volume)) {
-      std::cerr << "Cannot parse line " << row << ": " << line << std::endl;
-      return false;
+      return absl::InvalidArgumentError(
+          absl::StrFormat("Cannot parse the line %d: %s", row, line));
     }
     if (start_timestamp_sec > 0 && timestamp_sec < start_timestamp_sec) {
       continue;
@@ -80,18 +94,16 @@ bool ReadPriceHistoryFromCsvFile(const std::string& file_name,
       break;
     }
     if (timestamp_sec <= 0 || timestamp_sec < timestamp_sec_prev) {
-      std::cerr << "Invalid timestamp on line " << row << ": " << line
-                << std::endl;
-      return false;
+      return absl::InvalidArgumentError(
+          absl::StrFormat("Invalid timestamp on the line %d: %s", row, line));
     }
     if (price <= 0) {
-      std::cerr << "Invalid price on line " << row << ": " << line << std::endl;
-      return false;
+      return absl::InvalidArgumentError(
+          absl::StrFormat("Invalid price on the line %d: %s", row, line));
     }
     if (volume < 0) {
-      std::cerr << "Invalid volume on line " << row << ": " << line
-                << std::endl;
-      return false;
+      return absl::InvalidArgumentError(
+          absl::StrFormat("Invalid volume on the line %d: %s", row, line));
     }
     timestamp_sec_prev = timestamp_sec;
     price_history.emplace_back();
@@ -99,44 +111,42 @@ bool ReadPriceHistoryFromCsvFile(const std::string& file_name,
     price_history.back().set_price(price);
     price_history.back().set_volume(volume);
   }
-  const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::high_resolution_clock::now() - start);
-  std::cout << "Loaded " << price_history.size() << " records in "
-            << duration.count() / 1000.0 << " seconds" << std::endl
-            << std::flush;
-  return true;
+  LogInfo(
+      absl::StrFormat("Loaded %d records in %.3f seconds", price_history.size(),
+                      absl::ToDoubleSeconds(absl::Now() - latency_start_time)));
+  return price_history;
 }
 
-// Reads the input CSV file containing the OHLC prices and saves them into the
-// given ohlc_history vector.
-bool ReadOhlcHistoryFromCsvFile(const std::string& file_name,
-                                std::time_t start_timestamp_sec,
-                                std::time_t end_timestamp_sec,
-                                OhlcHistory& ohlc_history) {
-  std::cout << "Reading OHLC history from CSV file: " << file_name << std::endl
-            << std::flush;
-  auto start = std::chrono::high_resolution_clock::now();
+// Reads the input CSV file containing the OHLC prices.
+absl::StatusOr<OhlcHistory> ReadOhlcHistoryFromCsvFile(
+    const std::string& file_name, const absl::Time start_time,
+    const absl::Time end_time) {
+  const absl::Time latency_start_time = absl::Now();
+  LogInfo(absl::StrFormat("Reading OHLC history from CSV file: %s", file_name));
   std::ifstream infile(file_name);
   if (!infile.is_open()) {
-    std::cerr << "Cannot open file: " << file_name << std::endl;
-    return false;
+    return absl::InvalidArgumentError(
+        absl::StrFormat("Cannot open the file: %s", file_name));
   }
   int row = 0;
   std::string line;
-  int timestamp_sec_prev = 0;
-  int timestamp_sec = 0;
+  const int64_t start_timestamp_sec = absl::ToUnixSeconds(start_time);
+  const int64_t end_timestamp_sec = absl::ToUnixSeconds(end_time);
+  int64_t timestamp_sec_prev = 0;
+  int64_t timestamp_sec = 0;
   float open = 0;
   float high = 0;
   float low = 0;
   float close = 0;
   float volume = 0;
+  OhlcHistory ohlc_history;
   while (std::getline(infile, line)) {
     ++row;
     std::replace(line.begin(), line.end(), ',', ' ');
     std::istringstream iss(line);
     if (!(iss >> timestamp_sec >> open >> high >> low >> close >> volume)) {
-      std::cerr << "Cannot parse line " << row << ": " << line << std::endl;
-      return false;
+      return absl::InvalidArgumentError(
+          absl::StrFormat("Cannot parse the line %d: %s", row, line));
     }
     if (start_timestamp_sec > 0 && timestamp_sec < start_timestamp_sec) {
       continue;
@@ -145,20 +155,17 @@ bool ReadOhlcHistoryFromCsvFile(const std::string& file_name,
       break;
     }
     if (timestamp_sec <= 0 || timestamp_sec < timestamp_sec_prev) {
-      std::cerr << "Invalid timestamp on line " << row << ": " << line
-                << std::endl;
-      return false;
+      return absl::InvalidArgumentError(
+          absl::StrFormat("Invalid timestamp on the line %d: %s", row, line));
     }
     if (open <= 0 || high <= 0 || low <= 0 || close <= 0 || low > open ||
         low > high || low > close || high < open || high < close) {
-      std::cerr << "Invalid OHLC prices on line " << row << ": " << line
-                << std::endl;
-      return false;
+      return absl::InvalidArgumentError(
+          absl::StrFormat("Invalid OHLC prices on the line %d: %s", row, line));
     }
     if (volume < 0) {
-      std::cerr << "Invalid volume on line " << row << ": " << line
-                << std::endl;
-      return false;
+      return absl::InvalidArgumentError(
+          absl::StrFormat("Invalid volume on the line %d: %s", row, line));
     }
     timestamp_sec_prev = timestamp_sec;
     ohlc_history.emplace_back();
@@ -169,42 +176,39 @@ bool ReadOhlcHistoryFromCsvFile(const std::string& file_name,
     ohlc_history.back().set_close(close);
     ohlc_history.back().set_volume(volume);
   }
-  const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::high_resolution_clock::now() - start);
-  std::cout << "Loaded " << ohlc_history.size() << " OHLC ticks in "
-            << duration.count() / 1000.0 << " seconds" << std::endl
-            << std::flush;
-  return true;
+  LogInfo(absl::StrFormat(
+      "Loaded %d OHLC ticks in %.3f seconds", ohlc_history.size(),
+      absl::ToDoubleSeconds(absl::Now() - latency_start_time)));
+  return ohlc_history;
 }
 
-// Reads the input CSV file containing the historical side inputs and saves them
-// into the given side_history vector.
-bool ReadSideHistoryFromCsvFile(const std::string& file_name,
-                                std::time_t start_timestamp_sec,
-                                std::time_t end_timestamp_sec,
-                                SideHistory& side_history) {
-  std::cout << "Reading side history from CSV file: " << file_name << std::endl
-            << std::flush;
-  auto start = std::chrono::high_resolution_clock::now();
+// Reads the input CSV file containing the historical side inputs.
+absl::StatusOr<SideHistory> ReadSideHistoryFromCsvFile(
+    const std::string& file_name, const absl::Time start_time,
+    const absl::Time end_time) {
+  const absl::Time latency_start_time = absl::Now();
+  LogInfo(absl::StrFormat("Reading side history from CSV file: %s", file_name));
   std::ifstream infile(file_name);
   if (!infile.is_open()) {
-    std::cerr << "Cannot open file: " << file_name << std::endl;
-    return false;
+    return absl::InvalidArgumentError(
+        absl::StrFormat("Cannot open the file: %s", file_name));
   }
   int row = 0;
   std::string line;
-  int timestamp_sec_prev = 0;
-  int timestamp_sec = 0;
+  const int64_t start_timestamp_sec = absl::ToUnixSeconds(start_time);
+  const int64_t end_timestamp_sec = absl::ToUnixSeconds(end_time);
+  int64_t timestamp_sec_prev = 0;
+  int64_t timestamp_sec = 0;
   float signal = 0;
   int num_signals = 0;
+  SideHistory side_history;
   while (std::getline(infile, line)) {
     ++row;
     std::replace(line.begin(), line.end(), ',', ' ');
     std::istringstream iss(line);
     if (!(iss >> timestamp_sec)) {
-      std::cerr << "Cannot parse timestamp on line " << row << ": " << line
-                << std::endl;
-      return false;
+      return absl::InvalidArgumentError(absl::StrFormat(
+          "Cannot parse the timestamp on the line %d: %s", row, line));
     }
     if (start_timestamp_sec > 0 && timestamp_sec < start_timestamp_sec) {
       continue;
@@ -213,9 +217,8 @@ bool ReadSideHistoryFromCsvFile(const std::string& file_name,
       break;
     }
     if (timestamp_sec <= 0 || timestamp_sec <= timestamp_sec_prev) {
-      std::cerr << "Invalid timestamp on line " << row << ": " << line
-                << std::endl;
-      return false;
+      return absl::InvalidArgumentError(
+          absl::StrFormat("Invalid timestamp on the line %d: %s", row, line));
     }
     timestamp_sec_prev = timestamp_sec;
     side_history.emplace_back();
@@ -227,103 +230,92 @@ bool ReadSideHistoryFromCsvFile(const std::string& file_name,
       num_signals = side_history.back().signal_size();
     }
     if (num_signals == 0 || num_signals != side_history.back().signal_size()) {
-      std::cerr << "Invalid number of signals on line " << row << ": " << line
-                << std::endl;
-      return false;
+      return absl::InvalidArgumentError(absl::StrFormat(
+          "Invalid number of signals on the line %d: %s", row, line));
     }
   }
-  const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::high_resolution_clock::now() - start);
-  std::cout << "Loaded " << side_history.size() << " records in "
-            << duration.count() / 1000.0 << " seconds" << std::endl
-            << std::flush;
-  return true;
+  LogInfo(
+      absl::StrFormat("Loaded %d records in %.3f seconds", side_history.size(),
+                      absl::ToDoubleSeconds(absl::Now() - latency_start_time)));
+  return side_history;
 }
 
 // Reads and returns the price / OHLC history.
 template <typename T>
-bool ReadHistoryFromDelimitedProtoFile(
-    const std::string& file_name, std::time_t start_timestamp_sec,
-    std::time_t end_timestamp_sec, std::function<bool(int, const T&)> validate,
-    std::vector<T>& history) {
-  std::cout << "Reading history from delimited proto file: " << file_name
-            << std::endl
-            << std::flush;
-  auto start = std::chrono::high_resolution_clock::now();
+absl::StatusOr<std::vector<T>> ReadHistoryFromDelimitedProtoFile(
+    const std::string& file_name, const absl::Time start_time,
+    const absl::Time end_time, std::function<absl::Status(const T&)> validate) {
+  const absl::Time latency_start_time = absl::Now();
+  LogInfo(absl::StrFormat("Reading history from delimited proto file: %s",
+                          file_name));
   int record_index = 0;
-  int timestamp_sec_prev = 0;
-  if (!ReadDelimitedMessagesFromFile<T>(
-          file_name,
-          /* reader = */
-          [&history, start_timestamp_sec, end_timestamp_sec, validate,
-           &record_index,
-           &timestamp_sec_prev](const T& message) -> ReaderStatus {
-            const int timestamp_sec = message.timestamp_sec();
-            if (start_timestamp_sec > 0 &&
-                timestamp_sec < start_timestamp_sec) {
-              return ReaderStatus::kContinue;
-            }
-            if (end_timestamp_sec > 0 && timestamp_sec >= end_timestamp_sec) {
-              return ReaderStatus::kBreak;
-            }
-            if (timestamp_sec <= 0 || timestamp_sec < timestamp_sec_prev) {
-              std::cerr << "Invalid timestamp on record " << record_index
-                        << ": " << message.DebugString() << std::endl;
-              return ReaderStatus::kFailure;
-            }
-            if (!validate(record_index, message)) {
-              std::cerr << "Invalid record " << record_index << ": "
-                        << message.DebugString() << std::endl;
-              return ReaderStatus::kFailure;
-            }
-            timestamp_sec_prev = timestamp_sec;
-            history.push_back(message);
-            ++record_index;
-            return ReaderStatus::kContinue;
-          })) {
-    return false;
+  const int64_t start_timestamp_sec = absl::ToUnixSeconds(start_time);
+  const int64_t end_timestamp_sec = absl::ToUnixSeconds(end_time);
+  int64_t timestamp_sec_prev = 0;
+  std::vector<T> history;
+  const absl::Status read_status = ReadDelimitedMessagesFromFile<T>(
+      file_name,
+      /*reader=*/
+      [&history, start_timestamp_sec, end_timestamp_sec, validate,
+       &record_index, &timestamp_sec_prev](const T& message) -> ReaderStatus {
+        const int64_t timestamp_sec = message.timestamp_sec();
+        if (start_timestamp_sec > 0 && timestamp_sec < start_timestamp_sec) {
+          return ReaderSignal::kContinue;
+        }
+        if (end_timestamp_sec > 0 && timestamp_sec >= end_timestamp_sec) {
+          return ReaderSignal::kBreak;
+        }
+        if (timestamp_sec <= 0 || timestamp_sec < timestamp_sec_prev) {
+          return absl::InvalidArgumentError(
+              absl::StrFormat("Invalid timestamp on the record %d:\n%s",
+                              record_index, message.DebugString()));
+        }
+        const absl::Status validation_status = validate(message);
+        if (!validation_status.ok()) {
+          return absl::InvalidArgumentError(absl::StrFormat(
+              "Invalid record %d:\n%s\n%s", record_index, message.DebugString(),
+              validation_status.message()));
+        }
+        timestamp_sec_prev = timestamp_sec;
+        history.push_back(message);
+        ++record_index;
+        return ReaderSignal::kContinue;
+      });
+  if (!read_status.ok()) {
+    return read_status;
   }
-  const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::high_resolution_clock::now() - start);
-  std::cout << "Loaded " << history.size() << " records in "
-            << duration.count() / 1000.0 << " seconds" << std::endl
-            << std::flush;
-  return true;
+  LogInfo(
+      absl::StrFormat("Loaded %d records in %.3f seconds", history.size(),
+                      absl::ToDoubleSeconds(absl::Now() - latency_start_time)));
+  return history;
 }
 
-// Reads the input delimited proto file containing the PriceRecord protos and
-// saves them into the given price_history vector.
-bool ReadPriceHistoryFromDelimitedProtoFile(const std::string& file_name,
-                                            std::time_t start_timestamp_sec,
-                                            std::time_t end_timestamp_sec,
-                                            PriceHistory& price_history) {
+// Reads the input delimited proto file containing the PriceRecord protos.
+absl::StatusOr<PriceHistory> ReadPriceHistoryFromDelimitedProtoFile(
+    const std::string& file_name, const absl::Time start_time,
+    const absl::Time end_time) {
   return ReadHistoryFromDelimitedProtoFile<PriceRecord>(
-      file_name, start_timestamp_sec, end_timestamp_sec,
-      /* validate = */
-      [](int record_index, const PriceRecord& price_record) -> bool {
+      file_name, start_time, end_time,
+      /*validate=*/
+      [](const PriceRecord& price_record) -> absl::Status {
         if (price_record.price() <= 0) {
-          std::cerr << "Invalid price on record " << record_index << std::endl;
-          return false;
+          return absl::InvalidArgumentError("Invalid price");
         }
         if (price_record.volume() < 0) {
-          std::cerr << "Invalid volume on record " << record_index << std::endl;
-          return false;
+          return absl::InvalidArgumentError("Invalid volume");
         }
-        return true;
-      },
-      price_history);
+        return absl::OkStatus();
+      });
 }
 
-// Reads the input delimited proto file containing the OhlcTick protos and
-// saves them into the given ohlc_history vector.
-bool ReadOhlcHistoryFromDelimitedProtoFile(const std::string& file_name,
-                                           std::time_t start_timestamp_sec,
-                                           std::time_t end_timestamp_sec,
-                                           OhlcHistory& ohlc_history) {
+// Reads the input delimited proto file containing the OhlcTick protos.
+absl::StatusOr<OhlcHistory> ReadOhlcHistoryFromDelimitedProtoFile(
+    const std::string& file_name, const absl::Time start_time,
+    const absl::Time end_time) {
   return ReadHistoryFromDelimitedProtoFile<OhlcTick>(
-      file_name, start_timestamp_sec, end_timestamp_sec,
-      /* validate = */
-      [](int record_index, const OhlcTick& ohlc_tick) -> bool {
+      file_name, start_time, end_time,
+      /*validate=*/
+      [](const OhlcTick& ohlc_tick) -> absl::Status {
         if (ohlc_tick.open() <= 0 || ohlc_tick.high() <= 0 ||
             ohlc_tick.low() <= 0 || ohlc_tick.close() <= 0 ||
             ohlc_tick.low() > ohlc_tick.open() ||
@@ -331,33 +323,36 @@ bool ReadOhlcHistoryFromDelimitedProtoFile(const std::string& file_name,
             ohlc_tick.low() > ohlc_tick.close() ||
             ohlc_tick.high() < ohlc_tick.open() ||
             ohlc_tick.high() < ohlc_tick.close()) {
-          std::cerr << "Invalid OHLC prices on record " << record_index
-                    << std::endl;
-          return false;
+          return absl::InvalidArgumentError("Invalid OHLC prices");
         }
         if (ohlc_tick.volume() < 0) {
-          std::cerr << "Invalid volume on record " << record_index << std::endl;
-          return false;
+          return absl::InvalidArgumentError("Invalid volume");
         }
-        return true;
-      },
-      ohlc_history);
+        return absl::OkStatus();
+      });
+}
+
+std::string DurationToString(const int64_t duration_sec) {
+  const int64_t hours = duration_sec / 3600;
+  const int64_t minutes = (duration_sec / 60) % 60;
+  const int64_t seconds = duration_sec % 60;
+  return absl::StrFormat("%d:%02d:%02d", hours, minutes, seconds);
 }
 
 // Prints the top_n largest (chronologically sorted) price history gaps.
 void PrintPriceHistoryGaps(const PriceHistory& price_history, size_t top_n) {
-  std::vector<HistoryGap> history_gaps = GetPriceHistoryGaps(
-      price_history.begin(), price_history.end(), /* start_timestamp_sec = */ 0,
-      /* end_timestamp_sec = */ 0, top_n);
+  const std::vector<HistoryGap> history_gaps = GetPriceHistoryGaps(
+      price_history.begin(), price_history.end(), /*start_timestamp_sec=*/0,
+      /*end_timestamp_sec=*/0, top_n);
   for (const HistoryGap& history_gap : history_gaps) {
-    const long gap_duration_sec = history_gap.second - history_gap.first;
-    std::cout << history_gap.first << " ["
-              << ConvertTimestampSecToDateTimeUTC(history_gap.first) << "] - "
-              << history_gap.second << " ["
-              << ConvertTimestampSecToDateTimeUTC(history_gap.second)
-              << "]: " << DurationToString(gap_duration_sec) << std::endl;
+    const int64_t gap_duration_sec = history_gap.second - history_gap.first;
+    LogInfo(absl::StrFormat(
+        "%d [%s] - %d [%s]: %s", history_gap.first,
+        FormatTimeUTC(absl::FromUnixSeconds(history_gap.first)),
+        history_gap.second,
+        FormatTimeUTC(absl::FromUnixSeconds(history_gap.second)),
+        DurationToString(gap_duration_sec)));
   }
-  std::cout << std::flush;
 }
 
 // Prints a subset of the given price history that covers the last_n outliers.
@@ -379,21 +374,15 @@ void PrintOutliersWithContext(PriceHistory::const_iterator begin,
     assert(index < price_history_size);
     const PriceRecord& price_record = *(begin + index);
     if (index_prev > 0 && index > index_prev + 1) {
-      std::cout << "   ..." << std::endl;
+      LogInfo("   ...");
     }
-    std::cout << (is_outlier ? " x " : "   ")  // nowrap
-              << price_record.timestamp_sec()  // nowrap
-              << " ["                          // nowrap
-              << ConvertTimestampSecToDateTimeUTC(price_record.timestamp_sec())
-              << "]: "                               // nowrap
-              << std::fixed << std::setprecision(2)  // nowrap
-              << price_record.price() << " ["        // nowrap
-              << std::fixed << std::setprecision(4)  // nowrap
-              << price_record.volume() << "]"        // nowrap
-              << std::endl;
+    LogInfo(absl::StrFormat(
+        "%s %d [%s]: %.2f [%.4f]", (is_outlier ? " x" : "  "),
+        price_record.timestamp_sec(),
+        FormatTimeUTC(absl::FromUnixSeconds(price_record.timestamp_sec())),
+        price_record.price(), price_record.volume()));
     index_prev = index;
   }
-  std::cout << std::flush;
 }
 
 // Removes outliers and resamples the price history into OHLC history.
@@ -401,47 +390,41 @@ OhlcHistory ConvertPriceHistoryToOhlcHistory(
     const PriceHistory& price_history) {
   std::vector<size_t> outlier_indices;
   const PriceHistory price_history_clean = RemoveOutliers(
-      /* begin = */ price_history.begin(),
-      /* end = */ price_history.end(),
+      /*begin=*/price_history.begin(),
+      /*end=*/price_history.end(),
       absl::GetFlag(FLAGS_max_price_deviation_per_min), &outlier_indices);
-  std::cout << "Removed " << outlier_indices.size() << " outliers" << std::endl;
-  std::cout << "Last " << absl::GetFlag(FLAGS_last_n_outliers)
-            << " outliers:" << std::endl;
+  LogInfo(absl::StrFormat("Removed %d outliers", outlier_indices.size()));
+  LogInfo(absl::StrFormat("Last %d outliers:",
+                          absl::GetFlag(FLAGS_last_n_outliers)));
   PrintOutliersWithContext(
-      /* begin = */ price_history.begin(),
-      /* end = */ price_history.end(), outlier_indices,
-      /* left_context_size = */ 5,
-      /* right_context_size = */ 5,
-      /* last_n = */ absl::GetFlag(FLAGS_last_n_outliers));
+      /*begin=*/price_history.begin(),
+      /*end=*/price_history.end(), outlier_indices,
+      /*left_context_size=*/5,
+      /*right_context_size=*/5,
+      /*last_n=*/absl::GetFlag(FLAGS_last_n_outliers));
   const OhlcHistory ohlc_history =
       Resample(price_history_clean.begin(), price_history_clean.end(),
                absl::GetFlag(FLAGS_sampling_rate_sec));
-  std::cout << "Resampled " << price_history_clean.size() << " records to "
-            << ohlc_history.size() << " OHLC ticks" << std::endl;
+  LogInfo(absl::StrFormat("Resampled %d records to %d OHLC ticks",
+                          price_history_clean.size(), ohlc_history.size()));
   return ohlc_history;
 }
 
 // Writes history to delimited protobuf file.
 template <typename T>
-bool WriteHistoryToDelimitedProtoFile(
+absl::Status WriteHistoryToDelimitedProtoFile(
     const std::vector<T>& history,
     const std::string& output_history_delimited_proto_file) {
-  auto start = std::chrono::high_resolution_clock::now();
-  std::cout << "Writing " << history.size() << " records to "
-            << output_history_delimited_proto_file << std::endl;
-  if (!WriteDelimitedMessagesToFile(history.begin(), history.end(),
-                                    output_history_delimited_proto_file,
-                                    absl::GetFlag(FLAGS_compress))) {
-    std::cerr << "Failed to write history file: "
-              << output_history_delimited_proto_file << std::endl;
-    return false;
-  }
-  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::high_resolution_clock::now() - start);
-  std::cout << "Finished in " << duration.count() / 1000.0 << " seconds"
-            << std::endl
-            << std::flush;
-  return true;
+  const absl::Time latency_start_time = absl::Now();
+  LogInfo(absl::StrFormat("Writing %d records to the file: %s", history.size(),
+                          output_history_delimited_proto_file));
+  const absl::Status status = WriteDelimitedMessagesToFile(
+      history.begin(), history.end(), output_history_delimited_proto_file,
+      absl::GetFlag(FLAGS_compress));
+  LogInfo(
+      absl::StrFormat("Finished in %.3f seconds",
+                      absl::ToDoubleSeconds(absl::Now() - latency_start_time)));
+  return status;
 }
 }  // namespace
 
@@ -452,35 +435,27 @@ int main(int argc, char* argv[]) {
 
   absl::ParseCommandLine(argc, argv);
 
-  std::time_t start_timestamp_sec = 0;
-  std::time_t end_timestamp_sec = 0;
-  if (!ConvertDateUTCToTimestampSec(absl::GetFlag(FLAGS_start_date_utc),
-                                    start_timestamp_sec)) {
-    std::cerr << "Invalid start date: " << absl::GetFlag(FLAGS_start_date_utc)
-              << std::endl;
-    return 1;
-  }
-  if (!ConvertDateUTCToTimestampSec(absl::GetFlag(FLAGS_end_date_utc),
-                                    end_timestamp_sec)) {
-    std::cerr << "Invalid end date: " << absl::GetFlag(FLAGS_end_date_utc)
-              << std::endl;
-    return 1;
-  }
-  std::cout << std::endl
-            << "Selected time period:" << std::endl
-            << TimestampPeriodToString(start_timestamp_sec, end_timestamp_sec)
-            << std::endl;
+  const absl::StatusOr<absl::Time> start_time_status =
+      ParseTime(absl::GetFlag(FLAGS_start_time));
+  CheckOk(start_time_status.status());
+  const absl::StatusOr<absl::Time> end_time_status =
+      ParseTime(absl::GetFlag(FLAGS_end_time));
+  CheckOk(end_time_status.status());
+  const absl::Time start_time = start_time_status.value();
+  const absl::Time end_time = end_time_status.value();
+  LogInfo(absl::StrFormat("Selected time period:\n[%s - %s)",
+                          FormatTimeUTC(start_time), FormatTimeUTC(end_time)));
 
   if (!absl::GetFlag(FLAGS_input_price_history_csv_file).empty() &&
       !absl::GetFlag(FLAGS_input_price_history_delimited_proto_file).empty()) {
-    std::cerr << "Cannot have two input price history files" << std::endl;
-    return 1;
+    LogError("Cannot have two input price history files");
+    std::exit(EXIT_FAILURE);
   }
 
   if (!absl::GetFlag(FLAGS_input_ohlc_history_csv_file).empty() &&
       !absl::GetFlag(FLAGS_input_ohlc_history_delimited_proto_file).empty()) {
-    std::cerr << "Cannot have two input OHLC history files" << std::endl;
-    return 1;
+    LogError("Cannot have two input OHLC history files");
+    std::exit(EXIT_FAILURE);
   }
 
   const bool read_price_history =
@@ -499,61 +474,65 @@ int main(int argc, char* argv[]) {
                                 (read_side_history ? 1 : 0);
 
   if (num_history_files > 1) {
-    std::cerr << "Cannot read more than one input history file" << std::endl;
-    return 1;
+    LogError("Cannot read more than one input history file");
+    std::exit(EXIT_FAILURE);
   }
 
   if (num_history_files == 0) {
-    std::cerr << "Input history file not specified" << std::endl;
-    return 1;
+    LogError("Input history file not specified");
+    std::exit(EXIT_FAILURE);
   }
 
-  PriceHistory price_history;
-  if (!absl::GetFlag(FLAGS_input_price_history_csv_file).empty()) {
-    if (!ReadPriceHistoryFromCsvFile(
-            absl::GetFlag(FLAGS_input_price_history_csv_file),
-            start_timestamp_sec, end_timestamp_sec, price_history)) {
-      return 1;
+  const auto price_history_status =
+      [start_time, end_time]() -> absl::StatusOr<PriceHistory> {
+    if (!absl::GetFlag(FLAGS_input_price_history_csv_file).empty()) {
+      return ReadPriceHistoryFromCsvFile(
+          absl::GetFlag(FLAGS_input_price_history_csv_file), start_time,
+          end_time);
+    } else if (!absl::GetFlag(FLAGS_input_price_history_delimited_proto_file)
+                    .empty()) {
+      return ReadPriceHistoryFromDelimitedProtoFile(
+          absl::GetFlag(FLAGS_input_price_history_delimited_proto_file),
+          start_time, end_time);
     }
-  } else if (!absl::GetFlag(FLAGS_input_price_history_delimited_proto_file)
-                  .empty()) {
-    if (!ReadPriceHistoryFromDelimitedProtoFile(
-            absl::GetFlag(FLAGS_input_price_history_delimited_proto_file),
-            start_timestamp_sec, end_timestamp_sec, price_history)) {
-      return 1;
-    }
-  }
+    return PriceHistory{};
+  }();
+  CheckOk(price_history_status.status());
+  PriceHistory price_history = std::move(price_history_status.value());
 
-  OhlcHistory ohlc_history;
-  if (!absl::GetFlag(FLAGS_input_ohlc_history_csv_file).empty()) {
-    if (!ReadOhlcHistoryFromCsvFile(
-            absl::GetFlag(FLAGS_input_ohlc_history_csv_file),
-            start_timestamp_sec, end_timestamp_sec, ohlc_history)) {
-      return 1;
+  const auto ohlc_history_status = [start_time,
+                                    end_time]() -> absl::StatusOr<OhlcHistory> {
+    if (!absl::GetFlag(FLAGS_input_ohlc_history_csv_file).empty()) {
+      return ReadOhlcHistoryFromCsvFile(
+          absl::GetFlag(FLAGS_input_ohlc_history_csv_file), start_time,
+          end_time);
+    } else if (!absl::GetFlag(FLAGS_input_ohlc_history_delimited_proto_file)
+                    .empty()) {
+      return ReadOhlcHistoryFromDelimitedProtoFile(
+          absl::GetFlag(FLAGS_input_ohlc_history_delimited_proto_file),
+          start_time, end_time);
     }
-  } else if (!absl::GetFlag(FLAGS_input_ohlc_history_delimited_proto_file)
-                  .empty()) {
-    if (!ReadOhlcHistoryFromDelimitedProtoFile(
-            absl::GetFlag(FLAGS_input_ohlc_history_delimited_proto_file),
-            start_timestamp_sec, end_timestamp_sec, ohlc_history)) {
-      return 1;
-    }
-  }
+    return OhlcHistory{};
+  }();
+  CheckOk(ohlc_history_status.status());
+  OhlcHistory ohlc_history = std::move(ohlc_history_status.value());
 
-  SideHistory side_history;
-  if (!absl::GetFlag(FLAGS_input_side_history_csv_file).empty()) {
-    if (!ReadSideHistoryFromCsvFile(
-            absl::GetFlag(FLAGS_input_side_history_csv_file),
-            start_timestamp_sec, end_timestamp_sec, side_history)) {
-      return 1;
+  const auto side_history_status = [start_time,
+                                    end_time]() -> absl::StatusOr<SideHistory> {
+    if (!absl::GetFlag(FLAGS_input_side_history_csv_file).empty()) {
+      return ReadSideHistoryFromCsvFile(
+          absl::GetFlag(FLAGS_input_side_history_csv_file), start_time,
+          end_time);
     }
-  }
+    return SideHistory{};
+  }();
+  CheckOk(side_history_status.status());
+  SideHistory side_history = std::move(side_history_status.value());
 
   if (!price_history.empty()) {
-    std::cout << "Top " << absl::GetFlag(FLAGS_top_n_gaps)
-              << " gaps:" << std::endl;
+    LogInfo(absl::StrFormat("Top %d gaps:", absl::GetFlag(FLAGS_top_n_gaps)));
     PrintPriceHistoryGaps(price_history,
-                          /* top_n = */ absl::GetFlag(FLAGS_top_n_gaps));
+                          /*top_n=*/absl::GetFlag(FLAGS_top_n_gaps));
   }
 
   if (!price_history.empty() && ohlc_history.empty() &&
@@ -563,29 +542,23 @@ int main(int argc, char* argv[]) {
 
   if (!price_history.empty() &&
       !absl::GetFlag(FLAGS_output_price_history_delimited_proto_file).empty()) {
-    if (!WriteHistoryToDelimitedProtoFile(
-            price_history,
-            absl::GetFlag(FLAGS_output_price_history_delimited_proto_file))) {
-      return 1;
-    }
+    CheckOk(WriteHistoryToDelimitedProtoFile(
+        price_history,
+        absl::GetFlag(FLAGS_output_price_history_delimited_proto_file)));
   }
 
   if (!ohlc_history.empty() &&
       !absl::GetFlag(FLAGS_output_ohlc_history_delimited_proto_file).empty()) {
-    if (!WriteHistoryToDelimitedProtoFile(
-            ohlc_history,
-            absl::GetFlag(FLAGS_output_ohlc_history_delimited_proto_file))) {
-      return 1;
-    }
+    CheckOk(WriteHistoryToDelimitedProtoFile(
+        ohlc_history,
+        absl::GetFlag(FLAGS_output_ohlc_history_delimited_proto_file)));
   }
 
   if (!side_history.empty() &&
       !absl::GetFlag(FLAGS_output_side_history_delimited_proto_file).empty()) {
-    if (!WriteHistoryToDelimitedProtoFile(
-            side_history,
-            absl::GetFlag(FLAGS_output_side_history_delimited_proto_file))) {
-      return 1;
-    }
+    CheckOk(WriteHistoryToDelimitedProtoFile(
+        side_history,
+        absl::GetFlag(FLAGS_output_side_history_delimited_proto_file)));
   }
 
   // Optional: Delete all global objects allocated by libprotobuf.

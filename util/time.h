@@ -1,47 +1,32 @@
 // Copyright © 2021 Peter Cerno. All rights reserved.
 
-// Note taken from: https://en.cppreference.com/w/cpp/chrono/c/time
-// The encoding of calendar time in std::time_t is unspecified, but most systems
-// conform to the POSIX specification and return a value of integral type
-// holding 86400 times the number of calendar days since the Epoch plus the
-// number of seconds that have passed since the last midnight UTC. Most notably,
-// POSIX time does not (and can not) take leap seconds into account, so that
-// this integral value is not equal to the number of S.I. seconds that have
-// passed since the epoch, but rather is reduced with the number of leap seconds
-// that have occurred since the epoch. Implementations in which std::time_t is a
-// 32-bit signed integer (many historical implementations) fail in the year
-// 2038.
-
 #ifndef UTIL_TIME_H
 #define UTIL_TIME_H
 
-#include <ctime>
-#include <string>
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
+#include "absl/time/time.h"
 
 namespace trader {
 
-// Converts date YYYY-MM-DD in UTC to UNIX timestamp (in seconds).
-// Also supports YYYY-MM-DD hh:mm:ss format.
-// If empty string is provided, sets the output timestamp_sec to 0.
-// Returns true on success.
-bool ConvertDateUTCToTimestampSec(const std::string& datetime_utc,
-                                  std::time_t& timestamp_sec);
+// Parses the input datetime string to absl::Time.
+// Supports ISO 8601 format for date and time with UTC offset.
+// Supported formats:
+//   %Y-%m-%d (defaults to UTC timezone)
+//   %Y-%m-%d %Ez (%Ez is RFC3339-compatible UTC offset (+hh:mm or -hh:mm))
+//   %Y-%m-%d %H:%M:%S (defaults to UTC timezone)
+//   %Y-%m-%d %H:%M:%S %Ez  (e.g. 1970-01-01 00:00:00 +00:00)
+//   %Y-%m-%d%ET%H:%M:%S%Ez (e.g. 1970-01-01T00:00:00+00:00)
+absl::StatusOr<absl::Time> ParseTime(absl::string_view datetime);
 
-// Converts UNIX timestamp (in seconds) to date YYYY-MM-DD in UTC.
-std::string ConvertTimestampSecToDateUTC(std::time_t timestamp_sec);
+// Returns time formated as: %Y-%m-%d %H:%M:%S (in the UTC timezone).
+std::string FormatTimeUTC(absl::Time time);
 
-// Converts UNIX timestamp (in seconds) to datetime YYYY-MM-DD hh:mm:ss in UTC.
-std::string ConvertTimestampSecToDateTimeUTC(std::time_t timestamp_sec);
+// Adds specified number of months to the given absl::Time.
+absl::Time AddMonthsToTime(absl::Time time, int months);
 
-// Converts [start_timestamp_sec, end_timestamp_sec) period to string.
-std::string TimestampPeriodToString(std::time_t start_timestamp_sec,
-                                    std::time_t end_timestamp_sec);
-
-// Converts duration (in seconds) to string hh:mm:ss.
-std::string DurationToString(long duration_sec);
-
-// Adds months to UNIX timestamp (in seconds).
-std::time_t AddMonthsToTimestampSec(std::time_t timestamp_sec, int months);
+// Adds specified number of months to the given UNIX timestamp (in sec).
+int64_t AddMonthsToTimestampSec(int64_t timestamp_sec, int months);
 
 }  // namespace trader
 

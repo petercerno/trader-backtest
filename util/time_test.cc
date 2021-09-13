@@ -5,127 +5,115 @@
 #include "gtest/gtest.h"
 
 namespace trader {
+namespace {
+const absl::TimeZone utc = absl::UTCTimeZone();
+}  // namespace
 
-TEST(ConvertDateUTCToTimestampSecTest, Basic) {
-  std::time_t timestamp_sec = -1;
-  ASSERT_FALSE(ConvertDateUTCToTimestampSec("Hello World!", timestamp_sec));
-  EXPECT_EQ(-1, timestamp_sec);
-  ASSERT_TRUE(ConvertDateUTCToTimestampSec("1970-01-01", timestamp_sec));
-  EXPECT_EQ(0, timestamp_sec);
-  ASSERT_TRUE(ConvertDateUTCToTimestampSec("2000-02-29", timestamp_sec));
-  EXPECT_EQ(951782400, timestamp_sec);
-  ASSERT_TRUE(ConvertDateUTCToTimestampSec("2017-01-01", timestamp_sec));
-  EXPECT_EQ(1483228800, timestamp_sec);
-  ASSERT_TRUE(ConvertDateUTCToTimestampSec("", timestamp_sec));
-  EXPECT_EQ(0, timestamp_sec);
-  timestamp_sec = -1;
-  ASSERT_FALSE(ConvertDateUTCToTimestampSec("1000-01-01", timestamp_sec));
-  EXPECT_EQ(-1, timestamp_sec);
-  ASSERT_FALSE(ConvertDateUTCToTimestampSec("2017-00-01", timestamp_sec));
-  EXPECT_EQ(-1, timestamp_sec);
-  ASSERT_FALSE(ConvertDateUTCToTimestampSec("2017-13-01", timestamp_sec));
-  EXPECT_EQ(-1, timestamp_sec);
-  ASSERT_FALSE(ConvertDateUTCToTimestampSec("2017-01-00", timestamp_sec));
-  EXPECT_EQ(-1, timestamp_sec);
-  ASSERT_FALSE(ConvertDateUTCToTimestampSec("2017-01-32", timestamp_sec));
-  EXPECT_EQ(-1, timestamp_sec);
+TEST(ParseTimeTest, Basic_Y_m_d_Format) {
+  absl::StatusOr<absl::Time> time_status = ParseTime("Hello World!");
+  EXPECT_EQ(time_status.status(),
+            absl::Status(absl::StatusCode::kInvalidArgument,
+                         "Cannot parse datetime: Hello World!"));
+
+  time_status = ParseTime("1970-01-01");
+  ASSERT_TRUE(time_status.ok());
+  EXPECT_EQ(absl::FormatTime(time_status.value(), utc),
+            "1970-01-01T00:00:00+00:00");
+  EXPECT_EQ(FormatTimeUTC(time_status.value()), "1970-01-01 00:00:00");
+
+  time_status = ParseTime("2000-02-29");
+  ASSERT_TRUE(time_status.ok());
+  EXPECT_EQ(absl::ToUnixSeconds(time_status.value()), 951782400);
+  EXPECT_EQ(FormatTimeUTC(time_status.value()), "2000-02-29 00:00:00");
+
+  time_status = ParseTime("2017-01-01");
+  ASSERT_TRUE(time_status.ok());
+  EXPECT_EQ(absl::ToUnixSeconds(time_status.value()), 1483228800);
+  EXPECT_EQ(FormatTimeUTC(time_status.value()), "2017-01-01 00:00:00");
+
+  time_status = ParseTime("2017-01-01 +02:00");
+  ASSERT_TRUE(time_status.ok());
+  EXPECT_EQ(absl::ToUnixSeconds(time_status.value()), 1483221600);
+
+  EXPECT_FALSE(ParseTime("2017-00-01").ok());
+  EXPECT_FALSE(ParseTime("2017-13-01").ok());
+  EXPECT_FALSE(ParseTime("2017-01-00").ok());
+  EXPECT_FALSE(ParseTime("2017-01-32").ok());
 }
 
-TEST(ConvertDateUTCToTimestampSecTest, Extended) {
-  std::time_t timestamp_sec = -1;
-  ASSERT_FALSE(ConvertDateUTCToTimestampSec("1970-01-01 ", timestamp_sec));
-  EXPECT_EQ(-1, timestamp_sec);
-  ASSERT_FALSE(ConvertDateUTCToTimestampSec(" 2000-02-29", timestamp_sec));
-  EXPECT_EQ(-1, timestamp_sec);
-  ASSERT_TRUE(
-      ConvertDateUTCToTimestampSec("1970-01-01 00:00:00", timestamp_sec));
-  EXPECT_EQ(0, timestamp_sec);
-  ASSERT_TRUE(
-      ConvertDateUTCToTimestampSec("2000-02-29 00:00:00", timestamp_sec));
-  EXPECT_EQ(951782400, timestamp_sec);
-  ASSERT_TRUE(
-      ConvertDateUTCToTimestampSec("2000-02-29 00:00:10", timestamp_sec));
-  EXPECT_EQ(951782410, timestamp_sec);
-  ASSERT_TRUE(
-      ConvertDateUTCToTimestampSec("2017-01-01 00:05:00", timestamp_sec));
-  EXPECT_EQ(1483229100, timestamp_sec);
-  timestamp_sec = -1;
-  ASSERT_FALSE(
-      ConvertDateUTCToTimestampSec("1970-01-01 24:00:00", timestamp_sec));
-  EXPECT_EQ(-1, timestamp_sec);
-  ASSERT_FALSE(
-      ConvertDateUTCToTimestampSec("1970-01-01 00:60:00", timestamp_sec));
-  EXPECT_EQ(-1, timestamp_sec);
-  ASSERT_FALSE(
-      ConvertDateUTCToTimestampSec("1970-01-01 00:00:60", timestamp_sec));
-  EXPECT_EQ(-1, timestamp_sec);
+TEST(ParseTimeTest, Extended_Y_m_d_H_M_S_Format) {
+  absl::StatusOr<absl::Time> time_status = ParseTime("1970-01-01 00:00:00");
+  ASSERT_TRUE(time_status.ok());
+  EXPECT_EQ(absl::FormatTime(time_status.value(), utc),
+            "1970-01-01T00:00:00+00:00");
+
+  time_status = ParseTime("2000-02-29 00:00:00");
+  ASSERT_TRUE(time_status.ok());
+  EXPECT_EQ(absl::ToUnixSeconds(time_status.value()), 951782400);
+  EXPECT_EQ(FormatTimeUTC(time_status.value()), "2000-02-29 00:00:00");
+
+  time_status = ParseTime("2017-01-01 00:05:00");
+  ASSERT_TRUE(time_status.ok());
+  EXPECT_EQ(absl::ToUnixSeconds(time_status.value()), 1483229100);
+  EXPECT_EQ(FormatTimeUTC(time_status.value()), "2017-01-01 00:05:00");
+
+  time_status = ParseTime("2017-01-01 16:25:15 +02:00");
+  ASSERT_TRUE(time_status.ok());
+  EXPECT_EQ(absl::FormatTime(time_status.value(), utc),
+            "2017-01-01T14:25:15+00:00");
+  EXPECT_EQ(FormatTimeUTC(time_status.value()), "2017-01-01 14:25:15");
+
+  EXPECT_FALSE(ParseTime("2017-01-01 24:00:00").ok());
+  EXPECT_FALSE(ParseTime("2017-01-01 00:60:00").ok());
+  EXPECT_FALSE(ParseTime("2017-01-01 00:00:70").ok());
 }
 
-TEST(ConvertTimestampSecToDateUTCTest, Basic) {
-  EXPECT_EQ("1970-01-01", ConvertTimestampSecToDateUTC(0));
-  EXPECT_EQ("2000-02-29", ConvertTimestampSecToDateUTC(951782400));
-  EXPECT_EQ("2000-02-29", ConvertTimestampSecToDateUTC(951782700));
-  EXPECT_EQ("2000-02-29", ConvertTimestampSecToDateUTC(951786000));
-  EXPECT_EQ("2017-01-01", ConvertTimestampSecToDateUTC(1483228800));
-  EXPECT_EQ("2017-01-01", ConvertTimestampSecToDateUTC(1483229100));
+TEST(ParseTimeTest, RFC3339_Format) {
+  absl::StatusOr<absl::Time> time_status =
+      ParseTime("2017-01-01T16:25:15+02:00");
+  ASSERT_TRUE(time_status.ok());
+  EXPECT_EQ(absl::FormatTime(time_status.value(), utc),
+            "2017-01-01T14:25:15+00:00");
+  EXPECT_EQ(FormatTimeUTC(time_status.value()), "2017-01-01 14:25:15");
 }
 
-TEST(ConvertTimestampSecToDateTimeUTCTest, Basic) {
-  EXPECT_EQ("1970-01-01 00:00:00", ConvertTimestampSecToDateTimeUTC(0));
-  EXPECT_EQ("2000-02-29 00:00:00", ConvertTimestampSecToDateTimeUTC(951782400));
-  EXPECT_EQ("2000-02-29 00:00:10", ConvertTimestampSecToDateTimeUTC(951782410));
-  EXPECT_EQ("2017-01-01 00:05:00",
-            ConvertTimestampSecToDateTimeUTC(1483229100));
-}
+TEST(AddMonthsToTimeTest, Basic) {
+  absl::StatusOr<absl::Time> time_status = ParseTime("2021-03-01");
+  ASSERT_TRUE(time_status.ok());
 
-TEST(DurationToStringTest, Basic) {
-  EXPECT_EQ("0:00:00", DurationToString(0));
-  EXPECT_EQ("0:00:05", DurationToString(5));
-  EXPECT_EQ("0:00:10", DurationToString(10));
-  EXPECT_EQ("0:01:00", DurationToString(60));
-  EXPECT_EQ("0:01:05", DurationToString(65));
-  EXPECT_EQ("0:01:10", DurationToString(70));
-  EXPECT_EQ("1:00:00", DurationToString(3600));
-  EXPECT_EQ("1:00:05", DurationToString(3605));
-  EXPECT_EQ("1:00:10", DurationToString(3610));
-  EXPECT_EQ("1:05:00", DurationToString(3900));
-  EXPECT_EQ("1:05:05", DurationToString(3905));
-  EXPECT_EQ("1:05:10", DurationToString(3910));
-  EXPECT_EQ("100:00:00", DurationToString(360000));
-}
+  EXPECT_EQ(absl::FormatTime(AddMonthsToTime(time_status.value(), 0), utc),
+            "2021-03-01T00:00:00+00:00");
+  EXPECT_EQ(AddMonthsToTimestampSec(1614556800, 0), 1614556800);
+  EXPECT_EQ(absl::FormatTime(AddMonthsToTime(time_status.value(), 1), utc),
+            "2021-04-01T00:00:00+00:00");
+  EXPECT_EQ(AddMonthsToTimestampSec(1614556800, 1), 1617235200);
+  EXPECT_EQ(absl::FormatTime(AddMonthsToTime(time_status.value(), 15), utc),
+            "2022-06-01T00:00:00+00:00");
+  EXPECT_EQ(AddMonthsToTimestampSec(1614556800, 15), 1654041600);
+  EXPECT_EQ(absl::FormatTime(AddMonthsToTime(time_status.value(), -1), utc),
+            "2021-02-01T00:00:00+00:00");
+  EXPECT_EQ(AddMonthsToTimestampSec(1614556800, -1), 1612137600);
+  EXPECT_EQ(absl::FormatTime(AddMonthsToTime(time_status.value(), -3), utc),
+            "2020-12-01T00:00:00+00:00");
+  EXPECT_EQ(AddMonthsToTimestampSec(1614556800, -3), 1606780800);
 
-TEST(TimestampPeriodToStringTest, Basic) {
-  EXPECT_EQ("[BEGIN - END)",
-            TimestampPeriodToString(/* start_timestamp_sec = */ 0,
-                                    /* end_timestamp_sec = */ 0));
-  EXPECT_EQ("[BEGIN - 2017-01-01 00:00:00)",
-            TimestampPeriodToString(/* start_timestamp_sec = */ 0,
-                                    /* end_timestamp_sec = */ 1483228800));
-  EXPECT_EQ("[2000-02-29 00:00:00 - END)",
-            TimestampPeriodToString(/* start_timestamp_sec = */ 951782400,
-                                    /* end_timestamp_sec = */ 0));
-  EXPECT_EQ("[2000-02-29 00:00:10 - 2017-01-01 00:05:00)",
-            TimestampPeriodToString(/* start_timestamp_sec = */ 951782410,
-                                    /* end_timestamp_sec = */ 1483229100));
-}
-
-TEST(AddMonthsToTimestampSec, Basic) {
-  EXPECT_EQ(0, AddMonthsToTimestampSec(0, 0));
-  EXPECT_EQ(1, AddMonthsToTimestampSec(1, 0));
-  EXPECT_EQ(2678400, AddMonthsToTimestampSec(0, 1));
-  EXPECT_EQ(5097600, AddMonthsToTimestampSec(0, 2));
-  EXPECT_EQ(7776000, AddMonthsToTimestampSec(0, 3));
-  EXPECT_EQ(28857600, AddMonthsToTimestampSec(0, 11));
-  EXPECT_EQ(31536000, AddMonthsToTimestampSec(0, 12));
-  EXPECT_EQ(2678410, AddMonthsToTimestampSec(10, 1));
-  EXPECT_EQ(5097620, AddMonthsToTimestampSec(20, 2));
-  EXPECT_EQ(7776030, AddMonthsToTimestampSec(30, 3));
-  EXPECT_EQ(28857640, AddMonthsToTimestampSec(40, 11));
-  EXPECT_EQ(31536050, AddMonthsToTimestampSec(50, 12));
-  EXPECT_EQ(31536000, AddMonthsToTimestampSec(28857600, 1));
-  EXPECT_EQ(34128000, AddMonthsToTimestampSec(31449600, 1));
-  EXPECT_EQ(951782400, AddMonthsToTimestampSec(949276800, 1));
-  EXPECT_EQ(954288000, AddMonthsToTimestampSec(951782400, 1));
+  time_status = ParseTime("2017-01-01T16:25:15+02:00");
+  ASSERT_TRUE(time_status.ok());
+  EXPECT_EQ(absl::FormatTime(AddMonthsToTime(time_status.value(), 0), utc),
+            "2017-01-01T14:25:15+00:00");
+  EXPECT_EQ(AddMonthsToTimestampSec(1483280715, 0), 1483280715);
+  EXPECT_EQ(absl::FormatTime(AddMonthsToTime(time_status.value(), 5), utc),
+            "2017-06-01T14:25:15+00:00");
+  EXPECT_EQ(AddMonthsToTimestampSec(1483280715, 5), 1496327115);
+  EXPECT_EQ(absl::FormatTime(AddMonthsToTime(time_status.value(), 12), utc),
+            "2018-01-01T14:25:15+00:00");
+  EXPECT_EQ(AddMonthsToTimestampSec(1483280715, 12), 1514816715);
+  EXPECT_EQ(absl::FormatTime(AddMonthsToTime(time_status.value(), -1), utc),
+            "2016-12-01T14:25:15+00:00");
+  EXPECT_EQ(AddMonthsToTimestampSec(1483280715, -1), 1480602315);
+  EXPECT_EQ(absl::FormatTime(AddMonthsToTime(time_status.value(), -12), utc),
+            "2016-01-01T14:25:15+00:00");
+  EXPECT_EQ(AddMonthsToTimestampSec(1483280715, -12), 1451658315);
 }
 
 }  // namespace trader
