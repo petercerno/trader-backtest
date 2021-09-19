@@ -26,7 +26,7 @@ class CsvLogger : public Logger {
                         const Order& order) override;
 
   // Logs the trader state.
-  void LogTraderState(const std::string& trader_state) override;
+  void LogTraderState(absl::string_view trader_state) override;
 
  private:
   std::ostream* exchange_os_;

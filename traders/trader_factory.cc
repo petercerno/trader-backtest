@@ -46,7 +46,7 @@ std::vector<std::unique_ptr<TraderEmitter>> GetBatchOfStopTraders() {
 }
 }  // namespace
 
-std::unique_ptr<TraderEmitter> GetTrader(const std::string& trader_name) {
+std::unique_ptr<TraderEmitter> GetTrader(absl::string_view trader_name) {
   if (trader_name == kRebalancingTraderName) {
     return GetDefaultRebalancingTraderEmitter();
   } else {
@@ -56,7 +56,7 @@ std::unique_ptr<TraderEmitter> GetTrader(const std::string& trader_name) {
 }
 
 std::vector<std::unique_ptr<TraderEmitter>> GetBatchOfTraders(
-    const std::string& trader_name) {
+    absl::string_view trader_name) {
   if (trader_name == kRebalancingTraderName) {
     return GetBatchOfRebalancingTraders();
   } else {

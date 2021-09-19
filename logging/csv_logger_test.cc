@@ -53,16 +53,13 @@ TEST(CsvLoggerTest, LogExchangeState) {
   logger.LogExchangeState(ohlc_history[1], account);
   logger.LogExchangeState(ohlc_history[2], account);
 
-  std::stringstream expected_exchange_os;
-  expected_exchange_os  // nowrap
-      << "1483228800,100.000,150.000,80.000,120.000,"
-      << "1000.000,2.000,1000.000,50.000,,,,," << std::endl
-      << "1483315200,120.000,180.000,100.000,150.000,"
-      << "500.000,2.000,1000.000,50.000,,,,," << std::endl
-      << "1483401600,150.000,250.000,100.000,140.000,"
-      << "800.000,2.000,1000.000,50.000,,,,," << std::endl;
-
-  EXPECT_EQ(expected_exchange_os.str(), exchange_os.str());
+  EXPECT_EQ(exchange_os.str(),
+            "1483228800,100.000,150.000,80.000,120.000,"
+            "1000.000,2.000,1000.000,50.000,,,,,\n"
+            "1483315200,120.000,180.000,100.000,150.000,"
+            "500.000,2.000,1000.000,50.000,,,,,\n"
+            "1483401600,150.000,250.000,100.000,140.000,"
+            "800.000,2.000,1000.000,50.000,,,,,\n");
 }
 
 TEST(CsvLoggerTest, LogExchangeStateWithOrder) {
@@ -84,16 +81,13 @@ TEST(CsvLoggerTest, LogExchangeStateWithOrder) {
   logger.LogExchangeState(ohlc_history[1], account, order);
   logger.LogExchangeState(ohlc_history[2], account);
 
-  std::stringstream expected_exchange_os;
-  expected_exchange_os  // nowrap
-      << "1483228800,100.000,150.000,80.000,120.000,"
-      << "1000.000,2.000,1000.000,50.000,,,,," << std::endl
-      << "1483315200,120.000,180.000,100.000,150.000,"
-      << "500.000,2.000,1000.000,50.000,LIMIT,SELL,,1.000,500.000" << std::endl
-      << "1483401600,150.000,250.000,100.000,140.000,"
-      << "800.000,2.000,1000.000,50.000,,,,," << std::endl;
-
-  EXPECT_EQ(expected_exchange_os.str(), exchange_os.str());
+  EXPECT_EQ(exchange_os.str(),
+            "1483228800,100.000,150.000,80.000,120.000,"
+            "1000.000,2.000,1000.000,50.000,,,,,\n"
+            "1483315200,120.000,180.000,100.000,150.000,"
+            "500.000,2.000,1000.000,50.000,LIMIT,SELL,,1.000,500.000\n"
+            "1483401600,150.000,250.000,100.000,140.000,"
+            "800.000,2.000,1000.000,50.000,,,,,\n");
 }
 
 TEST(CsvLoggerTest, LogTraderState) {
@@ -103,13 +97,7 @@ TEST(CsvLoggerTest, LogTraderState) {
   logger.LogTraderState("state_2");
   logger.LogTraderState("state_3");
 
-  std::stringstream expected_trader_os;
-  expected_trader_os  // nowrap
-      << "state_1" << std::endl
-      << "state_2" << std::endl
-      << "state_3" << std::endl;
-
-  EXPECT_EQ(expected_trader_os.str(), trader_os.str());
+  EXPECT_EQ(trader_os.str(), "state_1\nstate_2\nstate_3\n");
 }
 
 }  // namespace trader

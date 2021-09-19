@@ -25,6 +25,9 @@ cc_library(
     deps = [
         ":trader_config_cc_proto",
         "//base:trader",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
     ],
 )
 
@@ -32,5 +35,8 @@ cc_library(
     name = "trader_factory",
     srcs = ["trader_factory.cc"],
     hdrs = ["trader_factory.h"],
-    deps = [":traders"],
+    deps = [
+        ":traders",
+        "@com_google_absl//absl/strings",
+    ],
 )

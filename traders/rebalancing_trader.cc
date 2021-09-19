@@ -2,6 +2,9 @@
 
 #include "traders/rebalancing_trader.h"
 
+#include "absl/memory/memory.h"
+#include "absl/strings/str_format.h"
+
 namespace trader {
 
 void RebalancingTrader::Update(const OhlcTick& ohlc_tick,
@@ -68,32 +71,24 @@ void RebalancingTrader::Update(const OhlcTick& ohlc_tick,
 }
 
 std::string RebalancingTrader::GetInternalState() const {
-  std::stringstream ss;
-  ss << std::fixed << std::setprecision(0)  // nowrap
-     << last_timestamp_sec_ << ","          // nowrap
-     << std::setprecision(3)                // nowrap
-     << last_base_balance_ << ","           // nowrap
-     << last_quote_balance_ << ","          // nowrap
-     << last_close_;                        // nowrap
-  return ss.str();
+  return absl::StrFormat("%d,%.3f,%.3f,%.3f", last_timestamp_sec_,
+                         last_base_balance_, last_quote_balance_, last_close_);
 }
 
 std::string RebalancingTraderEmitter::GetName() const {
-  std::stringstream ss;
-  ss << std::fixed << std::setprecision(3) << "rebalancing-trader["
-     << trader_config_.alpha() << "|" << trader_config_.epsilon() << "]";
-  return ss.str();
+  return absl::StrFormat("rebalancing-trader[%.3f|%.3f]",
+                         trader_config_.alpha(), trader_config_.epsilon());
 }
 
 std::unique_ptr<Trader> RebalancingTraderEmitter::NewTrader() const {
-  return std::unique_ptr<RebalancingTrader>(
-      new RebalancingTrader(trader_config_));
+  return absl::make_unique<RebalancingTrader>(trader_config_);
 }
 
 std::vector<std::unique_ptr<TraderEmitter>>
 RebalancingTraderEmitter::GetBatchOfTraders(
     const std::vector<float>& alphas, const std::vector<float>& epsilons) {
   std::vector<std::unique_ptr<TraderEmitter>> batch;
+  batch.reserve(alphas.size() * epsilons.size());
   for (const float alpha : alphas)
     for (const float epsilon : epsilons) {
       RebalancingTraderConfig trader_config;

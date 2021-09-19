@@ -5,6 +5,8 @@
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/util/message_differencer.h>
 
+#include "absl/memory/memory.h"
+#include "absl/strings/str_format.h"
 #include "gtest/gtest.h"
 #include "logging/csv_logger.h"
 #include "util/time.h"
@@ -123,21 +125,11 @@ class TestTrader : public Trader {
   }
 
   std::string GetInternalState() const override {
-    std::stringstream ss;
-    ss << std::fixed << std::setprecision(0)  // nowrap
-       << last_timestamp_sec_ << ","          // nowrap
-       << std::setprecision(3)                // nowrap
-       << last_base_balance_ << ","           // nowrap
-       << last_quote_balance_ << ","          // nowrap
-       << last_close_ << ",";                 // nowrap
-    if (is_long_) {
-      ss << "IN_LONG,LIMIT_SELL@"  // nowrap
-         << std::setprecision(0) << sell_price_;
-    } else {
-      ss << "IN_CASH,LIMIT_BUY@"  // nowrap
-         << std::setprecision(0) << buy_price_;
-    }
-    return ss.str();
+    return absl::StrFormat(
+        "%d,%.3f,%.3f,%.3f,%s", last_timestamp_sec_, last_base_balance_,
+        last_quote_balance_, last_close_,
+        is_long_ ? absl::StrFormat("IN_LONG,LIMIT_SELL@%.0f", sell_price_)
+                 : absl::StrFormat("IN_CASH,LIMIT_BUY@%.0f", buy_price_));
   }
 
  private:
@@ -164,15 +156,11 @@ class TestTraderEmitter : public TraderEmitter {
   virtual ~TestTraderEmitter() {}
 
   std::string GetName() const override {
-    std::stringstream trader_name_os;
-    trader_name_os << std::fixed << std::setprecision(0) << "test-trader"
-                   << "[" << buy_price_ << "|" << sell_price_ << "]";
-    return trader_name_os.str();
+    return absl::StrFormat("test-trader[%.0f|%.0f]", buy_price_, sell_price_);
   }
 
   std::unique_ptr<Trader> NewTrader() const override {
-    // Note: std::make_unique is C++14 feature.
-    return std::unique_ptr<TestTrader>(new TestTrader(buy_price_, sell_price_));
+    return absl::make_unique<TestTrader>(buy_price_, sell_price_);
   }
 
  private:
@@ -233,36 +221,27 @@ TEST(ExecuteTraderTest, LimitBuyAndSell) {
       &expected_result));
   ExpectProtoEq(result, expected_result);
 
-  std::stringstream expected_exchange_os;
-  std::stringstream expected_trader_os;
-
-  expected_exchange_os  // nowrap
-      << "1483228800,100.000,150.000,80.000,120.000,"
-      << "1000.000,10.000,0.000,0.000,,,,," << std::endl
-      << "1483315200,120.000,180.000,100.000,150.000,"
-      << "1000.000,10.000,0.000,0.000,,,,," << std::endl
-      << "1483401600,150.000,250.000,100.000,140.000,"
-      << "1000.000,10.000,0.000,0.000,,,,," << std::endl
-      << "1483401600,150.000,250.000,100.000,140.000,"
-      << "1000.000,0.000,1799.000,201.000,LIMIT,SELL,10.000,,200.000"
-      << std::endl
-      << "1483488000,140.000,150.000,80.000,100.000,"
-      << "1000.000,0.000,1799.000,201.000,,,,," << std::endl
-      << "1483574400,100.000,120.000,20.000,50.000,"
-      << "1000.000,0.000,1799.000,201.000,,,,," << std::endl
-      << "1483574400,100.000,120.000,20.000,50.000,"
-      << "1000.000,32.300,21.000,364.000,LIMIT,BUY,,1799.000,50.000"
-      << std::endl;
-
-  expected_trader_os  // nowrap
-      << "1483228800,10.000,0.000,120.000,IN_LONG,LIMIT_SELL@200" << std::endl
-      << "1483315200,10.000,0.000,150.000,IN_LONG,LIMIT_SELL@200" << std::endl
-      << "1483401600,0.000,1799.000,140.000,IN_CASH,LIMIT_BUY@50" << std::endl
-      << "1483488000,0.000,1799.000,100.000,IN_CASH,LIMIT_BUY@50" << std::endl
-      << "1483574400,32.300,21.000,50.000,IN_LONG,LIMIT_SELL@200" << std::endl;
-
-  EXPECT_EQ(exchange_os.str(), expected_exchange_os.str());
-  EXPECT_EQ(trader_os.str(), expected_trader_os.str());
+  EXPECT_EQ(exchange_os.str(),
+            "1483228800,100.000,150.000,80.000,120.000,"
+            "1000.000,10.000,0.000,0.000,,,,,\n"
+            "1483315200,120.000,180.000,100.000,150.000,"
+            "1000.000,10.000,0.000,0.000,,,,,\n"
+            "1483401600,150.000,250.000,100.000,140.000,"
+            "1000.000,10.000,0.000,0.000,,,,,\n"
+            "1483401600,150.000,250.000,100.000,140.000,"
+            "1000.000,0.000,1799.000,201.000,LIMIT,SELL,10.000,,200.000\n"
+            "1483488000,140.000,150.000,80.000,100.000,"
+            "1000.000,0.000,1799.000,201.000,,,,,\n"
+            "1483574400,100.000,120.000,20.000,50.000,"
+            "1000.000,0.000,1799.000,201.000,,,,,\n"
+            "1483574400,100.000,120.000,20.000,50.000,"
+            "1000.000,32.300,21.000,364.000,LIMIT,BUY,,1799.000,50.000\n");
+  EXPECT_EQ(trader_os.str(),
+            "1483228800,10.000,0.000,120.000,IN_LONG,LIMIT_SELL@200\n"
+            "1483315200,10.000,0.000,150.000,IN_LONG,LIMIT_SELL@200\n"
+            "1483401600,0.000,1799.000,140.000,IN_CASH,LIMIT_BUY@50\n"
+            "1483488000,0.000,1799.000,100.000,IN_CASH,LIMIT_BUY@50\n"
+            "1483574400,32.300,21.000,50.000,IN_LONG,LIMIT_SELL@200\n");
 }
 
 TEST(ExecuteTraderTest, LimitBuyAndSellFastEval) {
@@ -405,60 +384,50 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
       &expected_result));
   ExpectProtoEq(result, expected_result);
 
-  std::stringstream expected_exchange_os;
-  std::stringstream expected_trader_os;
-
-  expected_exchange_os  // nowrap
-      << "1483228800,100.000,150.000,80.000,120.000,"
-      << "1000.000,10.000,0.000,0.000,,,,," << std::endl
-      << "1485907200,120.000,180.000,100.000,150.000,"
-      << "1000.000,10.000,0.000,0.000,,,,," << std::endl
-      << "1488326400,150.000,250.000,100.000,140.000,"
-      << "1000.000,10.000,0.000,0.000,,,,," << std::endl
-      << "1488326400,150.000,250.000,100.000,140.000,"
-      << "1000.000,0.000,1799.000,201.000,LIMIT,SELL,10.000,,200.000"
-      << std::endl
-      << "1491004800,140.000,150.000,80.000,100.000,"
-      << "1000.000,0.000,1799.000,201.000,,,,," << std::endl
-      << "1493596800,100.000,120.000,20.000,50.000,"
-      << "1000.000,0.000,1799.000,201.000,,,,," << std::endl
-      << "1493596800,100.000,120.000,20.000,50.000,"
-      << "1000.000,32.300,21.000,364.000,LIMIT,BUY,,1799.000,50.000"
-      << std::endl
-      << "1496275200,50.000,100.000,40.000,80.000,"
-      << "1000.000,32.300,21.000,364.000,,,,," << std::endl
-      << "1498867200,80.000,180.000,50.000,150.000,"
-      << "1000.000,32.300,21.000,364.000,,,,," << std::endl
-      << "1501545600,150.000,250.000,120.000,240.000,"
-      << "1000.000,32.300,21.000,364.000,,,,," << std::endl
-      << "1501545600,150.000,250.000,120.000,240.000,"
-      << "1000.000,0.000,5834.000,1011.000,LIMIT,SELL,32.300,,200.000"
-      << std::endl
-      << "1504224000,240.000,450.000,220.000,400.000,"
-      << "1000.000,0.000,5834.000,1011.000,,,,," << std::endl
-      << "1506816000,400.000,450.000,250.000,300.000,"
-      << "1000.000,0.000,5834.000,1011.000,,,,," << std::endl
-      << "1509494400,300.000,700.000,220.000,650.000,"
-      << "1000.000,0.000,5834.000,1011.000,,,,," << std::endl
-      << "1512086400,650.000,800.000,600.000,750.000,"
-      << "1000.000,0.000,5834.000,1011.000,,,,," << std::endl;
-
-  expected_trader_os  // nowrap
-      << "1483228800,10.000,0.000,120.000,IN_LONG,LIMIT_SELL@200" << std::endl
-      << "1485907200,10.000,0.000,150.000,IN_LONG,LIMIT_SELL@200" << std::endl
-      << "1488326400,0.000,1799.000,140.000,IN_CASH,LIMIT_BUY@50" << std::endl
-      << "1491004800,0.000,1799.000,100.000,IN_CASH,LIMIT_BUY@50" << std::endl
-      << "1493596800,32.300,21.000,50.000,IN_LONG,LIMIT_SELL@200" << std::endl
-      << "1496275200,32.300,21.000,80.000,IN_LONG,LIMIT_SELL@200" << std::endl
-      << "1498867200,32.300,21.000,150.000,IN_LONG,LIMIT_SELL@200" << std::endl
-      << "1501545600,0.000,5834.000,240.000,IN_CASH,LIMIT_BUY@50" << std::endl
-      << "1504224000,0.000,5834.000,400.000,IN_CASH,LIMIT_BUY@50" << std::endl
-      << "1506816000,0.000,5834.000,300.000,IN_CASH,LIMIT_BUY@50" << std::endl
-      << "1509494400,0.000,5834.000,650.000,IN_CASH,LIMIT_BUY@50" << std::endl
-      << "1512086400,0.000,5834.000,750.000,IN_CASH,LIMIT_BUY@50" << std::endl;
-
-  EXPECT_EQ(exchange_os.str(), expected_exchange_os.str());
-  EXPECT_EQ(trader_os.str(), expected_trader_os.str());
+  EXPECT_EQ(exchange_os.str(),
+            "1483228800,100.000,150.000,80.000,120.000,"
+            "1000.000,10.000,0.000,0.000,,,,,\n"
+            "1485907200,120.000,180.000,100.000,150.000,"
+            "1000.000,10.000,0.000,0.000,,,,,\n"
+            "1488326400,150.000,250.000,100.000,140.000,"
+            "1000.000,10.000,0.000,0.000,,,,,\n"
+            "1488326400,150.000,250.000,100.000,140.000,"
+            "1000.000,0.000,1799.000,201.000,LIMIT,SELL,10.000,,200.000\n"
+            "1491004800,140.000,150.000,80.000,100.000,"
+            "1000.000,0.000,1799.000,201.000,,,,,\n"
+            "1493596800,100.000,120.000,20.000,50.000,"
+            "1000.000,0.000,1799.000,201.000,,,,,\n"
+            "1493596800,100.000,120.000,20.000,50.000,"
+            "1000.000,32.300,21.000,364.000,LIMIT,BUY,,1799.000,50.000\n"
+            "1496275200,50.000,100.000,40.000,80.000,"
+            "1000.000,32.300,21.000,364.000,,,,,\n"
+            "1498867200,80.000,180.000,50.000,150.000,"
+            "1000.000,32.300,21.000,364.000,,,,,\n"
+            "1501545600,150.000,250.000,120.000,240.000,"
+            "1000.000,32.300,21.000,364.000,,,,,\n"
+            "1501545600,150.000,250.000,120.000,240.000,"
+            "1000.000,0.000,5834.000,1011.000,LIMIT,SELL,32.300,,200.000\n"
+            "1504224000,240.000,450.000,220.000,400.000,"
+            "1000.000,0.000,5834.000,1011.000,,,,,\n"
+            "1506816000,400.000,450.000,250.000,300.000,"
+            "1000.000,0.000,5834.000,1011.000,,,,,\n"
+            "1509494400,300.000,700.000,220.000,650.000,"
+            "1000.000,0.000,5834.000,1011.000,,,,,\n"
+            "1512086400,650.000,800.000,600.000,750.000,"
+            "1000.000,0.000,5834.000,1011.000,,,,,\n");
+  EXPECT_EQ(trader_os.str(),
+            "1483228800,10.000,0.000,120.000,IN_LONG,LIMIT_SELL@200\n"
+            "1485907200,10.000,0.000,150.000,IN_LONG,LIMIT_SELL@200\n"
+            "1488326400,0.000,1799.000,140.000,IN_CASH,LIMIT_BUY@50\n"
+            "1491004800,0.000,1799.000,100.000,IN_CASH,LIMIT_BUY@50\n"
+            "1493596800,32.300,21.000,50.000,IN_LONG,LIMIT_SELL@200\n"
+            "1496275200,32.300,21.000,80.000,IN_LONG,LIMIT_SELL@200\n"
+            "1498867200,32.300,21.000,150.000,IN_LONG,LIMIT_SELL@200\n"
+            "1501545600,0.000,5834.000,240.000,IN_CASH,LIMIT_BUY@50\n"
+            "1504224000,0.000,5834.000,400.000,IN_CASH,LIMIT_BUY@50\n"
+            "1506816000,0.000,5834.000,300.000,IN_CASH,LIMIT_BUY@50\n"
+            "1509494400,0.000,5834.000,650.000,IN_CASH,LIMIT_BUY@50\n"
+            "1512086400,0.000,5834.000,750.000,IN_CASH,LIMIT_BUY@50\n");
 }
 
 TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriodFastEval) {
@@ -1091,34 +1060,29 @@ class TestTraderWithSideInput : public Trader {
   }
 
   std::string GetInternalState() const override {
-    std::stringstream ss;
-    ss << std::fixed << std::setprecision(0)  // nowrap
-       << last_timestamp_sec_ << ","          // nowrap
-       << std::setprecision(3)                // nowrap
-       << last_base_balance_ << ","           // nowrap
-       << last_quote_balance_ << ","          // nowrap
-       << last_close_ << ",";                 // nowrap
+    std::string recommendation_log;
     if (last_buy_sell_recommendation_ == -1) {
-      ss << "UNKNOWN,";
+      recommendation_log = "UNKNOWN";
     } else if (last_side_input_age_sec_ > kSecondsPerHour) {
-      ss << "TOO_OLD,";
+      recommendation_log = "TOO_OLD";
     } else {
       switch (last_buy_sell_recommendation_) {
         case 0:
-          ss << "DO_NOTHING,";
+          recommendation_log = "DO_NOTHING";
           break;
         case 1:
-          ss << "SHOULD_BUY,";
+          recommendation_log = "SHOULD_BUY";
           break;
         case 2:
-          ss << "SHOULD_SELL,";
+          recommendation_log = "SHOULD_SELL";
           break;
         default:
           assert(false);
       }
     }
-    ss << last_side_input_age_sec_;
-    return ss.str();
+    return absl::StrFormat("%d,%.3f,%.3f,%.3f,%s,%d", last_timestamp_sec_,
+                           last_base_balance_, last_quote_balance_, last_close_,
+                           recommendation_log, last_side_input_age_sec_);
   }
 
  private:
@@ -1215,34 +1179,27 @@ TEST(ExecuteTraderWithSideInputTest, MarketBuyAndSell) {
       &expected_result));
   ExpectProtoEq(result, expected_result);
 
-  std::stringstream expected_exchange_os;
-  std::stringstream expected_trader_os;
-
-  expected_exchange_os  // nowrap
-      << "1483228800,100.000,150.000,80.000,120.000,"
-      << "1000.000,10.000,0.000,0.000,,,,," << std::endl
-      << "1483315200,120.000,180.000,100.000,150.000,"
-      << "1000.000,10.000,0.000,0.000,,,,," << std::endl
-      << "1483401600,150.000,250.000,100.000,140.000,"
-      << "1000.000,10.000,0.000,0.000,,,,," << std::endl
-      << "1483401600,150.000,250.000,100.000,140.000,"
-      << "1000.000,0.000,1259.000,141.000,MARKET,SELL,10.000,," << std::endl
-      << "1483488000,140.000,150.000,80.000,100.000,"
-      << "1000.000,0.000,1259.000,141.000,,,,," << std::endl
-      << "1483574400,100.000,120.000,20.000,50.000,"
-      << "1000.000,0.000,1259.000,141.000,,,,," << std::endl
-      << "1483574400,100.000,120.000,20.000,50.000,"
-      << "1000.000,10.800,21.000,255.000,MARKET,BUY,,1259.000," << std::endl;
-
-  expected_trader_os  // nowrap
-      << "1483228800,10.000,0.000,120.000,UNKNOWN,-1" << std::endl
-      << "1483315200,10.000,0.000,150.000,SHOULD_SELL,3600" << std::endl
-      << "1483401600,0.000,1259.000,140.000,TOO_OLD,90000" << std::endl
-      << "1483488000,0.000,1259.000,100.000,SHOULD_BUY,0" << std::endl
-      << "1483574400,10.800,21.000,50.000,DO_NOTHING,0" << std::endl;
-
-  EXPECT_EQ(exchange_os.str(), expected_exchange_os.str());
-  EXPECT_EQ(trader_os.str(), expected_trader_os.str());
+  EXPECT_EQ(exchange_os.str(),
+            "1483228800,100.000,150.000,80.000,120.000,"
+            "1000.000,10.000,0.000,0.000,,,,,\n"
+            "1483315200,120.000,180.000,100.000,150.000,"
+            "1000.000,10.000,0.000,0.000,,,,,\n"
+            "1483401600,150.000,250.000,100.000,140.000,"
+            "1000.000,10.000,0.000,0.000,,,,,\n"
+            "1483401600,150.000,250.000,100.000,140.000,"
+            "1000.000,0.000,1259.000,141.000,MARKET,SELL,10.000,,\n"
+            "1483488000,140.000,150.000,80.000,100.000,"
+            "1000.000,0.000,1259.000,141.000,,,,,\n"
+            "1483574400,100.000,120.000,20.000,50.000,"
+            "1000.000,0.000,1259.000,141.000,,,,,\n"
+            "1483574400,100.000,120.000,20.000,50.000,"
+            "1000.000,10.800,21.000,255.000,MARKET,BUY,,1259.000,\n");
+  EXPECT_EQ(trader_os.str(),
+            "1483228800,10.000,0.000,120.000,UNKNOWN,-1\n"
+            "1483315200,10.000,0.000,150.000,SHOULD_SELL,3600\n"
+            "1483401600,0.000,1259.000,140.000,TOO_OLD,90000\n"
+            "1483488000,0.000,1259.000,100.000,SHOULD_BUY,0\n"
+            "1483574400,10.800,21.000,50.000,DO_NOTHING,0\n");
 }
 
 }  // namespace trader

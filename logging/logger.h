@@ -3,6 +3,7 @@
 #ifndef LOGGING_LOGGER_H
 #define LOGGING_LOGGER_H
 
+#include "absl/strings/string_view.h"
 #include "base/account.h"
 #include "base/base.h"
 
@@ -23,7 +24,7 @@ class Logger {
                                 const Account& account, const Order& order) = 0;
 
   // Logs the trader state.
-  virtual void LogTraderState(const std::string& trader_state) = 0;
+  virtual void LogTraderState(absl::string_view trader_state) = 0;
 };
 
 }  // namespace trader

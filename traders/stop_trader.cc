@@ -2,6 +2,9 @@
 
 #include "traders/stop_trader.h"
 
+#include "absl/memory/memory.h"
+#include "absl/strings/str_format.h"
+
 namespace trader {
 
 void StopTrader::Update(const OhlcTick& ohlc_tick,
@@ -86,38 +89,22 @@ void StopTrader::EmitStopOrder(float price, std::vector<Order>& orders) const {
 }
 
 std::string StopTrader::GetInternalState() const {
-  std::stringstream ss;
-  std::string mode;
-  if (mode_ == Mode::LONG) {
-    mode = "LONG";
-  } else {
-    assert(mode_ == Mode::CASH);
-    mode = "CASH";
-  }
-  ss << std::fixed << std::setprecision(0)  // nowrap
-     << last_timestamp_sec_ << ","          // nowrap
-     << std::setprecision(5)                // nowrap
-     << last_base_balance_ << ","           // nowrap
-     << std::setprecision(2)                // nowrap
-     << last_quote_balance_ << ","          // nowrap
-     << last_close_ << ","                  // nowrap
-     << mode << ","                         // nowrap
-     << stop_order_price_;                  // nowrap
-  return ss.str();
+  return absl::StrFormat("%d,%.3f,%.3f,%.3f,%s,%.3f", last_timestamp_sec_,
+                         last_base_balance_, last_quote_balance_, last_close_,
+                         mode_ == Mode::LONG ? "LONG" : "CASH",
+                         stop_order_price_);
 }
 
 std::string StopTraderEmitter::GetName() const {
-  std::stringstream ss;
-  ss << std::fixed << std::setprecision(3) << "stop-trader["
-     << trader_config_.stop_order_margin() << "|"
-     << trader_config_.stop_order_move_margin() << "|"
-     << trader_config_.stop_order_increase_per_day() << "|"
-     << trader_config_.stop_order_decrease_per_day() << "]";
-  return ss.str();
+  return absl::StrFormat("stop-trader[%.3f|%.3f|%.3f|%.3f]",
+                         trader_config_.stop_order_margin(),
+                         trader_config_.stop_order_move_margin(),
+                         trader_config_.stop_order_increase_per_day(),
+                         trader_config_.stop_order_decrease_per_day());
 }
 
 std::unique_ptr<Trader> StopTraderEmitter::NewTrader() const {
-  return std::unique_ptr<Trader>(new StopTrader(trader_config_));
+  return absl::make_unique<StopTrader>(trader_config_);
 }
 
 std::vector<std::unique_ptr<TraderEmitter>>
@@ -127,6 +114,9 @@ StopTraderEmitter::GetBatchOfTraders(
     const std::vector<float>& stop_order_increases_per_day,
     const std::vector<float>& stop_order_decreases_per_day) {
   std::vector<std::unique_ptr<TraderEmitter>> batch;
+  batch.reserve(stop_order_margins.size() * stop_order_move_margins.size() *
+                stop_order_increases_per_day.size() *
+                stop_order_decreases_per_day.size());
   for (const float stop_order_margin : stop_order_margins)
     for (const float stop_order_move_margin : stop_order_move_margins)
       for (const float stop_order_increase_per_day :

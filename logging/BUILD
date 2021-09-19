@@ -11,6 +11,8 @@ cc_library(
     deps = [
         "//base",
         "//base:account",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
     ],
 )
 
