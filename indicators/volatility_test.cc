@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #include "indicators/volatility.h"
 
@@ -19,29 +19,29 @@ TEST(RelativeStrengthIndexTest, GetVolatilityWhenAdding8HourOhlcTicks) {
   float base_balance = 5.0f;
   float quote_balance = 1000.0f;
 
-  EXPECT_FLOAT_EQ(0.0f, volatility.GetVolatility());
-  EXPECT_EQ(0, volatility.GetNumOhlcTicks());
+  EXPECT_FLOAT_EQ(volatility.GetVolatility(), 0.0f);
+  EXPECT_EQ(volatility.GetNumOhlcTicks(), 0);
 
   // O: 100  H: 150  L:  80  C: 120  V: 1000  T: 2017-01-01 00:00
   // --- Daily History ---
   // O: 100  H: 150  L:  80  C: 120  V: 1000  T: 2017-01-01 (Day 1)
   volatility.Update(ohlc_history[0], base_balance, quote_balance);
-  EXPECT_FLOAT_EQ(0.0f, volatility.GetVolatility());
-  EXPECT_EQ(1, volatility.GetNumOhlcTicks());
+  EXPECT_FLOAT_EQ(volatility.GetVolatility(), 0.0f);
+  EXPECT_EQ(volatility.GetNumOhlcTicks(), 1);
 
   // O: 120  H: 180  L: 100  C: 150  V: 1000  T: 2017-01-01 08:00
   // --- Daily History ---
   // O: 100  H: 180  L:  80  C: 150  V: 2000  T: 2017-01-01 (Day 1)
   volatility.Update(ohlc_history[1], base_balance, quote_balance);
-  EXPECT_FLOAT_EQ(0.0f, volatility.GetVolatility());
-  EXPECT_EQ(1, volatility.GetNumOhlcTicks());
+  EXPECT_FLOAT_EQ(volatility.GetVolatility(), 0.0f);
+  EXPECT_EQ(volatility.GetNumOhlcTicks(), 1);
 
   // O: 150  H: 250  L: 100  C: 140  V: 1000  T: 2017-01-01 16:00
   // --- Daily History ---
   // O: 100  H: 250  L:  80  C: 140  V: 3000  T: 2017-01-01 (Day 1)
   volatility.Update(ohlc_history[2], base_balance, quote_balance);
-  EXPECT_FLOAT_EQ(0.0f, volatility.GetVolatility());
-  EXPECT_EQ(1, volatility.GetNumOhlcTicks());
+  EXPECT_FLOAT_EQ(volatility.GetVolatility(), 0.0f);
+  EXPECT_EQ(volatility.GetNumOhlcTicks(), 1);
 
   // O: 140  H: 150  L:  80  C: 100  V: 1000  T: 2017-01-02 00:00 (+1 Day)
   // --- Daily History ---
@@ -58,8 +58,8 @@ TEST(RelativeStrengthIndexTest, GetVolatilityWhenAdding8HourOhlcTicks) {
   float v = (std::pow(std::log(value1(140.0f) / value1(100.0f)) - m, 2) +
              std::pow(std::log(value1(100.0f) / value1(140.0f)) - m, 2)) /
             2;
-  EXPECT_FLOAT_EQ(std::sqrt(v), volatility.GetVolatility());
-  EXPECT_EQ(2, volatility.GetNumOhlcTicks());
+  EXPECT_FLOAT_EQ(volatility.GetVolatility(), std::sqrt(v));
+  EXPECT_EQ(volatility.GetNumOhlcTicks(), 2);
 
   // O: 100  H: 120  L:  20  C:  50  V: 1000  T: 2017-01-02 08:00
   // --- Daily History ---
@@ -73,8 +73,8 @@ TEST(RelativeStrengthIndexTest, GetVolatilityWhenAdding8HourOhlcTicks) {
        std::pow(std::log(value1(50.0f) / value1(140.0f)), 2)) /
           2 -
       std::pow(m, 2);
-  EXPECT_FLOAT_EQ(std::sqrt(v), volatility.GetVolatility());
-  EXPECT_EQ(2, volatility.GetNumOhlcTicks());
+  EXPECT_FLOAT_EQ(volatility.GetVolatility(), std::sqrt(v));
+  EXPECT_EQ(volatility.GetNumOhlcTicks(), 2);
 
   // O:  50  H: 100  L:  40  C:  80  V: 1000  T: 2017-01-02 16:00
   // --- Daily History ---
@@ -88,8 +88,8 @@ TEST(RelativeStrengthIndexTest, GetVolatilityWhenAdding8HourOhlcTicks) {
        std::pow(std::log(value1(80.0f) / value1(140.0f)), 2)) /
           2 -
       std::pow(m, 2);
-  EXPECT_FLOAT_EQ(std::sqrt(v), volatility.GetVolatility());
-  EXPECT_EQ(2, volatility.GetNumOhlcTicks());
+  EXPECT_FLOAT_EQ(volatility.GetVolatility(), std::sqrt(v));
+  EXPECT_EQ(volatility.GetNumOhlcTicks(), 2);
 
   // O:  80  H: 180  L:  50  C: 150  V: 1000  T: 2017-01-03 00:00 (+1 Day)
   // --- Daily History ---
@@ -106,8 +106,8 @@ TEST(RelativeStrengthIndexTest, GetVolatilityWhenAdding8HourOhlcTicks) {
        std::pow(std::log(value1(150.0f) / value1(80.0f)), 2)) /
           3 -
       std::pow(m, 2);
-  EXPECT_FLOAT_EQ(std::sqrt(v), volatility.GetVolatility());
-  EXPECT_EQ(3, volatility.GetNumOhlcTicks());
+  EXPECT_FLOAT_EQ(volatility.GetVolatility(), std::sqrt(v));
+  EXPECT_EQ(volatility.GetNumOhlcTicks(), 3);
 
   // Let's update the portfolio by buying one unit of the base (crypto)currency.
   base_balance += 1.0f;
@@ -125,7 +125,7 @@ TEST(RelativeStrengthIndexTest, GetVolatilityWhenAdding8HourOhlcTicks) {
        std::pow(std::log(value2(150.0f) / value1(80.0f)), 2)) /
           3 -
       std::pow(m, 2);
-  EXPECT_FLOAT_EQ(std::sqrt(v), volatility.GetVolatility());
+  EXPECT_FLOAT_EQ(volatility.GetVolatility(), std::sqrt(v));
 
   // O: 150  H: 250  L: 120  C: 240  V: 1000  T: 2017-01-03 08:00
   // --- Daily History ---
@@ -142,8 +142,8 @@ TEST(RelativeStrengthIndexTest, GetVolatilityWhenAdding8HourOhlcTicks) {
        std::pow(std::log(value2(240.0f) / value1(80.0f)), 2)) /
           3 -
       std::pow(m, 2);
-  EXPECT_FLOAT_EQ(std::sqrt(v), volatility.GetVolatility());
-  EXPECT_EQ(3, volatility.GetNumOhlcTicks());
+  EXPECT_FLOAT_EQ(volatility.GetVolatility(), std::sqrt(v));
+  EXPECT_EQ(volatility.GetNumOhlcTicks(), 3);
 
   // O: 240  H: 450  L: 220  C: 400  V: 1000  T: 2017-01-03 16:00
   // --- Daily History ---
@@ -160,8 +160,8 @@ TEST(RelativeStrengthIndexTest, GetVolatilityWhenAdding8HourOhlcTicks) {
        std::pow(std::log(value2(400.0f) / value1(80.0f)), 2)) /
           3 -
       std::pow(m, 2);
-  EXPECT_FLOAT_EQ(std::sqrt(v), volatility.GetVolatility());
-  EXPECT_EQ(3, volatility.GetNumOhlcTicks());
+  EXPECT_FLOAT_EQ(volatility.GetVolatility(), std::sqrt(v));
+  EXPECT_EQ(volatility.GetNumOhlcTicks(), 3);
 
   // O: 400  H: 450  L: 250  C: 300  V: 1000  T: 2017-01-04 00:00 (+1 Day)
   // --- Daily History ---
@@ -179,8 +179,8 @@ TEST(RelativeStrengthIndexTest, GetVolatilityWhenAdding8HourOhlcTicks) {
        std::pow(std::log(value2(300.0f) / value2(400.0f)), 2)) /
           3 -
       std::pow(m, 2);
-  EXPECT_FLOAT_EQ(std::sqrt(v), volatility.GetVolatility());
-  EXPECT_EQ(4, volatility.GetNumOhlcTicks());
+  EXPECT_FLOAT_EQ(volatility.GetVolatility(), std::sqrt(v));
+  EXPECT_EQ(volatility.GetNumOhlcTicks(), 4);
 
   // O: 300  H: 700  L: 220  C: 650  V: 1000  T: 2017-01-04 08:00
   // --- Daily History ---
@@ -198,8 +198,8 @@ TEST(RelativeStrengthIndexTest, GetVolatilityWhenAdding8HourOhlcTicks) {
        std::pow(std::log(value2(650.0f) / value2(400.0f)), 2)) /
           3 -
       std::pow(m, 2);
-  EXPECT_FLOAT_EQ(std::sqrt(v), volatility.GetVolatility());
-  EXPECT_EQ(4, volatility.GetNumOhlcTicks());
+  EXPECT_FLOAT_EQ(volatility.GetVolatility(), std::sqrt(v));
+  EXPECT_EQ(volatility.GetNumOhlcTicks(), 4);
 
   // O: 650  H: 650  L: 650  C: 650  V:    0  T: 2017-01-04 16:00
   // O: 650  H: 650  L: 650  C: 650  V:    0  T: 2017-01-05 00:00 (+1 Day)
@@ -224,8 +224,8 @@ TEST(RelativeStrengthIndexTest, GetVolatilityWhenAdding8HourOhlcTicks) {
        std::pow(std::log(value2(750.0f) / value2(650.0f)), 2)) /
           3 -
       std::pow(m, 2);
-  EXPECT_FLOAT_EQ(std::sqrt(v), volatility.GetVolatility());
-  EXPECT_EQ(6, volatility.GetNumOhlcTicks());
+  EXPECT_FLOAT_EQ(volatility.GetVolatility(), std::sqrt(v));
+  EXPECT_EQ(volatility.GetNumOhlcTicks(), 6);
 }
 
 }  // namespace trader

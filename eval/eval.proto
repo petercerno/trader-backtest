@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 syntax = "proto2";
 
@@ -41,9 +41,9 @@ message ExecutionResult {
   // Trader evaluation configuration.
   message EvaluationConfig {
     // Starting UNIX timestamp (in seconds).
-    optional int32 start_timestamp_sec = 1;
+    optional int64 start_timestamp_sec = 1;
     // Ending UNIX timestamp (in seconds).
-    optional int32 end_timestamp_sec = 2;
+    optional int64 end_timestamp_sec = 2;
     // Length of evaluation period (in months).
     optional int32 evaluation_period_months = 3;
     // When true, avoids computing volatility (to speed up the computation).
@@ -62,9 +62,9 @@ message ExecutionResult {
     // Trader evaluation over a specific period.
     message Period {
       // Starting UNIX timestamp (in seconds) of the evaluation period (included).
-      optional int32 start_timestamp_sec = 1;
+      optional int64 start_timestamp_sec = 1;
       // Ending UNIX timestamp (in seconds) of the evaluation period (excluded).
-      optional int32 end_timestamp_sec = 2;
+      optional int64 end_timestamp_sec = 2;
       // Result of trader execution over the period.
       optional ExecutionResult result = 3;
       // Final percentual gain of the trader (after fees).

@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #ifndef BASE_ACCOUNT_H
 #define BASE_ACCOUNT_H

@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #ifndef LOGGING_CSV_LOGGER_H
 #define LOGGING_CSV_LOGGER_H

@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #include "base/base.h"
 
@@ -6,7 +6,7 @@
 
 namespace trader {
 namespace {
-void AddPriceRecord(int timestamp_sec, float price, float volume,
+void AddPriceRecord(int64_t timestamp_sec, float price, float volume,
                     PriceHistory& price_history) {
   price_history.emplace_back();
   price_history.back().set_timestamp_sec(timestamp_sec);
@@ -14,11 +14,11 @@ void AddPriceRecord(int timestamp_sec, float price, float volume,
   price_history.back().set_volume(volume);
 }
 
-void ExpectNearPriceRecord(const PriceRecord& expected,
-                           const PriceRecord& actual) {
-  EXPECT_EQ(expected.timestamp_sec(), actual.timestamp_sec());
-  EXPECT_FLOAT_EQ(expected.price(), actual.price());
-  EXPECT_FLOAT_EQ(expected.volume(), actual.volume());
+void ExpectNearPriceRecord(const PriceRecord& actual,
+                           const PriceRecord& expected) {
+  EXPECT_EQ(actual.timestamp_sec(), expected.timestamp_sec());
+  EXPECT_FLOAT_EQ(actual.price(), expected.price());
+  EXPECT_FLOAT_EQ(actual.volume(), expected.volume());
 }
 }  // namespace
 
@@ -32,52 +32,52 @@ TEST(HistorySubsetTest, Basic) {
 
   std::pair<PriceHistory::const_iterator, PriceHistory::const_iterator>
       history_subset = HistorySubset(price_history,
-                                     /* start_timestamp_sec = */ 0,
-                                     /* end_timestamp_sec = */ 0);
-  EXPECT_EQ(price_history.begin(), history_subset.first);
-  EXPECT_EQ(price_history.end(), history_subset.second);
+                                     /*start_timestamp_sec=*/0,
+                                     /*end_timestamp_sec=*/0);
+  EXPECT_EQ(history_subset.first, price_history.begin());
+  EXPECT_EQ(history_subset.second, price_history.end());
 
   history_subset = HistorySubset(price_history,
-                                 /* start_timestamp_sec = */ 0,
-                                 /* end_timestamp_sec = */ 1483230000);
-  EXPECT_EQ(price_history.begin(), history_subset.first);
-  EXPECT_EQ(price_history.begin() + 2, history_subset.second);
+                                 /*start_timestamp_sec=*/0,
+                                 /*end_timestamp_sec=*/1483230000);
+  EXPECT_EQ(history_subset.first, price_history.begin());
+  EXPECT_EQ(history_subset.second, price_history.begin() + 2);
 
   history_subset = HistorySubset(price_history,
-                                 /* start_timestamp_sec = */ 1483229400,
-                                 /* end_timestamp_sec = */ 0);
-  EXPECT_EQ(price_history.begin() + 1, history_subset.first);
-  EXPECT_EQ(price_history.end(), history_subset.second);
+                                 /*start_timestamp_sec=*/1483229400,
+                                 /*end_timestamp_sec=*/0);
+  EXPECT_EQ(history_subset.first, price_history.begin() + 1);
+  EXPECT_EQ(history_subset.second, price_history.end());
 
   history_subset = HistorySubset(price_history,
-                                 /* start_timestamp_sec = */ 1483228800,
-                                 /* end_timestamp_sec = */ 1483231800);
-  EXPECT_EQ(price_history.begin(), history_subset.first);
-  EXPECT_EQ(price_history.end(), history_subset.second);
+                                 /*start_timestamp_sec=*/1483228800,
+                                 /*end_timestamp_sec=*/1483231800);
+  EXPECT_EQ(history_subset.first, price_history.begin());
+  EXPECT_EQ(history_subset.second, price_history.end());
 
   history_subset = HistorySubset(price_history,
-                                 /* start_timestamp_sec = */ 1483228800,
-                                 /* end_timestamp_sec = */ 1483228800);
-  EXPECT_EQ(price_history.begin(), history_subset.first);
-  EXPECT_EQ(price_history.begin(), history_subset.second);
+                                 /*start_timestamp_sec=*/1483228800,
+                                 /*end_timestamp_sec=*/1483228800);
+  EXPECT_EQ(history_subset.first, price_history.begin());
+  EXPECT_EQ(history_subset.second, price_history.begin());
 
   history_subset = HistorySubset(price_history,
-                                 /* start_timestamp_sec = */ 1483228800,
-                                 /* end_timestamp_sec = */ 1483229400);
-  EXPECT_EQ(price_history.begin(), history_subset.first);
-  EXPECT_EQ(price_history.begin() + 1, history_subset.second);
+                                 /*start_timestamp_sec=*/1483228800,
+                                 /*end_timestamp_sec=*/1483229400);
+  EXPECT_EQ(history_subset.first, price_history.begin());
+  EXPECT_EQ(history_subset.second, price_history.begin() + 1);
 
   history_subset = HistorySubset(price_history,
-                                 /* start_timestamp_sec = */ 1483228860,
-                                 /* end_timestamp_sec = */ 1483229400);
-  EXPECT_EQ(price_history.begin() + 1, history_subset.first);
-  EXPECT_EQ(price_history.begin() + 1, history_subset.second);
+                                 /*start_timestamp_sec=*/1483228860,
+                                 /*end_timestamp_sec=*/1483229400);
+  EXPECT_EQ(history_subset.first, price_history.begin() + 1);
+  EXPECT_EQ(history_subset.second, price_history.begin() + 1);
 
   history_subset = HistorySubset(price_history,
-                                 /* start_timestamp_sec = */ 1483229100,
-                                 /* end_timestamp_sec = */ 1483230900);
-  EXPECT_EQ(price_history.begin() + 1, history_subset.first);
-  EXPECT_EQ(price_history.begin() + 4, history_subset.second);
+                                 /*start_timestamp_sec=*/1483229100,
+                                 /*end_timestamp_sec=*/1483230900);
+  EXPECT_EQ(history_subset.first, price_history.begin() + 1);
+  EXPECT_EQ(history_subset.second, price_history.begin() + 4);
 }
 
 TEST(HistorySubsetCopyTest, Basic) {
@@ -90,50 +90,46 @@ TEST(HistorySubsetCopyTest, Basic) {
 
   PriceHistory history_subset_copy =
       HistorySubsetCopy(price_history,
-                        /* start_timestamp_sec = */ 0,
-                        /* end_timestamp_sec = */ 0);
-  ASSERT_EQ(5, history_subset_copy.size());
-  for (int i = 0; i < 5; ++i) {
-    ExpectNearPriceRecord(price_history[i], history_subset_copy[i]);
+                        /*start_timestamp_sec=*/0,
+                        /*end_timestamp_sec=*/0);
+  ASSERT_EQ(history_subset_copy.size(), 5);
+  for (size_t i = 0; i < 5; ++i) {
+    ExpectNearPriceRecord(history_subset_copy[i], price_history[i]);
   }
 
   history_subset_copy = HistorySubsetCopy(price_history,
-                                          /* start_timestamp_sec = */ 0,
-                                          /* end_timestamp_sec = */ 1483230600);
-  ASSERT_EQ(3, history_subset_copy.size());
-  for (int i = 0; i < 3; ++i) {
-    ExpectNearPriceRecord(price_history[i], history_subset_copy[i]);
+                                          /*start_timestamp_sec=*/0,
+                                          /*end_timestamp_sec=*/1483230600);
+  ASSERT_EQ(history_subset_copy.size(), 3);
+  for (size_t i = 0; i < 3; ++i) {
+    ExpectNearPriceRecord(history_subset_copy[i], price_history[i]);
   }
 
-  history_subset_copy =
-      HistorySubsetCopy(price_history,
-                        /* start_timestamp_sec = */ 1483230000,
-                        /* end_timestamp_sec = */ 0);
-  ASSERT_EQ(3, history_subset_copy.size());
-  for (int i = 0; i < 3; ++i) {
-    ExpectNearPriceRecord(price_history[i + 2], history_subset_copy[i]);
+  history_subset_copy = HistorySubsetCopy(price_history,
+                                          /*start_timestamp_sec=*/1483230000,
+                                          /*end_timestamp_sec=*/0);
+  ASSERT_EQ(history_subset_copy.size(), 3);
+  for (size_t i = 0; i < 3; ++i) {
+    ExpectNearPriceRecord(history_subset_copy[i], price_history[i + 2]);
   }
 
-  history_subset_copy =
-      HistorySubsetCopy(price_history,
-                        /* start_timestamp_sec = */ 1483229100,
-                        /* end_timestamp_sec = */ 1483230900);
-  ASSERT_EQ(3, history_subset_copy.size());
-  for (int i = 0; i < 3; ++i) {
-    ExpectNearPriceRecord(price_history[i + 1], history_subset_copy[i]);
+  history_subset_copy = HistorySubsetCopy(price_history,
+                                          /*start_timestamp_sec=*/1483229100,
+                                          /*end_timestamp_sec=*/1483230900);
+  ASSERT_EQ(history_subset_copy.size(), 3);
+  for (size_t i = 0; i < 3; ++i) {
+    ExpectNearPriceRecord(history_subset_copy[i], price_history[i + 1]);
   }
 
-  history_subset_copy =
-      HistorySubsetCopy(price_history,
-                        /* start_timestamp_sec = */ 1483228800,
-                        /* end_timestamp_sec = */ 1483228800);
-  ASSERT_EQ(0, history_subset_copy.size());
+  history_subset_copy = HistorySubsetCopy(price_history,
+                                          /*start_timestamp_sec=*/1483228800,
+                                          /*end_timestamp_sec=*/1483228800);
+  ASSERT_EQ(history_subset_copy.size(), 0);
 
-  history_subset_copy =
-      HistorySubsetCopy(price_history,
-                        /* start_timestamp_sec = */ 1483230300,
-                        /* end_timestamp_sec = */ 1483230600);
-  ASSERT_EQ(0, history_subset_copy.size());
+  history_subset_copy = HistorySubsetCopy(price_history,
+                                          /*start_timestamp_sec=*/1483230300,
+                                          /*end_timestamp_sec=*/1483230600);
+  ASSERT_EQ(history_subset_copy.size(), 0);
 }
 
 }  // namespace trader

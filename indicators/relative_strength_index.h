@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #ifndef INDICATORS_RELATIVE_STRENGTH_INDEX_H
 #define INDICATORS_RELATIVE_STRENGTH_INDEX_H

@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #ifndef INDICATORS_LAST_N_OHLC_TICKS_H
 #define INDICATORS_LAST_N_OHLC_TICKS_H

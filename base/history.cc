@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #include "base/history.h"
 
@@ -16,14 +16,15 @@ bool CheckPriceHistoryTimestamps(const PriceHistory& price_history) {
 
 std::vector<HistoryGap> GetPriceHistoryGaps(PriceHistory::const_iterator begin,
                                             PriceHistory::const_iterator end,
-                                            long start_timestamp_sec,
-                                            long end_timestamp_sec,
+                                            int64_t start_timestamp_sec,
+                                            int64_t end_timestamp_sec,
                                             size_t top_n) {
   if (begin == end) {
     return {};
   }
   auto gap_cmp = [](HistoryGap lhs, HistoryGap rhs) {
-    const long length_delta = lhs.second - lhs.first - rhs.second + rhs.first;
+    const int64_t length_delta =
+        lhs.second - lhs.first - rhs.second + rhs.first;
     return length_delta > 0 || (length_delta == 0 && lhs.first < rhs.first);
   };
   std::priority_queue<HistoryGap, std::vector<HistoryGap>, decltype(gap_cmp)>
@@ -142,12 +143,12 @@ OhlcHistory Resample(PriceHistory::const_iterator begin,
                      PriceHistory::const_iterator end, int sampling_rate_sec) {
   OhlcHistory resampled_ohlc_history;
   for (auto it = begin; it != end; ++it) {
-    const int downsampled_timestamp_sec =
+    const int64_t downsampled_timestamp_sec =
         sampling_rate_sec * (it->timestamp_sec() / sampling_rate_sec);
     while (!resampled_ohlc_history.empty() &&
            resampled_ohlc_history.back().timestamp_sec() + sampling_rate_sec <
                downsampled_timestamp_sec) {
-      const int prev_timestamp_sec =
+      const int64_t prev_timestamp_sec =
           resampled_ohlc_history.back().timestamp_sec();
       const float prev_close = resampled_ohlc_history.back().close();
       resampled_ohlc_history.emplace_back();

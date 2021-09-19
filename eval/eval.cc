@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #include "eval/eval.h"
 
@@ -56,10 +56,10 @@ ExecutionResult ExecuteTrader(const AccountConfig& account_config,
   constexpr size_t kEmittedOrdersReserve = 8;
   orders.reserve(kEmittedOrdersReserve);
   int total_executed_orders = 0;
-  Volatility base_volatility(/* window_size = */ 0,
-                             /* period_size_sec = */ kSecondsPerDay);
-  Volatility trader_volatility(/* window_size = */ 0,
-                               /* period_size_sec = */ kSecondsPerDay);
+  Volatility base_volatility(/*window_size=*/0,
+                             /*period_size_sec=*/kSecondsPerDay);
+  Volatility trader_volatility(/*window_size=*/0,
+                               /*period_size_sec=*/kSecondsPerDay);
   for (auto ohlc_tick_it = ohlc_history_begin; ohlc_tick_it != ohlc_history_end;
        ++ohlc_tick_it) {
     const OhlcTick& ohlc_tick = *ohlc_tick_it;
@@ -67,7 +67,7 @@ ExecutionResult ExecuteTrader(const AccountConfig& account_config,
       const int side_input_index = side_input->GetSideInputIndex(
           ohlc_tick.timestamp_sec(), prev_side_input_index);
       if (side_input_index >= 0) {
-        const int side_input_timestamp_sec =
+        const int64_t side_input_timestamp_sec =
             side_input->GetSideInputTimestamp(side_input_index);
         side_input_signals.clear();
         side_input->GetSideInputSignals(side_input_index, side_input_signals);
@@ -113,8 +113,8 @@ ExecutionResult ExecuteTrader(const AccountConfig& account_config,
       logger->LogTraderState(trader.GetInternalState());
     }
     if (!fast_eval) {
-      base_volatility.Update(ohlc_tick, /* base_balance = */ 1.0f,
-                             /* quote_balance = */ 0.0f);
+      base_volatility.Update(ohlc_tick, /*base_balance=*/1.0f,
+                             /*quote_balance=*/0.0f);
       trader_volatility.Update(ohlc_tick, account.base_balance,
                                account.quote_balance);
     }
@@ -151,14 +151,12 @@ EvaluationResult EvaluateTrader(const AccountConfig& account_config,
   *eval_result.mutable_eval_config() = eval_config;
   eval_result.set_name(trader_emitter.GetName());
   for (int month_offset = 0;; ++month_offset) {
-    const int start_eval_timestamp_sec =
-        static_cast<int>(AddMonthsToTimestampSec(
-            eval_config.start_timestamp_sec(), month_offset));
-    const int end_eval_timestamp_sec =
+    const int64_t start_eval_timestamp_sec = AddMonthsToTimestampSec(
+        eval_config.start_timestamp_sec(), month_offset);
+    const int64_t end_eval_timestamp_sec =
         eval_config.evaluation_period_months() > 0
-            ? static_cast<int>(AddMonthsToTimestampSec(
-                  start_eval_timestamp_sec,
-                  eval_config.evaluation_period_months()))
+            ? AddMonthsToTimestampSec(start_eval_timestamp_sec,
+                                      eval_config.evaluation_period_months())
             : eval_config.end_timestamp_sec();
     if (end_eval_timestamp_sec > eval_config.end_timestamp_sec()) {
       break;
@@ -220,7 +218,7 @@ std::vector<EvaluationResult> EvaluateBatchOfTraders(
                     &trader_emitter]() {
           return EvaluateTrader(account_config, eval_config, ohlc_history,
                                 side_input, trader_emitter,
-                                /* logger = */ nullptr);
+                                /*logger=*/nullptr);
         }));
   }
   for (auto& eval_result_future : eval_result_futures) {

@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #include "base/side_input.h"
 
@@ -8,7 +8,7 @@ SideInput::SideInput(const SideHistory& side_history)
     : num_signals_(side_history.front().signal_size()) {
   timestamp_sec_history_.reserve(side_history.size());
   data_.reserve(side_history.size() * num_signals_);
-  int prev_timestamp_sec = 0;
+  int64_t prev_timestamp_sec = 0;
   for (const SideInputRecord& side_input : side_history) {
     assert(side_input.signal_size() == num_signals_);
     assert(side_input.timestamp_sec() > prev_timestamp_sec);
@@ -36,13 +36,13 @@ void SideInput::GetSideInputSignals(
   }
 }
 
-int SideInput::GetSideInputIndex(int timestamp_sec) const {
+int SideInput::GetSideInputIndex(int64_t timestamp_sec) const {
   return std::upper_bound(timestamp_sec_history_.begin(),
                           timestamp_sec_history_.end(), timestamp_sec) -
          timestamp_sec_history_.begin() - 1;
 }
 
-int SideInput::GetSideInputIndex(int timestamp_sec,
+int SideInput::GetSideInputIndex(int64_t timestamp_sec,
                                  int prev_side_input_index) const {
   if (prev_side_input_index < 0) {
     return GetSideInputIndex(timestamp_sec);

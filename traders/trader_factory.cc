@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #include "traders/trader_factory.h"
 
@@ -22,8 +22,8 @@ std::unique_ptr<TraderEmitter> GetDefaultRebalancingTraderEmitter() {
 // Returns the default batch of rebalancing traders.
 std::vector<std::unique_ptr<TraderEmitter>> GetBatchOfRebalancingTraders() {
   return RebalancingTraderEmitter::GetBatchOfTraders(
-      /* alphas = */ {0.1f, 0.3f, 0.5f, 0.7f, 0.9f},
-      /* epsilons = */ {0.01f, 0.05f, 0.1f, 0.2f});
+      /*alphas=*/{0.1f, 0.3f, 0.5f, 0.7f, 0.9f},
+      /*epsilons=*/{0.01f, 0.05f, 0.1f, 0.2f});
 }
 
 // Returns the default stop trader emitter.
@@ -39,10 +39,10 @@ std::unique_ptr<TraderEmitter> GetDefaultStopTraderEmitter() {
 // Returns the default batch of stop traders.
 std::vector<std::unique_ptr<TraderEmitter>> GetBatchOfStopTraders() {
   return StopTraderEmitter::GetBatchOfTraders(
-      /* stop_order_margins = */ {0.05, 0.1, 0.15, 0.2},
-      /* stop_order_move_margins = */ {0.05, 0.1, 0.15, 0.2},
-      /* stop_order_increases_per_day = */ {0.01, 0.05, 0.1},
-      /* stop_order_decreases_per_day = */ {0.01, 0.05, 0.1});
+      /*stop_order_margins=*/{0.05, 0.1, 0.15, 0.2},
+      /*stop_order_move_margins=*/{0.05, 0.1, 0.15, 0.2},
+      /*stop_order_increases_per_day=*/{0.01, 0.05, 0.1},
+      /*stop_order_decreases_per_day=*/{0.01, 0.05, 0.1});
 }
 }  // namespace
 

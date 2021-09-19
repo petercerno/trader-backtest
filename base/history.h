@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #ifndef BASE_HISTORY_H
 #define BASE_HISTORY_H
@@ -8,13 +8,13 @@
 namespace trader {
 
 // Gap in the price history, represented as a pair of timestamps (in seconds).
-using HistoryGap = std::pair<long, long>;
+using HistoryGap = std::pair<int64_t, int64_t>;
 
 // Returns the top_n largest (chronologically sorted) price history gaps.
 std::vector<HistoryGap> GetPriceHistoryGaps(PriceHistory::const_iterator begin,
                                             PriceHistory::const_iterator end,
-                                            long start_timestamp_sec,
-                                            long end_timestamp_sec,
+                                            int64_t start_timestamp_sec,
+                                            int64_t end_timestamp_sec,
                                             size_t top_n);
 
 // Returns price history with removed outliers.

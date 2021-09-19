@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #include "base/history.h"
 
@@ -6,7 +6,7 @@
 
 namespace trader {
 namespace {
-void AddPriceRecord(int timestamp_sec, float price, float volume,
+void AddPriceRecord(int64_t timestamp_sec, float price, float volume,
                     PriceHistory& price_history) {
   price_history.emplace_back();
   price_history.back().set_timestamp_sec(timestamp_sec);
@@ -14,38 +14,38 @@ void AddPriceRecord(int timestamp_sec, float price, float volume,
   price_history.back().set_volume(volume);
 }
 
-void ExpectNearPriceRecord(const PriceRecord& expected,
-                           const PriceRecord& actual) {
-  EXPECT_EQ(expected.timestamp_sec(), actual.timestamp_sec());
-  EXPECT_FLOAT_EQ(expected.price(), actual.price());
-  EXPECT_FLOAT_EQ(expected.volume(), actual.volume());
+void ExpectNearPriceRecord(const PriceRecord& actual,
+                           const PriceRecord& expected) {
+  EXPECT_EQ(actual.timestamp_sec(), expected.timestamp_sec());
+  EXPECT_FLOAT_EQ(actual.price(), expected.price());
+  EXPECT_FLOAT_EQ(actual.volume(), expected.volume());
 }
 
-void ExpectNearOhlcTick(int timestamp_sec, float open, float high, float low,
-                        float close, float volume,
-                        const OhlcTick& actual_ohlc_tick) {
-  EXPECT_EQ(timestamp_sec, actual_ohlc_tick.timestamp_sec());
-  EXPECT_FLOAT_EQ(open, actual_ohlc_tick.open());
-  EXPECT_FLOAT_EQ(high, actual_ohlc_tick.high());
-  EXPECT_FLOAT_EQ(low, actual_ohlc_tick.low());
-  EXPECT_FLOAT_EQ(close, actual_ohlc_tick.close());
-  EXPECT_FLOAT_EQ(volume, actual_ohlc_tick.volume());
+void ExpectNearOhlcTick(const OhlcTick& actual_ohlc_tick, int64_t timestamp_sec,
+                        float open, float high, float low, float close,
+                        float volume) {
+  EXPECT_EQ(actual_ohlc_tick.timestamp_sec(), timestamp_sec);
+  EXPECT_FLOAT_EQ(actual_ohlc_tick.open(), open);
+  EXPECT_FLOAT_EQ(actual_ohlc_tick.high(), high);
+  EXPECT_FLOAT_EQ(actual_ohlc_tick.low(), low);
+  EXPECT_FLOAT_EQ(actual_ohlc_tick.close(), close);
+  EXPECT_FLOAT_EQ(actual_ohlc_tick.volume(), volume);
 }
 }  // namespace
 
 TEST(GetPriceHistoryGapsTest, EmptyPriceHistory) {
   PriceHistory price_history;
   std::vector<HistoryGap> history_gaps = GetPriceHistoryGaps(
-      /* begin = */ price_history.begin(), /* end = */ price_history.end(),
-      /* start_timestamp_sec = */ 0,
-      /* end_timestamp_sec = */ 0,
-      /* top_n = */ 2);
+      /*begin=*/price_history.begin(), /*end=*/price_history.end(),
+      /*start_timestamp_sec=*/0,
+      /*end_timestamp_sec=*/0,
+      /*top_n=*/2);
   ASSERT_TRUE(history_gaps.empty());
   history_gaps = GetPriceHistoryGaps(
-      /* begin = */ price_history.begin(), /* end = */ price_history.end(),
-      /* start_timestamp_sec = */ 1483228000,
-      /* end_timestamp_sec = */ 1483233000,
-      /* top_n = */ 2);
+      /*begin=*/price_history.begin(), /*end=*/price_history.end(),
+      /*start_timestamp_sec=*/1483228000,
+      /*end_timestamp_sec=*/1483233000,
+      /*top_n=*/2);
   ASSERT_TRUE(history_gaps.empty());
 }
 
@@ -53,10 +53,10 @@ TEST(GetPriceHistoryGapsTest, SingleRecordPriceHistory) {
   PriceHistory price_history;
   AddPriceRecord(1483228800, 700.0f, 1.0e3f, price_history);
   std::vector<HistoryGap> history_gaps = GetPriceHistoryGaps(
-      /* begin = */ price_history.begin(), /* end = */ price_history.end(),
-      /* start_timestamp_sec = */ 0,
-      /* end_timestamp_sec = */ 0,
-      /* top_n = */ 2);
+      /*begin=*/price_history.begin(), /*end=*/price_history.end(),
+      /*start_timestamp_sec=*/0,
+      /*end_timestamp_sec=*/0,
+      /*top_n=*/2);
   ASSERT_TRUE(history_gaps.empty());
 }
 
@@ -69,100 +69,100 @@ TEST(GetPriceHistoryGapsTest, MultipleRecordsPriceHistory) {
   AddPriceRecord(1483231500, 820.0f, 1.0e3f, price_history);
   AddPriceRecord(1483231800, 840.0f, 1.0e3f, price_history);
   std::vector<HistoryGap> history_gaps = GetPriceHistoryGaps(
-      /* begin = */ price_history.begin(), /* end = */ price_history.end(),
-      /* start_timestamp_sec = */ 0,
-      /* end_timestamp_sec = */ 0,
-      /* top_n = */ 2);
-  ASSERT_EQ(2, history_gaps.size());
-  EXPECT_EQ(1483228800, history_gaps[0].first);
-  EXPECT_EQ(1483230000, history_gaps[0].second);
-  EXPECT_EQ(1483230000, history_gaps[1].first);
-  EXPECT_EQ(1483230600, history_gaps[1].second);
-  history_gaps = GetPriceHistoryGaps(/* begin = */ price_history.begin(),
-                                     /* end = */ price_history.end(),
-                                     /* start_timestamp_sec = */ 1483228000,
-                                     /* end_timestamp_sec = */ 0,
-                                     /* top_n = */ 2);
-  ASSERT_EQ(2, history_gaps.size());
-  EXPECT_EQ(1483228000, history_gaps[0].first);
-  EXPECT_EQ(1483228800, history_gaps[0].second);
-  EXPECT_EQ(1483228800, history_gaps[1].first);
-  EXPECT_EQ(1483230000, history_gaps[1].second);
-  history_gaps = GetPriceHistoryGaps(/* begin = */ price_history.begin(),
-                                     /* end = */ price_history.end(),
-                                     /* start_timestamp_sec = */ 0,
-                                     /* end_timestamp_sec = */ 1483233000,
-                                     /* top_n = */ 2);
-  ASSERT_EQ(2, history_gaps.size());
-  EXPECT_EQ(1483228800, history_gaps[0].first);
-  EXPECT_EQ(1483230000, history_gaps[0].second);
-  EXPECT_EQ(1483231800, history_gaps[1].first);
-  EXPECT_EQ(1483233000, history_gaps[1].second);
-  history_gaps = GetPriceHistoryGaps(/* begin = */ price_history.begin(),
-                                     /* end = */ price_history.end(),
-                                     /* start_timestamp_sec = */ 1483228000,
-                                     /* end_timestamp_sec = */ 1483233000,
-                                     /* top_n = */ 2);
-  ASSERT_EQ(2, history_gaps.size());
-  EXPECT_EQ(1483228800, history_gaps[0].first);
-  EXPECT_EQ(1483230000, history_gaps[0].second);
-  EXPECT_EQ(1483231800, history_gaps[1].first);
-  EXPECT_EQ(1483233000, history_gaps[1].second);
-  history_gaps = GetPriceHistoryGaps(/* begin = */ price_history.begin(),
-                                     /* end = */ price_history.end(),
-                                     /* start_timestamp_sec = */ 1483227000,
-                                     /* end_timestamp_sec = */ 1483233000,
-                                     /* top_n = */ 2);
-  ASSERT_EQ(2, history_gaps.size());
-  EXPECT_EQ(1483227000, history_gaps[0].first);
-  EXPECT_EQ(1483228800, history_gaps[0].second);
-  EXPECT_EQ(1483228800, history_gaps[1].first);
-  EXPECT_EQ(1483230000, history_gaps[1].second);
-  history_gaps = GetPriceHistoryGaps(/* begin = */ price_history.begin(),
-                                     /* end = */ price_history.end(),
-                                     /* start_timestamp_sec = */ 1483227000,
-                                     /* end_timestamp_sec = */ 1483234000,
-                                     /* top_n = */ 2);
-  ASSERT_EQ(2, history_gaps.size());
-  EXPECT_EQ(1483227000, history_gaps[0].first);
-  EXPECT_EQ(1483228800, history_gaps[0].second);
-  EXPECT_EQ(1483231800, history_gaps[1].first);
-  EXPECT_EQ(1483234000, history_gaps[1].second);
-  history_gaps = GetPriceHistoryGaps(/* begin = */ price_history.begin(),
-                                     /* end = */ price_history.end(),
-                                     /* start_timestamp_sec = */ 0,
-                                     /* end_timestamp_sec = */ 0,
-                                     /* top_n = */ 3);
-  ASSERT_EQ(3, history_gaps.size());
-  EXPECT_EQ(1483228800, history_gaps[0].first);
-  EXPECT_EQ(1483230000, history_gaps[0].second);
-  EXPECT_EQ(1483230000, history_gaps[1].first);
-  EXPECT_EQ(1483230600, history_gaps[1].second);
-  EXPECT_EQ(1483230900, history_gaps[2].first);
-  EXPECT_EQ(1483231500, history_gaps[2].second);
-  history_gaps = GetPriceHistoryGaps(/* begin = */ price_history.begin(),
-                                     /* end = */ price_history.end(),
-                                     /* start_timestamp_sec = */ 0,
-                                     /* end_timestamp_sec = */ 0,
-                                     /* top_n = */ 4);
-  ASSERT_EQ(4, history_gaps.size());
-  EXPECT_EQ(1483228800, history_gaps[0].first);
-  EXPECT_EQ(1483230000, history_gaps[0].second);
-  EXPECT_EQ(1483230000, history_gaps[1].first);
-  EXPECT_EQ(1483230600, history_gaps[1].second);
-  EXPECT_EQ(1483230600, history_gaps[2].first);
-  EXPECT_EQ(1483230900, history_gaps[2].second);
-  EXPECT_EQ(1483230900, history_gaps[3].first);
-  EXPECT_EQ(1483231500, history_gaps[3].second);
+      /*begin=*/price_history.begin(), /*end=*/price_history.end(),
+      /*start_timestamp_sec=*/0,
+      /*end_timestamp_sec=*/0,
+      /*top_n=*/2);
+  ASSERT_EQ(history_gaps.size(), 2);
+  EXPECT_EQ(history_gaps[0].first, 1483228800);
+  EXPECT_EQ(history_gaps[0].second, 1483230000);
+  EXPECT_EQ(history_gaps[1].first, 1483230000);
+  EXPECT_EQ(history_gaps[1].second, 1483230600);
+  history_gaps = GetPriceHistoryGaps(/*begin=*/price_history.begin(),
+                                     /*end=*/price_history.end(),
+                                     /*start_timestamp_sec=*/1483228000,
+                                     /*end_timestamp_sec=*/0,
+                                     /*top_n=*/2);
+  ASSERT_EQ(history_gaps.size(), 2);
+  EXPECT_EQ(history_gaps[0].first, 1483228000);
+  EXPECT_EQ(history_gaps[0].second, 1483228800);
+  EXPECT_EQ(history_gaps[1].first, 1483228800);
+  EXPECT_EQ(history_gaps[1].second, 1483230000);
+  history_gaps = GetPriceHistoryGaps(/*begin=*/price_history.begin(),
+                                     /*end=*/price_history.end(),
+                                     /*start_timestamp_sec=*/0,
+                                     /*end_timestamp_sec=*/1483233000,
+                                     /*top_n=*/2);
+  ASSERT_EQ(history_gaps.size(), 2);
+  EXPECT_EQ(history_gaps[0].first, 1483228800);
+  EXPECT_EQ(history_gaps[0].second, 1483230000);
+  EXPECT_EQ(history_gaps[1].first, 1483231800);
+  EXPECT_EQ(history_gaps[1].second, 1483233000);
+  history_gaps = GetPriceHistoryGaps(/*begin=*/price_history.begin(),
+                                     /*end=*/price_history.end(),
+                                     /*start_timestamp_sec=*/1483228000,
+                                     /*end_timestamp_sec=*/1483233000,
+                                     /*top_n=*/2);
+  ASSERT_EQ(history_gaps.size(), 2);
+  EXPECT_EQ(history_gaps[0].first, 1483228800);
+  EXPECT_EQ(history_gaps[0].second, 1483230000);
+  EXPECT_EQ(history_gaps[1].first, 1483231800);
+  EXPECT_EQ(history_gaps[1].second, 1483233000);
+  history_gaps = GetPriceHistoryGaps(/*begin=*/price_history.begin(),
+                                     /*end=*/price_history.end(),
+                                     /*start_timestamp_sec=*/1483227000,
+                                     /*end_timestamp_sec=*/1483233000,
+                                     /*top_n=*/2);
+  ASSERT_EQ(history_gaps.size(), 2);
+  EXPECT_EQ(history_gaps[0].first, 1483227000);
+  EXPECT_EQ(history_gaps[0].second, 1483228800);
+  EXPECT_EQ(history_gaps[1].first, 1483228800);
+  EXPECT_EQ(history_gaps[1].second, 1483230000);
+  history_gaps = GetPriceHistoryGaps(/*begin=*/price_history.begin(),
+                                     /*end=*/price_history.end(),
+                                     /*start_timestamp_sec=*/1483227000,
+                                     /*end_timestamp_sec=*/1483234000,
+                                     /*top_n=*/2);
+  ASSERT_EQ(history_gaps.size(), 2);
+  EXPECT_EQ(history_gaps[0].first, 1483227000);
+  EXPECT_EQ(history_gaps[0].second, 1483228800);
+  EXPECT_EQ(history_gaps[1].first, 1483231800);
+  EXPECT_EQ(history_gaps[1].second, 1483234000);
+  history_gaps = GetPriceHistoryGaps(/*begin=*/price_history.begin(),
+                                     /*end=*/price_history.end(),
+                                     /*start_timestamp_sec=*/0,
+                                     /*end_timestamp_sec=*/0,
+                                     /*top_n=*/3);
+  ASSERT_EQ(history_gaps.size(), 3);
+  EXPECT_EQ(history_gaps[0].first, 1483228800);
+  EXPECT_EQ(history_gaps[0].second, 1483230000);
+  EXPECT_EQ(history_gaps[1].first, 1483230000);
+  EXPECT_EQ(history_gaps[1].second, 1483230600);
+  EXPECT_EQ(history_gaps[2].first, 1483230900);
+  EXPECT_EQ(history_gaps[2].second, 1483231500);
+  history_gaps = GetPriceHistoryGaps(/*begin=*/price_history.begin(),
+                                     /*end=*/price_history.end(),
+                                     /*start_timestamp_sec=*/0,
+                                     /*end_timestamp_sec=*/0,
+                                     /*top_n=*/4);
+  ASSERT_EQ(history_gaps.size(), 4);
+  EXPECT_EQ(history_gaps[0].first, 1483228800);
+  EXPECT_EQ(history_gaps[0].second, 1483230000);
+  EXPECT_EQ(history_gaps[1].first, 1483230000);
+  EXPECT_EQ(history_gaps[1].second, 1483230600);
+  EXPECT_EQ(history_gaps[2].first, 1483230600);
+  EXPECT_EQ(history_gaps[2].second, 1483230900);
+  EXPECT_EQ(history_gaps[3].first, 1483230900);
+  EXPECT_EQ(history_gaps[3].second, 1483231500);
 }
 
 TEST(RemoveOutliersTest, EmptyPriceHistory) {
   PriceHistory price_history;
   PriceHistory price_history_clean =
-      RemoveOutliers(/* begin = */ price_history.begin(),
-                     /* end = */ price_history.end(),
-                     /* max_price_deviation_per_min = */ 0.02,
-                     /* outlier_indices = */ nullptr);
+      RemoveOutliers(/*begin=*/price_history.begin(),
+                     /*end=*/price_history.end(),
+                     /*max_price_deviation_per_min=*/0.02,
+                     /*outlier_indices=*/nullptr);
   ASSERT_TRUE(price_history_clean.empty());
 }
 
@@ -170,9 +170,9 @@ TEST(RemoveOutliersTest, EmptyPriceHistoryHasEmptyOutlierIndices) {
   PriceHistory price_history;
   std::vector<size_t> outlier_indices;
   PriceHistory price_history_clean = RemoveOutliers(
-      /* begin = */ price_history.begin(),
-      /* end = */ price_history.end(),
-      /* max_price_deviation_per_min = */ 0.02, &outlier_indices);
+      /*begin=*/price_history.begin(),
+      /*end=*/price_history.end(),
+      /*max_price_deviation_per_min=*/0.02, &outlier_indices);
   ASSERT_TRUE(price_history_clean.empty());
   ASSERT_TRUE(outlier_indices.empty());
 }
@@ -201,25 +201,25 @@ TEST(RemoveOutliersTest, NoOutliers) {
   AddPriceRecord(1483229940, 695.0f, 1.5e3f, price_history);
   // Without outlier_indices.
   PriceHistory price_history_clean =
-      RemoveOutliers(/* begin = */ price_history.begin(),
-                     /* end = */ price_history.end(),
-                     /* max_price_deviation_per_min = */ 0.02,
-                     /* outlier_indices = */ nullptr);
-  ASSERT_EQ(20, price_history_clean.size());
+      RemoveOutliers(/*begin=*/price_history.begin(),
+                     /*end=*/price_history.end(),
+                     /*max_price_deviation_per_min=*/0.02,
+                     /*outlier_indices=*/nullptr);
+  ASSERT_EQ(price_history_clean.size(), 20);
   for (size_t i = 0; i < 20; ++i) {
-    ExpectNearPriceRecord(price_history[i], price_history_clean[i]);
+    ExpectNearPriceRecord(price_history_clean[i], price_history[i]);
   }
   // With outlier_indices.
   std::vector<size_t> outlier_indices;
   price_history_clean = RemoveOutliers(
-      /* begin = */ price_history.begin(),
-      /* end = */ price_history.end(),
-      /* max_price_deviation_per_min = */ 0.02, &outlier_indices);
-  ASSERT_EQ(20, price_history_clean.size());
+      /*begin=*/price_history.begin(),
+      /*end=*/price_history.end(),
+      /*max_price_deviation_per_min=*/0.02, &outlier_indices);
+  ASSERT_EQ(price_history_clean.size(), 20);
   for (size_t i = 0; i < 20; ++i) {
-    ExpectNearPriceRecord(price_history[i], price_history_clean[i]);
+    ExpectNearPriceRecord(price_history_clean[i], price_history[i]);
   }
-  ASSERT_EQ(0, outlier_indices.size());
+  ASSERT_EQ(outlier_indices.size(), 0);
 }
 
 TEST(RemoveOutliersTest, NonPositivePrice) {
@@ -231,28 +231,28 @@ TEST(RemoveOutliersTest, NonPositivePrice) {
   AddPriceRecord(1483229040, 0.01f, 1.0e3f, price_history);
   // Without outlier_indices.
   PriceHistory price_history_clean =
-      RemoveOutliers(/* begin = */ price_history.begin(),
-                     /* end = */ price_history.end(),
-                     /* max_price_deviation_per_min = */ 0.02,
-                     /* outlier_indices = */ nullptr);
-  ASSERT_EQ(4, price_history_clean.size());
-  ExpectNearPriceRecord(price_history[0], price_history_clean[0]);
-  ExpectNearPriceRecord(price_history[1], price_history_clean[1]);
-  ExpectNearPriceRecord(price_history[3], price_history_clean[2]);
-  ExpectNearPriceRecord(price_history[4], price_history_clean[3]);
+      RemoveOutliers(/*begin=*/price_history.begin(),
+                     /*end=*/price_history.end(),
+                     /*max_price_deviation_per_min=*/0.02,
+                     /*outlier_indices=*/nullptr);
+  ASSERT_EQ(price_history_clean.size(), 4);
+  ExpectNearPriceRecord(price_history_clean[0], price_history[0]);
+  ExpectNearPriceRecord(price_history_clean[1], price_history[1]);
+  ExpectNearPriceRecord(price_history_clean[2], price_history[3]);
+  ExpectNearPriceRecord(price_history_clean[3], price_history[4]);
   // With outlier_indices.
   std::vector<size_t> outlier_indices;
   price_history_clean = RemoveOutliers(
-      /* begin = */ price_history.begin(),
-      /* end = */ price_history.end(),
-      /* max_price_deviation_per_min = */ 0.02, &outlier_indices);
-  ASSERT_EQ(4, price_history_clean.size());
-  ExpectNearPriceRecord(price_history[0], price_history_clean[0]);
-  ExpectNearPriceRecord(price_history[1], price_history_clean[1]);
-  ExpectNearPriceRecord(price_history[3], price_history_clean[2]);
-  ExpectNearPriceRecord(price_history[4], price_history_clean[3]);
-  ASSERT_EQ(1, outlier_indices.size());
-  EXPECT_EQ(2, outlier_indices[0]);
+      /*begin=*/price_history.begin(),
+      /*end=*/price_history.end(),
+      /*max_price_deviation_per_min=*/0.02, &outlier_indices);
+  ASSERT_EQ(price_history_clean.size(), 4);
+  ExpectNearPriceRecord(price_history_clean[0], price_history[0]);
+  ExpectNearPriceRecord(price_history_clean[1], price_history[1]);
+  ExpectNearPriceRecord(price_history_clean[2], price_history[3]);
+  ExpectNearPriceRecord(price_history_clean[3], price_history[4]);
+  ASSERT_EQ(outlier_indices.size(), 1);
+  EXPECT_EQ(outlier_indices[0], 2);
 }
 
 TEST(RemoveOutliersTest, NegativeVolume) {
@@ -264,28 +264,28 @@ TEST(RemoveOutliersTest, NegativeVolume) {
   AddPriceRecord(1483229040, 695.0f, 1.0e3f, price_history);
   // Without outlier_indices.
   PriceHistory price_history_clean =
-      RemoveOutliers(/* begin = */ price_history.begin(),
-                     /* end = */ price_history.end(),
-                     /* max_price_deviation_per_min = */ 0.02,
-                     /* outlier_indices = */ nullptr);
-  ASSERT_EQ(4, price_history_clean.size());
-  ExpectNearPriceRecord(price_history[0], price_history_clean[0]);
-  ExpectNearPriceRecord(price_history[1], price_history_clean[1]);
-  ExpectNearPriceRecord(price_history[3], price_history_clean[2]);
-  ExpectNearPriceRecord(price_history[4], price_history_clean[3]);
+      RemoveOutliers(/*begin=*/price_history.begin(),
+                     /*end=*/price_history.end(),
+                     /*max_price_deviation_per_min=*/0.02,
+                     /*outlier_indices=*/nullptr);
+  ASSERT_EQ(price_history_clean.size(), 4);
+  ExpectNearPriceRecord(price_history_clean[0], price_history[0]);
+  ExpectNearPriceRecord(price_history_clean[1], price_history[1]);
+  ExpectNearPriceRecord(price_history_clean[2], price_history[3]);
+  ExpectNearPriceRecord(price_history_clean[3], price_history[4]);
   // With outlier_indices.
   std::vector<size_t> outlier_indices;
   price_history_clean = RemoveOutliers(
-      /* begin = */ price_history.begin(),
-      /* end = */ price_history.end(),
-      /* max_price_deviation_per_min = */ 0.02, &outlier_indices);
-  ASSERT_EQ(4, price_history_clean.size());
-  ExpectNearPriceRecord(price_history[0], price_history_clean[0]);
-  ExpectNearPriceRecord(price_history[1], price_history_clean[1]);
-  ExpectNearPriceRecord(price_history[3], price_history_clean[2]);
-  ExpectNearPriceRecord(price_history[4], price_history_clean[3]);
-  ASSERT_EQ(1, outlier_indices.size());
-  EXPECT_EQ(2, outlier_indices[0]);
+      /*begin=*/price_history.begin(),
+      /*end=*/price_history.end(),
+      /*max_price_deviation_per_min=*/0.02, &outlier_indices);
+  ASSERT_EQ(price_history_clean.size(), 4);
+  ExpectNearPriceRecord(price_history_clean[0], price_history[0]);
+  ExpectNearPriceRecord(price_history_clean[1], price_history[1]);
+  ExpectNearPriceRecord(price_history_clean[2], price_history[3]);
+  ExpectNearPriceRecord(price_history_clean[3], price_history[4]);
+  ASSERT_EQ(outlier_indices.size(), 1);
+  EXPECT_EQ(outlier_indices[0], 2);
 }
 
 TEST(RemoveOutliersTest, SimpleOutlier) {
@@ -297,28 +297,28 @@ TEST(RemoveOutliersTest, SimpleOutlier) {
   AddPriceRecord(1483229040, 695.0f, 1.0e3f, price_history);
   // Without outlier_indices.
   PriceHistory price_history_clean =
-      RemoveOutliers(/* begin = */ price_history.begin(),
-                     /* end = */ price_history.end(),
-                     /* max_price_deviation_per_min = */ 0.02,
-                     /* outlier_indices = */ nullptr);
-  ASSERT_EQ(4, price_history_clean.size());
-  ExpectNearPriceRecord(price_history[0], price_history_clean[0]);
-  ExpectNearPriceRecord(price_history[1], price_history_clean[1]);
-  ExpectNearPriceRecord(price_history[3], price_history_clean[2]);
-  ExpectNearPriceRecord(price_history[4], price_history_clean[3]);
+      RemoveOutliers(/*begin=*/price_history.begin(),
+                     /*end=*/price_history.end(),
+                     /*max_price_deviation_per_min=*/0.02,
+                     /*outlier_indices=*/nullptr);
+  ASSERT_EQ(price_history_clean.size(), 4);
+  ExpectNearPriceRecord(price_history_clean[0], price_history[0]);
+  ExpectNearPriceRecord(price_history_clean[1], price_history[1]);
+  ExpectNearPriceRecord(price_history_clean[2], price_history[3]);
+  ExpectNearPriceRecord(price_history_clean[3], price_history[4]);
   // With outlier_indices.
   std::vector<size_t> outlier_indices;
   price_history_clean = RemoveOutliers(
-      /* begin = */ price_history.begin(),
-      /* end = */ price_history.end(),
-      /* max_price_deviation_per_min = */ 0.02, &outlier_indices);
-  ASSERT_EQ(4, price_history_clean.size());
-  ExpectNearPriceRecord(price_history[0], price_history_clean[0]);
-  ExpectNearPriceRecord(price_history[1], price_history_clean[1]);
-  ExpectNearPriceRecord(price_history[3], price_history_clean[2]);
-  ExpectNearPriceRecord(price_history[4], price_history_clean[3]);
-  ASSERT_EQ(1, outlier_indices.size());
-  EXPECT_EQ(2, outlier_indices[0]);
+      /*begin=*/price_history.begin(),
+      /*end=*/price_history.end(),
+      /*max_price_deviation_per_min=*/0.02, &outlier_indices);
+  ASSERT_EQ(price_history_clean.size(), 4);
+  ExpectNearPriceRecord(price_history_clean[0], price_history[0]);
+  ExpectNearPriceRecord(price_history_clean[1], price_history[1]);
+  ExpectNearPriceRecord(price_history_clean[2], price_history[3]);
+  ExpectNearPriceRecord(price_history_clean[3], price_history[4]);
+  ASSERT_EQ(outlier_indices.size(), 1);
+  EXPECT_EQ(outlier_indices[0], 2);
 }
 
 TEST(RemoveOutliersTest, NonPersistentOutliers) {
@@ -345,26 +345,26 @@ TEST(RemoveOutliersTest, NonPersistentOutliers) {
   AddPriceRecord(1483229940, 695.0f, 1.5e3f, price_history);
   std::vector<size_t> outlier_indices;
   PriceHistory price_history_clean = RemoveOutliers(
-      /* begin = */ price_history.begin(),
-      /* end = */ price_history.end(),
-      /* max_price_deviation_per_min = */ 0.02, &outlier_indices);
-  ASSERT_EQ(17, price_history_clean.size());
+      /*begin=*/price_history.begin(),
+      /*end=*/price_history.end(),
+      /*max_price_deviation_per_min=*/0.02, &outlier_indices);
+  ASSERT_EQ(price_history_clean.size(), 17);
   for (size_t i = 0; i < 4; ++i) {
-    ExpectNearPriceRecord(price_history[i], price_history_clean[i]);
+    ExpectNearPriceRecord(price_history_clean[i], price_history[i]);
   }
   for (size_t i = 5; i < 6; ++i) {
-    ExpectNearPriceRecord(price_history[i], price_history_clean[i - 1]);
+    ExpectNearPriceRecord(price_history_clean[i - 1], price_history[i]);
   }
   for (size_t i = 7; i < 10; ++i) {
-    ExpectNearPriceRecord(price_history[i], price_history_clean[i - 2]);
+    ExpectNearPriceRecord(price_history_clean[i - 2], price_history[i]);
   }
   for (size_t i = 11; i < 20; ++i) {
-    ExpectNearPriceRecord(price_history[i], price_history_clean[i - 3]);
+    ExpectNearPriceRecord(price_history_clean[i - 3], price_history[i]);
   }
-  ASSERT_EQ(3, outlier_indices.size());
-  EXPECT_EQ(4, outlier_indices[0]);
-  EXPECT_EQ(6, outlier_indices[1]);
-  EXPECT_EQ(10, outlier_indices[2]);
+  ASSERT_EQ(outlier_indices.size(), 3);
+  EXPECT_EQ(outlier_indices[0], 4);
+  EXPECT_EQ(outlier_indices[1], 6);
+  EXPECT_EQ(outlier_indices[2], 10);
 }
 
 TEST(RemoveOutliersTest, PersistentJumps) {
@@ -391,28 +391,28 @@ TEST(RemoveOutliersTest, PersistentJumps) {
   AddPriceRecord(1483229940, 695.0f, 1.5e3f, price_history);
   std::vector<size_t> outlier_indices;
   PriceHistory price_history_clean = RemoveOutliers(
-      /* begin = */ price_history.begin(),
-      /* end = */ price_history.end(),
-      /* max_price_deviation_per_min = */ 0.02, &outlier_indices);
-  ASSERT_EQ(19, price_history_clean.size());
+      /*begin=*/price_history.begin(),
+      /*end=*/price_history.end(),
+      /*max_price_deviation_per_min=*/0.02, &outlier_indices);
+  ASSERT_EQ(price_history_clean.size(), 19);
   for (size_t i = 0; i < 5; ++i) {
-    ExpectNearPriceRecord(price_history[i], price_history_clean[i]);
+    ExpectNearPriceRecord(price_history_clean[i], price_history[i]);
   }
   for (size_t i = 6; i < 20; ++i) {
-    ExpectNearPriceRecord(price_history[i], price_history_clean[i - 1]);
+    ExpectNearPriceRecord(price_history_clean[i - 1], price_history[i]);
   }
-  ASSERT_EQ(1, outlier_indices.size());
-  EXPECT_EQ(5, outlier_indices[0]);
+  ASSERT_EQ(outlier_indices.size(), 1);
+  EXPECT_EQ(outlier_indices[0], 5);
 }
 
 TEST(GetOutlierIndicesWithContextTest, NoOutliers) {
   std::vector<size_t> outlier_indices;
   std::map<size_t, bool> index_to_outlier =
       GetOutlierIndicesWithContext(outlier_indices,
-                                   /* price_history_size = */ 100,
-                                   /* left_context_size = */ 5,
-                                   /* right_context_size = */ 5,
-                                   /* last_n = */ 10);
+                                   /*price_history_size=*/100,
+                                   /*left_context_size=*/5,
+                                   /*right_context_size=*/5,
+                                   /*last_n=*/10);
   ASSERT_TRUE(index_to_outlier.empty());
 }
 
@@ -420,11 +420,11 @@ TEST(GetOutlierIndicesWithContextTest, SingleOutlierAtTheBeginning) {
   std::vector<size_t> outlier_indices{3};
   std::map<size_t, bool> index_to_outlier =
       GetOutlierIndicesWithContext(outlier_indices,
-                                   /* price_history_size = */ 100,
-                                   /* left_context_size = */ 5,
-                                   /* right_context_size = */ 5,
-                                   /* last_n = */ 10);
-  ASSERT_EQ(9, index_to_outlier.size());
+                                   /*price_history_size=*/100,
+                                   /*left_context_size=*/5,
+                                   /*right_context_size=*/5,
+                                   /*last_n=*/10);
+  ASSERT_EQ(index_to_outlier.size(), 9);
   EXPECT_FALSE(index_to_outlier.at(0));
   EXPECT_FALSE(index_to_outlier.at(1));
   EXPECT_FALSE(index_to_outlier.at(2));
@@ -440,11 +440,11 @@ TEST(GetOutlierIndicesWithContextTest, SingleOutlierInTheMiddle) {
   std::vector<size_t> outlier_indices{50};
   std::map<size_t, bool> index_to_outlier =
       GetOutlierIndicesWithContext(outlier_indices,
-                                   /* price_history_size = */ 100,
-                                   /* left_context_size = */ 5,
-                                   /* right_context_size = */ 5,
-                                   /* last_n = */ 10);
-  ASSERT_EQ(11, index_to_outlier.size());
+                                   /*price_history_size=*/100,
+                                   /*left_context_size=*/5,
+                                   /*right_context_size=*/5,
+                                   /*last_n=*/10);
+  ASSERT_EQ(index_to_outlier.size(), 11);
   EXPECT_FALSE(index_to_outlier.at(45));
   EXPECT_FALSE(index_to_outlier.at(46));
   EXPECT_FALSE(index_to_outlier.at(47));
@@ -462,11 +462,11 @@ TEST(GetOutlierIndicesWithContextTest, SingleOutlierAtTheEnd) {
   std::vector<size_t> outlier_indices{97};
   std::map<size_t, bool> index_to_outlier =
       GetOutlierIndicesWithContext(outlier_indices,
-                                   /* price_history_size = */ 100,
-                                   /* left_context_size = */ 5,
-                                   /* right_context_size = */ 5,
-                                   /* last_n = */ 10);
-  ASSERT_EQ(8, index_to_outlier.size());
+                                   /*price_history_size=*/100,
+                                   /*left_context_size=*/5,
+                                   /*right_context_size=*/5,
+                                   /*last_n=*/10);
+  ASSERT_EQ(index_to_outlier.size(), 8);
   EXPECT_FALSE(index_to_outlier.at(92));
   EXPECT_FALSE(index_to_outlier.at(93));
   EXPECT_FALSE(index_to_outlier.at(94));
@@ -481,11 +481,11 @@ TEST(GetOutlierIndicesWithContextTest, MultipleOutliersAtTheBeginning) {
   std::vector<size_t> outlier_indices{3, 4, 7};
   std::map<size_t, bool> index_to_outlier =
       GetOutlierIndicesWithContext(outlier_indices,
-                                   /* price_history_size = */ 100,
-                                   /* left_context_size = */ 5,
-                                   /* right_context_size = */ 5,
-                                   /* last_n = */ 10);
-  ASSERT_EQ(13, index_to_outlier.size());
+                                   /*price_history_size=*/100,
+                                   /*left_context_size=*/5,
+                                   /*right_context_size=*/5,
+                                   /*last_n=*/10);
+  ASSERT_EQ(index_to_outlier.size(), 13);
   EXPECT_FALSE(index_to_outlier.at(0));
   EXPECT_FALSE(index_to_outlier.at(1));
   EXPECT_FALSE(index_to_outlier.at(2));
@@ -505,11 +505,11 @@ TEST(GetOutlierIndicesWithContextTest, MultipleOutliersInTheMiddle) {
   std::vector<size_t> outlier_indices{50, 51, 53};
   std::map<size_t, bool> index_to_outlier =
       GetOutlierIndicesWithContext(outlier_indices,
-                                   /* price_history_size = */ 100,
-                                   /* left_context_size = */ 3,
-                                   /* right_context_size = */ 3,
-                                   /* last_n = */ 10);
-  ASSERT_EQ(10, index_to_outlier.size());
+                                   /*price_history_size=*/100,
+                                   /*left_context_size=*/3,
+                                   /*right_context_size=*/3,
+                                   /*last_n=*/10);
+  ASSERT_EQ(index_to_outlier.size(), 10);
   EXPECT_FALSE(index_to_outlier.at(47));
   EXPECT_FALSE(index_to_outlier.at(48));
   EXPECT_FALSE(index_to_outlier.at(49));
@@ -526,11 +526,11 @@ TEST(GetOutlierIndicesWithContextTest, MultipleOutliersAtTheEnd) {
   std::vector<size_t> outlier_indices{94, 95, 97};
   std::map<size_t, bool> index_to_outlier =
       GetOutlierIndicesWithContext(outlier_indices,
-                                   /* price_history_size = */ 100,
-                                   /* left_context_size = */ 5,
-                                   /* right_context_size = */ 5,
-                                   /* last_n = */ 10);
-  ASSERT_EQ(11, index_to_outlier.size());
+                                   /*price_history_size=*/100,
+                                   /*left_context_size=*/5,
+                                   /*right_context_size=*/5,
+                                   /*last_n=*/10);
+  ASSERT_EQ(index_to_outlier.size(), 11);
   EXPECT_FALSE(index_to_outlier.at(89));
   EXPECT_FALSE(index_to_outlier.at(90));
   EXPECT_FALSE(index_to_outlier.at(91));
@@ -546,10 +546,10 @@ TEST(GetOutlierIndicesWithContextTest, MultipleOutliersAtTheEnd) {
 
 TEST(ResampleTest, EmptyPriceHistory) {
   PriceHistory price_history;
-  OhlcHistory ohlc_history = Resample(/* begin = */ price_history.begin(),
-                                      /* end = */ price_history.end(),
-                                      /* sampling_rate_sec = */ 300);
-  ASSERT_EQ(0, ohlc_history.size());
+  OhlcHistory ohlc_history = Resample(/*begin=*/price_history.begin(),
+                                      /*end=*/price_history.end(),
+                                      /*sampling_rate_sec=*/300);
+  ASSERT_EQ(ohlc_history.size(), 0);
 }
 
 TEST(ResampleTest, EmptyOhlcHistory) {
@@ -558,49 +558,49 @@ TEST(ResampleTest, EmptyOhlcHistory) {
   AddPriceRecord(60, 20.0f, 2.0e3f, price_history);
   AddPriceRecord(120, 30.0f, 3.0e3f, price_history);
   AddPriceRecord(180, 40.0f, 4.0e3f, price_history);
-  OhlcHistory ohlc_history = Resample(/* begin = */ price_history.begin() + 1,
-                                      /* end = */ price_history.begin() + 1,
-                                      /* sampling_rate_sec = */ 300);
-  ASSERT_EQ(0, ohlc_history.size());
-  ohlc_history = Resample(/* begin = */ price_history.begin() + 3,
-                          /* end = */ price_history.begin() + 3,
-                          /* sampling_rate_sec = */ 10);
-  ASSERT_EQ(0, ohlc_history.size());
+  OhlcHistory ohlc_history = Resample(/*begin=*/price_history.begin() + 1,
+                                      /*end=*/price_history.begin() + 1,
+                                      /*sampling_rate_sec=*/300);
+  ASSERT_EQ(ohlc_history.size(), 0);
+  ohlc_history = Resample(/*begin=*/price_history.begin() + 3,
+                          /*end=*/price_history.begin() + 3,
+                          /*sampling_rate_sec=*/10);
+  ASSERT_EQ(ohlc_history.size(), 0);
 }
 
 TEST(ResampleTest, ResampleSinglePriceRecord) {
   PriceHistory price_history;
   AddPriceRecord(1483228800, 700.0f, 1.0e3f, price_history);
-  OhlcHistory ohlc_history = Resample(/* begin = */ price_history.begin(),
-                                      /* end = */ price_history.end(),
-                                      /* sampling_rate_sec = */ 300);
-  ASSERT_EQ(1, ohlc_history.size());
-  ExpectNearOhlcTick(1483228800, 700.0f, 700.0f, 700.0f, 700.0f, 1.0e3f,
-                     ohlc_history[0]);
+  OhlcHistory ohlc_history = Resample(/*begin=*/price_history.begin(),
+                                      /*end=*/price_history.end(),
+                                      /*sampling_rate_sec=*/300);
+  ASSERT_EQ(ohlc_history.size(), 1);
+  ExpectNearOhlcTick(ohlc_history[0], 1483228800, 700.0f, 700.0f, 700.0f,
+                     700.0f, 1.0e3f);
 }
 
 TEST(ResampleTest, ResampleMultiplePriceRecords1) {
   PriceHistory price_history;
   AddPriceRecord(1483228800, 700.0f, 1.0e3f, price_history);
   AddPriceRecord(1483229400, 800.0f, 1.5e3f, price_history);
-  OhlcHistory ohlc_history = Resample(/* begin = */ price_history.begin(),
-                                      /* end = */ price_history.end(),
-                                      /* sampling_rate_sec = */ 300);
-  ASSERT_EQ(3, ohlc_history.size());
-  ExpectNearOhlcTick(1483228800, 700.0f, 700.0f, 700.0f, 700.0f, 1.0e3f,
-                     ohlc_history[0]);
-  ExpectNearOhlcTick(1483229100, 700.0f, 700.0f, 700.0f, 700.0f, 0.0f,
-                     ohlc_history[1]);
-  ExpectNearOhlcTick(1483229400, 800.0f, 800.0f, 800.0f, 800.0f, 1.5e3f,
-                     ohlc_history[2]);
-  ohlc_history = Resample(/* begin = */ price_history.begin(),
-                          /* end = */ price_history.end(),
-                          /* sampling_rate_sec = */ 600);
-  ASSERT_EQ(2, ohlc_history.size());
-  ExpectNearOhlcTick(1483228800, 700.0f, 700.0f, 700.0f, 700.0f, 1.0e3f,
-                     ohlc_history[0]);
-  ExpectNearOhlcTick(1483229400, 800.0f, 800.0f, 800.0f, 800.0f, 1.5e3f,
-                     ohlc_history[1]);
+  OhlcHistory ohlc_history = Resample(/*begin=*/price_history.begin(),
+                                      /*end=*/price_history.end(),
+                                      /*sampling_rate_sec=*/300);
+  ASSERT_EQ(ohlc_history.size(), 3);
+  ExpectNearOhlcTick(ohlc_history[0], 1483228800, 700.0f, 700.0f, 700.0f,
+                     700.0f, 1.0e3f);
+  ExpectNearOhlcTick(ohlc_history[1], 1483229100, 700.0f, 700.0f, 700.0f,
+                     700.0f, 0.0f);
+  ExpectNearOhlcTick(ohlc_history[2], 1483229400, 800.0f, 800.0f, 800.0f,
+                     800.0f, 1.5e3f);
+  ohlc_history = Resample(/*begin=*/price_history.begin(),
+                          /*end=*/price_history.end(),
+                          /*sampling_rate_sec=*/600);
+  ASSERT_EQ(ohlc_history.size(), 2);
+  ExpectNearOhlcTick(ohlc_history[0], 1483228800, 700.0f, 700.0f, 700.0f,
+                     700.0f, 1.0e3f);
+  ExpectNearOhlcTick(ohlc_history[1], 1483229400, 800.0f, 800.0f, 800.0f,
+                     800.0f, 1.5e3f);
 }
 
 TEST(ResampleTest, ResampleMultiplePriceRecords2) {
@@ -613,32 +613,32 @@ TEST(ResampleTest, ResampleMultiplePriceRecords2) {
   AddPriceRecord(1483229500, 750.0f, 2.5e3f, price_history);
   AddPriceRecord(1483229550, 800.0f, 1.5e3f, price_history);
   AddPriceRecord(1483229600, 850.0f, 2.5e3f, price_history);
-  OhlcHistory ohlc_history = Resample(/* begin = */ price_history.begin(),
-                                      /* end = */ price_history.end(),
-                                      /* sampling_rate_sec = */ 300);
-  ASSERT_EQ(3, ohlc_history.size());
-  ExpectNearOhlcTick(1483228800, 700.0f, 750.0f, 650.0f, 720.0f, 6.0e3f,
-                     ohlc_history[0]);
-  ExpectNearOhlcTick(1483229100, 720.0f, 720.0f, 720.0f, 720.0f, 0.0f,
-                     ohlc_history[1]);
-  ExpectNearOhlcTick(1483229400, 800.0f, 850.0f, 750.0f, 850.0f, 8.0e3f,
-                     ohlc_history[2]);
-  ohlc_history = Resample(/* begin = */ price_history.begin(),
-                          /* end = */ price_history.end(),
-                          /* sampling_rate_sec = */ 150);
-  ASSERT_EQ(6, ohlc_history.size());
-  ExpectNearOhlcTick(1483228800, 700.0f, 750.0f, 700.0f, 750.0f, 3.0e3f,
-                     ohlc_history[0]);
-  ExpectNearOhlcTick(1483228950, 650.0f, 720.0f, 650.0f, 720.0f, 3.0e3f,
-                     ohlc_history[1]);
-  ExpectNearOhlcTick(1483229100, 720.0f, 720.0f, 720.0f, 720.0f, 0.0f,
-                     ohlc_history[2]);
-  ExpectNearOhlcTick(1483229250, 720.0f, 720.0f, 720.0f, 720.0f, 0.0f,
-                     ohlc_history[3]);
-  ExpectNearOhlcTick(1483229400, 800.0f, 800.0f, 750.0f, 750.0f, 4.0e3f,
-                     ohlc_history[4]);
-  ExpectNearOhlcTick(1483229550, 800.0f, 850.0f, 800.0f, 850.0f, 4.0e3f,
-                     ohlc_history[5]);
+  OhlcHistory ohlc_history = Resample(/*begin=*/price_history.begin(),
+                                      /*end=*/price_history.end(),
+                                      /*sampling_rate_sec=*/300);
+  ASSERT_EQ(ohlc_history.size(), 3);
+  ExpectNearOhlcTick(ohlc_history[0], 1483228800, 700.0f, 750.0f, 650.0f,
+                     720.0f, 6.0e3f);
+  ExpectNearOhlcTick(ohlc_history[1], 1483229100, 720.0f, 720.0f, 720.0f,
+                     720.0f, 0.0f);
+  ExpectNearOhlcTick(ohlc_history[2], 1483229400, 800.0f, 850.0f, 750.0f,
+                     850.0f, 8.0e3f);
+  ohlc_history = Resample(/*begin=*/price_history.begin(),
+                          /*end=*/price_history.end(),
+                          /*sampling_rate_sec=*/150);
+  ASSERT_EQ(ohlc_history.size(), 6);
+  ExpectNearOhlcTick(ohlc_history[0], 1483228800, 700.0f, 750.0f, 700.0f,
+                     750.0f, 3.0e3f);
+  ExpectNearOhlcTick(ohlc_history[1], 1483228950, 650.0f, 720.0f, 650.0f,
+                     720.0f, 3.0e3f);
+  ExpectNearOhlcTick(ohlc_history[2], 1483229100, 720.0f, 720.0f, 720.0f,
+                     720.0f, 0.0f);
+  ExpectNearOhlcTick(ohlc_history[3], 1483229250, 720.0f, 720.0f, 720.0f,
+                     720.0f, 0.0f);
+  ExpectNearOhlcTick(ohlc_history[4], 1483229400, 800.0f, 800.0f, 750.0f,
+                     750.0f, 4.0e3f);
+  ExpectNearOhlcTick(ohlc_history[5], 1483229550, 800.0f, 850.0f, 800.0f,
+                     850.0f, 4.0e3f);
 }
 
 }  // namespace trader

@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #include "indicators/test_util.h"
 
@@ -27,7 +27,7 @@ void AddOhlcTick(float open, float high, float low, float close,
 // Adds OHLC tick to the history period_sec away from the last OHLC tick.
 void AddOhlcTickWithPeriod(float open, float high, float low, float close,
                            int period_sec, OhlcHistory& ohlc_history) {
-  int timestamp_sec = 1483228800;  // 2017-01-01
+  int64_t timestamp_sec = 1483228800;  // 2017-01-01
   if (!ohlc_history.empty()) {
     ASSERT_FLOAT_EQ(ohlc_history.back().close(), open);
     timestamp_sec = ohlc_history.back().timestamp_sec() + period_sec;

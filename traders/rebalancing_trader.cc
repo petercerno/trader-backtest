@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #include "traders/rebalancing_trader.h"
 
@@ -8,7 +8,7 @@ void RebalancingTrader::Update(const OhlcTick& ohlc_tick,
                                const std::vector<float>& side_input_signals,
                                float base_balance, float quote_balance,
                                std::vector<Order>& orders) {
-  const int timestamp_sec = ohlc_tick.timestamp_sec();
+  const int64_t timestamp_sec = ohlc_tick.timestamp_sec();
   const float price = ohlc_tick.close();
   assert(timestamp_sec > last_timestamp_sec_);
   assert(price > 0);

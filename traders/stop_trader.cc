@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #include "traders/stop_trader.h"
 
@@ -8,7 +8,7 @@ void StopTrader::Update(const OhlcTick& ohlc_tick,
                         const std::vector<float>& side_input_signals,
                         float base_balance, float quote_balance,
                         std::vector<Order>& orders) {
-  const int timestamp_sec = ohlc_tick.timestamp_sec();
+  const int64_t timestamp_sec = ohlc_tick.timestamp_sec();
   const float price = ohlc_tick.close();
   assert(timestamp_sec > last_timestamp_sec_);
   assert(price > 0);
@@ -35,10 +35,10 @@ void StopTrader::Update(const OhlcTick& ohlc_tick,
   EmitStopOrder(price, orders);
 }
 
-void StopTrader::UpdateStopOrderPrice(Mode mode, int timestamp_sec,
+void StopTrader::UpdateStopOrderPrice(Mode mode, int64_t timestamp_sec,
                                       float price) {
-  const float sampling_rate_sec =
-      std::min(kSecondsPerDay, timestamp_sec - last_timestamp_sec_);
+  const float sampling_rate_sec = std::min(static_cast<int64_t>(kSecondsPerDay),
+                                           timestamp_sec - last_timestamp_sec_);
   const float ticks_per_day = kSecondsPerDay / sampling_rate_sec;
   if (mode == Mode::LONG) {
     const float stop_order_increase_threshold =

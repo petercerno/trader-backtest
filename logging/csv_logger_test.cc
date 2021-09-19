@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #include "logging/csv_logger.h"
 
@@ -48,7 +48,7 @@ TEST(CsvLoggerTest, LogExchangeState) {
   PrepareExampleAccount(account);
 
   std::stringstream exchange_os;
-  CsvLogger logger(&exchange_os, /* trader_os = */ nullptr);
+  CsvLogger logger(&exchange_os, /*trader_os=*/nullptr);
   logger.LogExchangeState(ohlc_history[0], account);
   logger.LogExchangeState(ohlc_history[1], account);
   logger.LogExchangeState(ohlc_history[2], account);
@@ -79,7 +79,7 @@ TEST(CsvLoggerTest, LogExchangeStateWithOrder) {
   order.set_price(500.0f);
 
   std::stringstream exchange_os;
-  CsvLogger logger(&exchange_os, /* trader_os = */ nullptr);
+  CsvLogger logger(&exchange_os, /*trader_os=*/nullptr);
   logger.LogExchangeState(ohlc_history[0], account);
   logger.LogExchangeState(ohlc_history[1], account, order);
   logger.LogExchangeState(ohlc_history[2], account);
@@ -98,7 +98,7 @@ TEST(CsvLoggerTest, LogExchangeStateWithOrder) {
 
 TEST(CsvLoggerTest, LogTraderState) {
   std::stringstream trader_os;
-  CsvLogger logger(/* exchange_os = */ nullptr, &trader_os);
+  CsvLogger logger(/*exchange_os=*/nullptr, &trader_os);
   logger.LogTraderState("state_1");
   logger.LogTraderState("state_2");
   logger.LogTraderState("state_3");

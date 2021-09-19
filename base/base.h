@@ -50,9 +50,9 @@ using SideHistory = std::vector<SideInputRecord>;
 template <typename T>
 std::pair<typename std::vector<T>::const_iterator,
           typename std::vector<T>::const_iterator>
-HistorySubset(const std::vector<T>& history, long start_timestamp_sec,
-              long end_timestamp_sec) {
-  const auto record_compare = [](const T& record, long timestamp_sec) {
+HistorySubset(const std::vector<T>& history, int64_t start_timestamp_sec,
+              int64_t end_timestamp_sec) {
+  const auto record_compare = [](const T& record, int64_t timestamp_sec) {
     return record.timestamp_sec() < timestamp_sec;
   };
   const auto record_begin =
@@ -72,8 +72,8 @@ HistorySubset(const std::vector<T>& history, long start_timestamp_sec,
 // [start_timestamp_sec, end_timestamp_sec).
 template <typename T>
 std::vector<T> HistorySubsetCopy(const std::vector<T>& history,
-                                 long start_timestamp_sec,
-                                 long end_timestamp_sec) {
+                                 int64_t start_timestamp_sec,
+                                 int64_t end_timestamp_sec) {
   std::vector<T> history_subset_copy;
   const auto history_subset =
       HistorySubset(history, start_timestamp_sec, end_timestamp_sec);

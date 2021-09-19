@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #include "eval/eval.h"
 
@@ -16,9 +16,9 @@ using ::google::protobuf::util::MessageDifferencer;
 
 namespace {
 // Compares two protobuf messages and outputs a diff if they differ.
-void ExpectProtoEq(const Message& expected_message, const Message& message,
+void ExpectProtoEq(const Message& message, const Message& expected_message,
                    bool full_scope = true) {
-  EXPECT_EQ(expected_message.GetTypeName(), message.GetTypeName());
+  EXPECT_EQ(message.GetTypeName(), expected_message.GetTypeName());
   std::string diff_report;
   MessageDifferencer differencer;
   differencer.set_scope(full_scope ? MessageDifferencer::FULL
@@ -47,9 +47,9 @@ void AddOhlcTick(float open, float high, float low, float close,
 // Adds daily OHLC tick to the history.
 void AddDailyOhlcTick(float open, float high, float low, float close,
                       OhlcHistory& ohlc_history) {
-  int timestamp_sec = 1483228800;  // 2017-01-01
+  int64_t timestamp_sec = 1483228800;  // 2017-01-01
   if (!ohlc_history.empty()) {
-    ASSERT_FLOAT_EQ(ohlc_history.back().close(), open);
+    ASSERT_FLOAT_EQ(open, ohlc_history.back().close());
     timestamp_sec = ohlc_history.back().timestamp_sec() + 24 * 60 * 60;
   }
   AddOhlcTick(open, high, low, close, ohlc_history);
@@ -59,9 +59,9 @@ void AddDailyOhlcTick(float open, float high, float low, float close,
 // Adds monthly OHLC tick to the history.
 void AddMonthlyOhlcTick(float open, float high, float low, float close,
                         OhlcHistory& ohlc_history) {
-  int timestamp_sec = 1483228800;  // 2017-01-01
+  int64_t timestamp_sec = 1483228800;  // 2017-01-01
   if (!ohlc_history.empty()) {
-    ASSERT_FLOAT_EQ(ohlc_history.back().close(), open);
+    ASSERT_FLOAT_EQ(open, ohlc_history.back().close());
     timestamp_sec =
         AddMonthsToTimestampSec(ohlc_history.back().timestamp_sec(), 1);
   }
@@ -149,7 +149,7 @@ class TestTrader : public Trader {
   float last_base_balance_ = 0.0f;
   float last_quote_balance_ = 0.0f;
   // Last seen UNIX timestamp (in seconds).
-  int last_timestamp_sec_ = 0;
+  int64_t last_timestamp_sec_ = 0;
   // Last seen close price.
   float last_close_ = 0.0f;
   // True iff most of the account value is in base (crypto) currency.
@@ -203,7 +203,7 @@ TEST(ExecuteTraderTest, LimitBuyAndSell) {
   OhlcHistory ohlc_history;
   SetupDailyOhlcHistory(ohlc_history);
 
-  TestTrader trader(/* buy_price = */ 50, /* sell_price = */ 200);
+  TestTrader trader(/*buy_price=*/50, /*sell_price=*/200);
 
   std::stringstream exchange_os;
   std::stringstream trader_os;
@@ -211,8 +211,8 @@ TEST(ExecuteTraderTest, LimitBuyAndSell) {
 
   ExecutionResult result =
       ExecuteTrader(account_config, ohlc_history.begin(), ohlc_history.end(),
-                    /* side_input = */ nullptr,
-                    /* fast_eval = */ false, trader, &logger);
+                    /*side_input=*/nullptr,
+                    /*fast_eval=*/false, trader, &logger);
 
   ExecutionResult expected_result;
   ASSERT_TRUE(TextFormat::ParseFromString(
@@ -231,7 +231,7 @@ TEST(ExecuteTraderTest, LimitBuyAndSell) {
         trader_volatility: 2.36517286
         )",
       &expected_result));
-  ExpectProtoEq(expected_result, result);
+  ExpectProtoEq(result, expected_result);
 
   std::stringstream expected_exchange_os;
   std::stringstream expected_trader_os;
@@ -261,8 +261,8 @@ TEST(ExecuteTraderTest, LimitBuyAndSell) {
       << "1483488000,0.000,1799.000,100.000,IN_CASH,LIMIT_BUY@50" << std::endl
       << "1483574400,32.300,21.000,50.000,IN_LONG,LIMIT_SELL@200" << std::endl;
 
-  EXPECT_EQ(expected_exchange_os.str(), exchange_os.str());
-  EXPECT_EQ(expected_trader_os.str(), trader_os.str());
+  EXPECT_EQ(exchange_os.str(), expected_exchange_os.str());
+  EXPECT_EQ(trader_os.str(), expected_trader_os.str());
 }
 
 TEST(ExecuteTraderTest, LimitBuyAndSellFastEval) {
@@ -285,12 +285,12 @@ TEST(ExecuteTraderTest, LimitBuyAndSellFastEval) {
   OhlcHistory ohlc_history;
   SetupDailyOhlcHistory(ohlc_history);
 
-  TestTrader trader(/* buy_price = */ 50, /* sell_price = */ 200);
+  TestTrader trader(/*buy_price=*/50, /*sell_price=*/200);
 
   ExecutionResult result =
       ExecuteTrader(account_config, ohlc_history.begin(), ohlc_history.end(),
-                    /* side_input = */ nullptr, /* fast_eval = */ true, trader,
-                    /* logger = */ nullptr);
+                    /*side_input=*/nullptr, /*fast_eval=*/true, trader,
+                    /*logger=*/nullptr);
 
   ExecutionResult expected_result;
   ASSERT_TRUE(TextFormat::ParseFromString(
@@ -307,7 +307,7 @@ TEST(ExecuteTraderTest, LimitBuyAndSellFastEval) {
         total_fee: 364
         )",
       &expected_result));
-  ExpectProtoEq(expected_result, result);
+  ExpectProtoEq(result, expected_result);
 }
 
 TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
@@ -341,9 +341,9 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
         )",
       &eval_config));
 
-  TestTraderEmitter trader_emitter(/* buy_price = */ 50,
-                                   /* sell_price = */ 200);
-  EXPECT_EQ("test-trader[50|200]", trader_emitter.GetName());
+  TestTraderEmitter trader_emitter(/*buy_price=*/50,
+                                   /*sell_price=*/200);
+  EXPECT_EQ(trader_emitter.GetName(), "test-trader[50|200]");
 
   std::stringstream exchange_os;
   std::stringstream trader_os;
@@ -351,7 +351,7 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
 
   EvaluationResult result =
       EvaluateTrader(account_config, eval_config, ohlc_history,
-                     /* side_input = */ nullptr, trader_emitter, &logger);
+                     /*side_input=*/nullptr, trader_emitter, &logger);
 
   EvaluationResult expected_result;
   ASSERT_TRUE(TextFormat::ParseFromString(
@@ -403,7 +403,7 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
         avg_total_fee: 1011
         )",
       &expected_result));
-  ExpectProtoEq(expected_result, result);
+  ExpectProtoEq(result, expected_result);
 
   std::stringstream expected_exchange_os;
   std::stringstream expected_trader_os;
@@ -457,8 +457,8 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriod) {
       << "1509494400,0.000,5834.000,650.000,IN_CASH,LIMIT_BUY@50" << std::endl
       << "1512086400,0.000,5834.000,750.000,IN_CASH,LIMIT_BUY@50" << std::endl;
 
-  EXPECT_EQ(expected_exchange_os.str(), exchange_os.str());
-  EXPECT_EQ(expected_trader_os.str(), trader_os.str());
+  EXPECT_EQ(exchange_os.str(), expected_exchange_os.str());
+  EXPECT_EQ(trader_os.str(), expected_trader_os.str());
 }
 
 TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriodFastEval) {
@@ -492,14 +492,14 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriodFastEval) {
         )",
       &eval_config));
 
-  TestTraderEmitter trader_emitter(/* buy_price = */ 50,
-                                   /* sell_price = */ 200);
-  EXPECT_EQ("test-trader[50|200]", trader_emitter.GetName());
+  TestTraderEmitter trader_emitter(/*buy_price=*/50,
+                                   /*sell_price=*/200);
+  EXPECT_EQ(trader_emitter.GetName(), "test-trader[50|200]");
 
   EvaluationResult result =
       EvaluateTrader(account_config, eval_config, ohlc_history,
-                     /* side_input = */ nullptr, trader_emitter,
-                     /* logger = */ nullptr);
+                     /*side_input=*/nullptr, trader_emitter,
+                     /*logger=*/nullptr);
 
   EvaluationResult expected_result;
   ASSERT_TRUE(TextFormat::ParseFromString(
@@ -549,7 +549,7 @@ TEST(EvaluateTraderTest, LimitBuyAndSellOnePeriodFastEval) {
         avg_total_fee: 1011
         )",
       &expected_result));
-  ExpectProtoEq(expected_result, result);
+  ExpectProtoEq(result, expected_result);
 }
 
 TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
@@ -583,14 +583,14 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
         )",
       &eval_config));
 
-  TestTraderEmitter trader_emitter(/* buy_price = */ 50,
-                                   /* sell_price = */ 200);
-  EXPECT_EQ("test-trader[50|200]", trader_emitter.GetName());
+  TestTraderEmitter trader_emitter(/*buy_price=*/50,
+                                   /*sell_price=*/200);
+  EXPECT_EQ(trader_emitter.GetName(), "test-trader[50|200]");
 
   EvaluationResult result =
       EvaluateTrader(account_config, eval_config, ohlc_history,
-                     /* side_input = */ nullptr, trader_emitter,
-                     /* logger = */ nullptr);
+                     /*side_input=*/nullptr, trader_emitter,
+                     /*logger=*/nullptr);
 
   EvaluationResult expected_result;
   ASSERT_TRUE(TextFormat::ParseFromString(
@@ -762,7 +762,7 @@ TEST(EvaluateTraderTest, LimitBuyAndSellMultiple6MonthPeriods) {
         avg_total_fee: 247.571426
         )",
       &expected_result));
-  ExpectProtoEq(expected_result, result);
+  ExpectProtoEq(result, expected_result);
 }
 
 TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
@@ -797,18 +797,18 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
       &eval_config));
 
   std::vector<std::unique_ptr<TraderEmitter>> trader_emitters;
-  trader_emitters.emplace_back(new TestTraderEmitter(/* buy_price = */ 50,
-                                                     /* sell_price = */ 200));
-  trader_emitters.emplace_back(new TestTraderEmitter(/* buy_price = */ 40,
-                                                     /* sell_price = */ 250));
-  trader_emitters.emplace_back(new TestTraderEmitter(/* buy_price = */ 30,
-                                                     /* sell_price = */ 500));
+  trader_emitters.emplace_back(new TestTraderEmitter(/*buy_price=*/50,
+                                                     /*sell_price=*/200));
+  trader_emitters.emplace_back(new TestTraderEmitter(/*buy_price=*/40,
+                                                     /*sell_price=*/250));
+  trader_emitters.emplace_back(new TestTraderEmitter(/*buy_price=*/30,
+                                                     /*sell_price=*/500));
 
   std::vector<EvaluationResult> eval_results =
       EvaluateBatchOfTraders(account_config, eval_config, ohlc_history,
-                             /* side_input = */ nullptr, trader_emitters);
+                             /*side_input=*/nullptr, trader_emitters);
 
-  ASSERT_EQ(3, eval_results.size());
+  ASSERT_EQ(eval_results.size(), 3);
   EvaluationResult expected_result[3];
 
   ASSERT_TRUE(TextFormat::ParseFromString(
@@ -882,8 +882,8 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
         avg_total_fee: 247.571426
         )",
       &expected_result[0]));
-  ExpectProtoEq(expected_result[0], eval_results[0],
-                /* full_scope = */ false);
+  ExpectProtoEq(eval_results[0], expected_result[0],
+                /*full_scope=*/false);
 
   ASSERT_TRUE(TextFormat::ParseFromString(
       R"(
@@ -956,8 +956,8 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
         avg_total_fee: 309
         )",
       &expected_result[1]));
-  ExpectProtoEq(expected_result[1], eval_results[1],
-                /* full_scope = */ false);
+  ExpectProtoEq(eval_results[1], expected_result[1],
+                /*full_scope=*/false);
 
   ASSERT_TRUE(TextFormat::ParseFromString(
       R"(
@@ -1030,13 +1030,13 @@ TEST(EvaluateBatchOfTradersTest, LimitBuyAndSellMultiple6MonthPeriods) {
         avg_total_fee: 143.142853
         )",
       &expected_result[2]));
-  ExpectProtoEq(expected_result[2], eval_results[2],
-                /* full_scope = */ false);
+  ExpectProtoEq(eval_results[2], expected_result[2],
+                /*full_scope=*/false);
 }
 
 namespace {
 // Adds signals to the side_history.
-void AddSignals(const std::vector<float>& signals, int timestamp_sec,
+void AddSignals(const std::vector<float>& signals, int64_t timestamp_sec,
                 SideHistory& side_history) {
   side_history.emplace_back();
   SideInputRecord& side_input = side_history.back();
@@ -1126,7 +1126,7 @@ class TestTraderWithSideInput : public Trader {
   float last_base_balance_ = 0.0f;
   float last_quote_balance_ = 0.0f;
   // Last seen UNIX timestamp (in seconds).
-  int last_timestamp_sec_ = 0;
+  int64_t last_timestamp_sec_ = 0;
   // Last seen close price.
   float last_close_ = 0.0f;
   // Last seen side input signal.
@@ -1176,13 +1176,13 @@ TEST(ExecuteTraderWithSideInputTest, MarketBuyAndSell) {
   AddDailyOhlcTick(100, 120, 20, 50, ohlc_history);    // 2017-01-05
 
   SideHistory side_history;
-  AddSignals(/* signals = */ {2},
-             /* timestamp_sec = */ 1483315200 - kSecondsPerHour,
+  AddSignals(/*signals=*/{2},
+             /*timestamp_sec=*/1483315200 - kSecondsPerHour,
              side_history);  // SHOULD_SELL on 2017-01-02 -1h
-  AddSignals(/* signals = */ {1}, /* timestamp_sec = */ 1483488000,
+  AddSignals(/*signals=*/{1}, /*timestamp_sec=*/1483488000,
              side_history);  // SHOULD_BUY on 2017-01-04
-  AddSignals(/* signals = */ {0},
-             /* timestamp_sec = */ 1483574400,
+  AddSignals(/*signals=*/{0},
+             /*timestamp_sec=*/1483574400,
              side_history);  // DO_NOTHING on 2017-01-05
   SideInput side_input(side_history);
 
@@ -1192,9 +1192,9 @@ TEST(ExecuteTraderWithSideInputTest, MarketBuyAndSell) {
   std::stringstream trader_os;
   CsvLogger logger(&exchange_os, &trader_os);
 
-  ExecutionResult result = ExecuteTrader(
-      account_config, ohlc_history.begin(), ohlc_history.end(), &side_input,
-      /* fast_eval = */ false, trader, &logger);
+  ExecutionResult result = ExecuteTrader(account_config, ohlc_history.begin(),
+                                         ohlc_history.end(), &side_input,
+                                         /*fast_eval=*/false, trader, &logger);
 
   ExecutionResult expected_result;
   ASSERT_TRUE(TextFormat::ParseFromString(
@@ -1213,7 +1213,7 @@ TEST(ExecuteTraderWithSideInputTest, MarketBuyAndSell) {
         trader_volatility: 7.15005541
         )",
       &expected_result));
-  ExpectProtoEq(expected_result, result);
+  ExpectProtoEq(result, expected_result);
 
   std::stringstream expected_exchange_os;
   std::stringstream expected_trader_os;
@@ -1241,8 +1241,8 @@ TEST(ExecuteTraderWithSideInputTest, MarketBuyAndSell) {
       << "1483488000,0.000,1259.000,100.000,SHOULD_BUY,0" << std::endl
       << "1483574400,10.800,21.000,50.000,DO_NOTHING,0" << std::endl;
 
-  EXPECT_EQ(expected_exchange_os.str(), exchange_os.str());
-  EXPECT_EQ(expected_trader_os.str(), trader_os.str());
+  EXPECT_EQ(exchange_os.str(), expected_exchange_os.str());
+  EXPECT_EQ(trader_os.str(), expected_trader_os.str());
 }
 
 }  // namespace trader

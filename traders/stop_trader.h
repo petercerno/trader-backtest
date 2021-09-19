@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #ifndef TRADERS_STOP_TRADER_H
 #define TRADERS_STOP_TRADER_H
@@ -33,7 +33,7 @@ class StopTrader : public Trader {
   float last_base_balance_ = 0.0f;
   float last_quote_balance_ = 0.0f;
   // Last seen UNIX timestamp (in seconds).
-  int last_timestamp_sec_ = 0;
+  int64_t last_timestamp_sec_ = 0;
   // Last seen close price.
   float last_close_ = 0.0f;
   // Last trader mode.
@@ -46,7 +46,7 @@ class StopTrader : public Trader {
   int max_allowed_gap_sec_ = 1 * 60 * 60;  // 1 hour.
 
   // Updates the trader stop order price.
-  void UpdateStopOrderPrice(Mode mode, int timestamp_sec, float price);
+  void UpdateStopOrderPrice(Mode mode, int64_t timestamp_sec, float price);
   // Emits the stop order based on the (updated) internal trader state.
   void EmitStopOrder(float price, std::vector<Order>& orders) const;
 };

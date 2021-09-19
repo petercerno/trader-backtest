@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #ifndef TRADERS_REBALANCING_TRADER_H
 #define TRADERS_REBALANCING_TRADER_H
@@ -27,7 +27,7 @@ class RebalancingTrader : public Trader {
   float last_base_balance_ = 0.0f;
   float last_quote_balance_ = 0.0f;
   // Last seen UNIX timestamp (in seconds).
-  int last_timestamp_sec_ = 0;
+  int64_t last_timestamp_sec_ = 0;
   // Last seen close price.
   float last_close_ = 0.0f;
 };

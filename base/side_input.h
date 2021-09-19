@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #ifndef BASE_SIDE_INPUT_H
 #define BASE_SIDE_INPUT_H
@@ -19,7 +19,7 @@ class SideInput {
   // Returns the number of side input records.
   int GetNumberOfRecords() const { return timestamp_sec_history_.size(); }
   // Returns the timestamp (in seconds) for the given side_input_index.
-  int GetSideInputTimestamp(int side_input_index) const {
+  int64_t GetSideInputTimestamp(int side_input_index) const {
     return timestamp_sec_history_.at(side_input_index);
   }
   // Returns the signal for the given side_input_index and signal_index.
@@ -30,18 +30,18 @@ class SideInput {
   // Returns the latest side input index before (or at) the given timestamp.
   // Returns -1 if the first side input record is after the given timestamp.
   // This method runs in O(log N) where N is the number of side input records.
-  int GetSideInputIndex(int timestamp_sec) const;
+  int GetSideInputIndex(int64_t timestamp_sec) const;
   // The same method as GetSideInputIndex, but with a hint about what was the
   // previous side_input_index. If the prev_side_input_index is -1, then the
   // hint is ignored. The time complexity is O(1) if the given timestamp is
   // close enough to the the previous timestamp.
-  int GetSideInputIndex(int timestamp_sec, int prev_side_input_index) const;
+  int GetSideInputIndex(int64_t timestamp_sec, int prev_side_input_index) const;
 
  private:
   // Number of signals per side input record.
   int num_signals_ = 0;
   // All historical (increasing) side input timestamps (in seconds).
-  std::vector<int> timestamp_sec_history_;
+  std::vector<int64_t> timestamp_sec_history_;
   // Flattened vector of all historical side input signals.
   std::vector<float> data_;
 };

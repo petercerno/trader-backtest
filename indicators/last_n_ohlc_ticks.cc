@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #include "indicators/last_n_ohlc_ticks.h"
 
@@ -26,12 +26,13 @@ const std::deque<OhlcTick>& LastNOhlcTicks::GetLastNOhlcTicks() const {
 }
 
 void LastNOhlcTicks::Update(const OhlcTick& ohlc_tick) {
-  const int adjusted_timestamp_sec =
+  const int64_t adjusted_timestamp_sec =
       period_size_sec_ * (ohlc_tick.timestamp_sec() / period_size_sec_);
   while (!last_n_ohlc_ticks_.empty() &&
          last_n_ohlc_ticks_.back().timestamp_sec() + period_size_sec_ <
              adjusted_timestamp_sec) {
-    const int prev_timestamp_sec = last_n_ohlc_ticks_.back().timestamp_sec();
+    const int64_t prev_timestamp_sec =
+        last_n_ohlc_ticks_.back().timestamp_sec();
     const float prev_close = last_n_ohlc_ticks_.back().close();
     last_n_ohlc_ticks_.emplace_back();
     OhlcTick* top_ohlc_tick = &last_n_ohlc_ticks_.back();

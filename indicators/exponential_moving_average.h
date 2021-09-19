@@ -1,4 +1,4 @@
-// Copyright © 2020 Peter Cerno. All rights reserved.
+// Copyright © 2021 Peter Cerno. All rights reserved.
 
 #ifndef INDICATORS_EXPONENTIAL_MOVING_AVERAGE_H
 #define INDICATORS_EXPONENTIAL_MOVING_AVERAGE_H
