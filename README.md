@@ -83,15 +83,32 @@ As discussed before, a stop order can be thought of as a promise by the exchange
 
 ## Installation
 
-First, you need to install [Bazel](https://bazel.build/).
+On [macOS](https://www.apple.com/macos) you need to have the [XCode](https://developer.apple.com/xcode/) (including the XCode Command Line Tools) installed.
 
-**Note**: This code was tested on [macOS](https://www.apple.com/macos), and [Windows](https://www.microsoft.com/en-us/windows). However, there are few caveats on Windows:
+On [Windows](https://www.microsoft.com/en-us/windows) you need to have the [Build Tools for Visual Studio](https://aka.ms/buildtools) installed.
+
+Install [Bazel](https://bazel.build/).
+
+If you use [Visual Studio Code](https://code.visualstudio.com/) then I also recommend installing the following extensions:
+
+* [C/C++](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools): C/C++ IntelliSense, debugging, and code browsing.
+* [Bazel](https://marketplace.visualstudio.com/items?itemName=BazelBuild.vscode-bazel): Bazel BUILD integration.
+* [vscode-proto3](https://marketplace.visualstudio.com/items?itemName=zxh404.vscode-proto3): Protobuf editing.
+
+For the [C/C++](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) extension to work properly for this project you need to set the following settings:
+
+```
+"C_Cpp.clang_format_fallbackStyle": "Google",
+"C_Cpp.default.cppStandard": "c++17"
+```
+
+There are few more caveats for Windows:
 
 * [Protocol Buffers](https://github.com/protocolbuffers/protobuf) come without [zlib](https://zlib.net/), which means that the output delimited protocol buffer files are not compressed.
-* You need to follow [these instructions](https://docs.bazel.build/versions/master/install-windows.html) to install [Bazel](https://bazel.build/). In particular, I would recommend to install [MSYS2 x86_64](https://www.msys2.org/) to get Bash and some common Unix tools (like `grep`, `tar`, `git`, `curl`, `gzip`, etc.). You also need to install [Build Tools for Visual Studio 2019](https://aka.ms/buildtools) in order to build C++ code on Windows.
-* The syntax for Windows Command Prompt is slightly different from Linux / macOS. I have tried to highlight the differences.
+* You need to follow [these instructions](https://docs.bazel.build/versions/master/install-windows.html) to install [Bazel](https://bazel.build/). In particular, I would recommend to install [MSYS2 x86_64](https://www.msys2.org/) to get Bash and some common Unix tools (like `grep`, `tar`, `git`, `curl`, `gzip`, etc.).
+* The syntax for Windows Command Prompt is slightly different from Linux / macOS. I have tried to highlight the differences whenever possible.
 
-You can download the code from [GitHub](https://github.com/petercerno/trader-backtest) as follows:
+You can download the code for this project from [GitHub](https://github.com/petercerno/trader-backtest) as follows:
 
 ```
 git clone https://github.com/petercerno/trader-backtest.git
