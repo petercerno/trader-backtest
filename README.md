@@ -204,7 +204,7 @@ bazel run :convert -- \
   --input_price_history_csv_file="/$(pwd)/data/bitstampUSD.csv" \
   --output_price_history_delimited_proto_file="/$(pwd)/data/bitstampUSD.dpb" \
   --start_time="2017-01-01" \
-  --end_time="2021-09-01"
+  --end_time="2022-01-01"
 ```
 
 Windows:
@@ -214,14 +214,16 @@ bazel run :convert -- ^
   --input_price_history_csv_file="%cd%\data\bitstampUSD.csv" ^
   --output_price_history_delimited_proto_file="%cd%\data\bitstampUSD.dpb" ^
   --start_time="2017-01-01" ^
-  --end_time="2021-09-01"
+  --end_time="2022-01-01"
 ```
 
 Output (shortened):
 
 ```
+Selected time period:
+[2017-01-01 00:00:00 - 2022-01-01 00:00:00)
 Reading price history from CSV file: .../data/bitstampUSD.csv
-Loaded 44641233 records in 290.129 seconds
+Loaded 47743034 records in 126.722 seconds
 Top 50 gaps:
 1483250945 [2017-01-01 06:09:05] - 1483252128 [2017-01-01 06:28:48]: 0:19:43
 1483252902 [2017-01-01 06:41:42] - 1483253968 [2017-01-01 06:59:28]: 0:17:46
@@ -229,13 +231,13 @@ Top 50 gaps:
 1483256048 [2017-01-01 07:34:08] - 1483256938 [2017-01-01 07:48:58]: 0:14:50
 1483257203 [2017-01-01 07:53:23] - 1483258092 [2017-01-01 08:08:12]: 0:14:49
 ...
-1595141310 [2020-07-19 06:48:30] - 1595141997 [2020-07-19 06:59:57]: 0:11:27
-1598436188 [2020-08-26 10:03:08] - 1598442747 [2020-08-26 11:52:27]: 1:49:19
-1600855314 [2020-09-23 10:01:54] - 1600857660 [2020-09-23 10:41:00]: 0:39:06
-1600858960 [2020-09-23 11:02:40] - 1600860317 [2020-09-23 11:25:17]: 0:22:37
 1618387319 [2021-04-14 08:01:59] - 1618393146 [2021-04-14 09:39:06]: 1:37:07
-Writing 44641233 records to the file: .../data/bitstampUSD.dpb
-Finished in 15.053 seconds
+1632304872 [2021-09-22 10:01:12] - 1632307499 [2021-09-22 10:44:59]: 0:43:47
+1633075261 [2021-10-01 08:01:01] - 1633076338 [2021-10-01 08:18:58]: 0:17:57
+1634716883 [2021-10-20 08:01:23] - 1634720673 [2021-10-20 09:04:33]: 1:03:10
+1637744459 [2021-11-24 09:00:59] - 1637748045 [2021-11-24 10:00:45]: 0:59:46
+Writing 47743034 records to the file: .../data/bitstampUSD.dpb
+Finished in 8.898 seconds
 ```
 
 As you can see, reading the full CSV file is prohibitively slow. It would be impractical to wait so long every time we wanted to evaluate the trader.
@@ -249,7 +251,7 @@ bazel run :convert -- \
   --input_price_history_delimited_proto_file="/$(pwd)/data/bitstampUSD.dpb" \
   --output_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_5min.dpb" \
   --start_time="2017-01-01" \
-  --end_time="2021-09-01" \
+  --end_time="2022-01-01" \
   --sampling_rate_sec=300
 ```
 
@@ -260,43 +262,41 @@ bazel run :convert -- ^
   --input_price_history_delimited_proto_file="%cd%\data\bitstampUSD.dpb" ^
   --output_ohlc_history_delimited_proto_file="%cd%\data\bitstampUSD_5min.dpb" ^
   --start_time="2017-01-01" ^
-  --end_time="2021-09-01" ^
+  --end_time="2022-01-01" ^
   --sampling_rate_sec=300
 ```
 
 Output (shortened):
 
 ```
+Selected time period:
+[2017-01-01 00:00:00 - 2022-01-01 00:00:00)
 Reading history from delimited proto file: .../data/bitstampUSD.dpb
-Loaded 44641233 records in 68.952 seconds
+Loaded 47743034 records in 34.041 seconds
 Top 50 gaps:
 1483250945 [2017-01-01 06:09:05] - 1483252128 [2017-01-01 06:28:48]: 0:19:43
 1483252902 [2017-01-01 06:41:42] - 1483253968 [2017-01-01 06:59:28]: 0:17:46
-
 ...
-1600858960 [2020-09-23 11:02:40] - 1600860317 [2020-09-23 11:25:17]: 0:22:37
-1618387319 [2021-04-14 08:01:59] - 1618393146 [2021-04-14 09:39:06]: 1:37:07
-Removed 13 outliers
+1634716883 [2021-10-20 08:01:23] - 1634720673 [2021-10-20 09:04:33]: 1:03:10
+1637744459 [2021-11-24 09:00:59] - 1637748045 [2021-11-24 10:00:45]: 0:59:46
+Removed 22 outliers
 Last 20 outliers:
    ...
-   1558062705 [2019-05-17 03:11:45]: 7180.00 [0.0014]
-   1558062706 [2019-05-17 03:11:46]: 7187.00 [0.0062]
- x 1558062706 [2019-05-17 03:11:46]: 6810.00 [0.0128]
-   1558062706 [2019-05-17 03:11:46]: 7187.00 [0.0025]
- x 1558062706 [2019-05-17 03:11:46]: 6810.00 [2.4939]
-   1558062708 [2019-05-17 03:11:48]: 7187.00 [0.0175]
-   1558062708 [2019-05-17 03:11:48]: 7194.00 [0.0500]
-   ...
-   1584066710 [2020-03-13 02:31:50]: 4998.99 [0.7207]
-   1584066710 [2020-03-13 02:31:50]: 4998.99 [0.0313]
- x 1584066711 [2020-03-13 02:31:51]: 4728.75 [0.0505]
- x 1584066712 [2020-03-13 02:31:52]: 4728.89 [0.0226]
-   1584066712 [2020-03-13 02:31:52]: 4998.92 [0.0485]
-   1584066712 [2020-03-13 02:31:52]: 4998.94 [0.0560]
-   ...
-Resampled 44641220 records to 490752 OHLC ticks
-Writing 490752 records to the file: .../data/bitstampUSD_5min.dpb
-Finished in 0.300 seconds
+   1634572737 [2021-10-18 15:58:57]: 61795.17 [0.0631]
+   1634572737 [2021-10-18 15:58:57]: 61763.10 [0.0369]
+   1634572737 [2021-10-18 15:58:57]: 61763.10 [0.4348]
+   1634572737 [2021-10-18 15:58:57]: 59013.00 [10.0680]
+   1634572737 [2021-10-18 15:58:57]: 62031.50 [0.1900]
+ x 1634572737 [2021-10-18 15:58:57]: 59013.00 [0.0948]
+ x 1634572737 [2021-10-18 15:58:57]: 59013.00 [0.0131]
+   1634572737 [2021-10-18 15:58:57]: 61624.00 [0.0003]
+   1634572737 [2021-10-18 15:58:57]: 61870.43 [0.0098]
+   1634572737 [2021-10-18 15:58:57]: 61870.43 [0.0004]
+   1634572737 [2021-10-18 15:58:57]: 61899.66 [0.0337]
+   1634572737 [2021-10-18 15:58:57]: 61870.43 [0.1434]
+Resampled 47743012 records to 525888 OHLC ticks
+Writing 525888 records to the file: .../data/bitstampUSD_5min.dpb
+Finished in 0.140 seconds
 ```
 
 In general, it is a good idea to evaluate traders over OHLC histories with different sampling rates. To this end we will also resample the price history into the OHLC history with 1 hour sampling rate as follows:
@@ -308,7 +308,7 @@ bazel run :convert -- \
   --input_price_history_delimited_proto_file="/$(pwd)/data/bitstampUSD.dpb" \
   --output_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_1h.dpb" \
   --start_time="2017-01-01" \
-  --end_time="2021-09-01" \
+  --end_time="2022-01-01" \
   --sampling_rate_sec=3600
 ```
 
@@ -319,19 +319,21 @@ bazel run :convert -- ^
   --input_price_history_delimited_proto_file="%cd%\data\bitstampUSD.dpb" ^
   --output_ohlc_history_delimited_proto_file="%cd%\data\bitstampUSD_1h.dpb" ^
   --start_time="2017-01-01" ^
-  --end_time="2021-09-01" ^
+  --end_time="2022-01-01" ^
   --sampling_rate_sec=3600
 ```
 
 Output (shortened):
 
 ```
+Selected time period:
+[2017-01-01 00:00:00 - 2022-01-01 00:00:00)
 Reading history from delimited proto file: .../data/bitstampUSD.dpb
-Loaded 44641233 records in 82.820 seconds
+Loaded 47743034 records in 33.931 seconds
 ...
-Resampled 44641220 records to 40896 OHLC ticks
-Writing 40896 records to the file: .../data/bitstampUSD_1h.dpb
-Finished in 0.021 seconds
+Resampled 47743012 records to 43824 OHLC ticks
+Writing 43824 records to the file: .../data/bitstampUSD_1h.dpb
+Finished in 0.013 seconds
 ```
 
 It is also possible to provide an additional side history to the trader. For example, one can use the `fear_and_greed_index.ipynb` notebook to download the [Crypto Fear & Greed Index](https://alternative.me/crypto/fear-and-greed-index/) into a CSV file: `data/fear_and_greed_index.csv` and then convert it into the delimited proto file as follows:
@@ -343,7 +345,7 @@ bazel run :convert -- \
   --input_side_history_csv_file="/$(pwd)/data/fear_and_greed_index.csv" \
   --output_side_history_delimited_proto_file="/$(pwd)/data/fear_and_greed_index.dpb" \
   --start_time="2018-01-01" \
-  --end_time="2021-09-01"
+  --end_time="2022-01-01"
 ```
 
 Windows:
@@ -353,21 +355,23 @@ bazel run :convert -- ^
   --input_side_history_csv_file="%cd%\data\fear_and_greed_index.csv" ^
   --output_side_history_delimited_proto_file="%cd%\data\fear_and_greed_index.dpb" ^
   --start_time="2018-01-01" ^
-  --end_time="2021-09-01"
+  --end_time="2022-01-01"
 ```
 
 Output:
 
 ```
+Selected time period:
+[2018-01-01 00:00:00 - 2022-01-01 00:00:00)
 Reading side history from CSV file: .../data/fear_and_greed_index.csv
-Loaded 1305 records in 0.006 seconds
-Writing 1305 records to the file: .../data/fear_and_greed_index.dpb
-Finished in 0.001 seconds
+Loaded 1427 records in 0.002 seconds
+Writing 1427 records to the file: .../data/fear_and_greed_index.dpb
+Finished in 0.000 seconds
 ```
 
 **Note**: One needs to be very careful when defining additional side input signals for a trader. Every signal at timestamp `T` can only be based on information available before (or at) the timestamp `T` (in order to avoid peeking into the future).
 
-Now we can evaluate a simple `rebalancing` trader over a 4 year time period: `[2017-01-01 - 2021-01-01)` (and log both the exchange states and also the trader internal states) as follows:
+Now we can evaluate a simple `rebalancing` trader over a 5 year time period: `[2017-01-01 - 2022-01-01)` (and log both the exchange states and also the trader internal states) as follows:
 
 Linux / macOS:
 
@@ -378,7 +382,7 @@ bazel run :trader -- \
   --output_exchange_log_file="/$(pwd)/data/bitstampUSD_5min_rebalancing_exchange_log.out.csv" \
   --output_trader_log_file="/$(pwd)/data/bitstampUSD_5min_rebalancing_trader_log.csv" \
   --start_time="2017-01-01" \
-  --end_time="2021-01-01" \
+  --end_time="2022-01-01" \
   --start_base_balance=1.0 \
   --start_quote_balance=0.0
 ```
@@ -392,7 +396,7 @@ bazel run :trader -- ^
   --output_exchange_log_file="%cd%\data\bitstampUSD_5min_rebalancing_exchange_log.out.csv" ^
   --output_trader_log_file="%cd%\data\bitstampUSD_5min_rebalancing_trader_log.csv" ^
   --start_time="2017-01-01" ^
-  --end_time="2021-01-01" ^
+  --end_time="2022-01-01" ^
   --start_base_balance=1.0 ^
   --start_quote_balance=0.0
 ```
@@ -424,22 +428,22 @@ market_liquidity: 0.5
 max_volume_ratio: 0.5
 
 Selected time period:
-[2017-01-01 00:00:00 - 2021-01-01 00:00:00)
+[2017-01-01 00:00:00 - 2022-01-01 00:00:00)
 
 Trader EvaluationConfig:
 start_timestamp_sec: 1483228800
-end_timestamp_sec: 1609459200
+end_timestamp_sec: 1640995200
 evaluation_period_months: 0
 
 Reading OHLC history from: .../data/bitstampUSD_5min.dpb
-- Loaded 490752 records in 2.078 seconds
-- Selected 420768 records within the time period: [2017-01-01 00:00:00 - 2021-01-01 00:00:00)
+- Loaded 525888 records in 0.410 seconds
+- Selected 525888 records within the time period: [2017-01-01 00:00:00 - 2022-01-01 00:00:00)
 
 rebalancing-trader[0.700|0.050] evaluation:
 ------------------ period ------------------    trader & base gain    score    t&b volatility
-[2017-01-01 00:00:00 - 2021-01-01 00:00:00):   1333.09%   2900.17%    0.478    0.581    0.828
+[2017-01-01 00:00:00 - 2022-01-01 00:00:00):   2040.36%   4682.26%    0.448    0.579    0.824
 
-Evaluated in 15.545 seconds
+Evaluated in 3.988 seconds
 ```
 
 To put it simply, the `rebalancing` trader tries to maintain a constant portfolio allocation (in our case 70% in BTC and 30% in USD with at most ±5% error). You can learn more about the `rebalancing` trader in the `//traders/rebalancing_trader.ipynb` notebook.
@@ -485,7 +489,7 @@ bazel run :trader -- \
   --output_exchange_log_file="/$(pwd)/data/bitstampUSD_1h_rebalancing_exchange_log.out.csv" \
   --output_trader_log_file="/$(pwd)/data/bitstampUSD_1h_rebalancing_trader_log.csv" \
   --start_time="2017-01-01" \
-  --end_time="2021-01-01" \
+  --end_time="2022-01-01" \
   --start_base_balance=1.0 \
   --start_quote_balance=0.0
 ```
@@ -499,7 +503,7 @@ bazel run :trader -- ^
   --output_exchange_log_file="%cd%\data\bitstampUSD_1h_rebalancing_exchange_log.out.csv" ^
   --output_trader_log_file="%cd%\data\bitstampUSD_1h_rebalancing_trader_log.csv" ^
   --start_time="2017-01-01" ^
-  --end_time="2021-01-01" ^
+  --end_time="2022-01-01" ^
   --start_base_balance=1.0 ^
   --start_quote_balance=0.0
 ```
@@ -509,14 +513,14 @@ Output (shortened):
 ```
 ...
 Reading OHLC history from: .../data/bitstampUSD_1h.dpb
-- Loaded 40896 records in 0.056 seconds
-- Selected 35064 records within the time period: [2017-01-01 00:00:00 - 2021-01-01 00:00:00)
+- Loaded 43824 records in 0.032 seconds
+- Selected 43824 records within the time period: [2017-01-01 00:00:00 - 2022-01-01 00:00:00)
 
 rebalancing-trader[0.700|0.050] evaluation:
 ------------------ period ------------------    trader & base gain    score    t&b volatility
-[2017-01-01 00:00:00 - 2021-01-01 00:00:00):   1338.77%   2899.46%    0.480    0.580    0.828
+[2017-01-01 00:00:00 - 2022-01-01 00:00:00):   2055.91%   4681.13%    0.451    0.578    0.824
 
-Evaluated in 2.043 seconds
+Evaluated in 0.334 seconds
 ```
 
 As you can see, it has a very similar performance. This, however, does not need to be true for every trader. For example, the `stop` trader has much better performance over the 5-min OHLC history than over the 1-hour OHLC history. You can learn more about the `stop` trader in the `//traders/stop_trader.ipynb` notebook.
@@ -530,7 +534,7 @@ bazel run :trader -- \
   --input_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_5min.dpb" \
   --trader="rebalancing" \
   --start_time="2017-01-01" \
-  --end_time="2021-01-01" \
+  --end_time="2022-01-01" \
   --evaluation_period_months=6 \
   --start_base_balance=1.0 \
   --start_quote_balance=0.0
@@ -543,7 +547,7 @@ bazel run :trader -- ^
   --input_ohlc_history_delimited_proto_file="%cd%\data\bitstampUSD_5min.dpb" ^
   --trader="rebalancing" ^
   --start_time="2017-01-01" ^
-  --end_time="2021-01-01" ^
+  --end_time="2022-01-01" ^
   --evaluation_period_months=6 ^
   --start_base_balance=1.0 ^
   --start_quote_balance=0.0
@@ -554,9 +558,10 @@ This time, however, we are not allowed to log the exchange nor trader states.
 Output (shortened):
 
 ```
+...
 Reading OHLC history from: .../data/bitstampUSD_5min.dpb
-- Loaded 490752 records in 1.415 seconds
-- Selected 420768 records within the time period: [2017-01-01 00:00:00 - 2021-01-01 00:00:00)
+- Loaded 525888 records in 0.409 seconds
+- Selected 525888 records within the time period: [2017-01-01 00:00:00 - 2022-01-01 00:00:00)
 
 rebalancing-trader[0.700|0.050] evaluation:
 ------------------ period ------------------    trader & base gain    score    t&b volatility
@@ -565,13 +570,12 @@ rebalancing-trader[0.700|0.050] evaluation:
 [2017-03-01 00:00:00 - 2017-09-01 00:00:00):    176.04%    297.85%    0.694    0.618    0.877
 [2017-04-01 00:00:00 - 2017-10-01 00:00:00):    181.23%    302.96%    0.698    0.650    0.921
 ...
-[2020-03-01 00:00:00 - 2020-09-01 00:00:00):     25.65%     36.01%    0.924    0.688    0.982
-[2020-04-01 00:00:00 - 2020-10-01 00:00:00):     44.46%     67.60%    0.862    0.405    0.571
-[2020-05-01 00:00:00 - 2020-11-01 00:00:00):     40.59%     59.90%    0.879    0.361    0.512
-[2020-06-01 00:00:00 - 2020-12-01 00:00:00):     69.25%    108.97%    0.810    0.363    0.517
-[2020-07-01 00:00:00 - 2021-01-01 00:00:00):    128.65%    218.20%    0.719    0.385    0.542
+[2021-04-01 00:00:00 - 2021-10-01 00:00:00):    -19.57%    -25.85%    1.085    0.581    0.820
+[2021-05-01 00:00:00 - 2021-11-01 00:00:00):      4.36%      6.04%    0.984    0.579    0.823
+[2021-06-01 00:00:00 - 2021-12-01 00:00:00):     36.53%     51.37%    0.902    0.505    0.719
+[2021-07-01 00:00:00 - 2022-01-01 00:00:00):     24.05%     32.05%    0.939    0.461    0.656
 
-Evaluated in 21.341 seconds
+Evaluated in 7.105 seconds
 ```
 
 It is good to see that the `rebalancing` trader is very consistent in its performance.
@@ -587,7 +591,7 @@ bazel run :trader -- \
   --input_ohlc_history_delimited_proto_file="/$(pwd)/data/bitstampUSD_1h.dpb" \
   --trader="rebalancing" \
   --start_time="2017-01-01" \
-  --end_time="2021-01-01" \
+  --end_time="2022-01-01" \
   --evaluation_period_months=6 \
   --start_base_balance=1.0 \
   --start_quote_balance=0.0 \
@@ -601,7 +605,7 @@ bazel run :trader -- ^
   --input_ohlc_history_delimited_proto_file="%cd%\data\bitstampUSD_1h.dpb" ^
   --trader="rebalancing" ^
   --start_time="2017-01-01" ^
-  --end_time="2021-01-01" ^
+  --end_time="2022-01-01" ^
   --evaluation_period_months=6 ^
   --start_base_balance=1.0 ^
   --start_quote_balance=0.0 ^
@@ -613,32 +617,32 @@ Output (shortened):
 ```
 ...
 Reading OHLC history from: .../data/bitstampUSD_1h.dpb
-- Loaded 40896 records in 0.134 seconds
-- Selected 35064 records within the time period: [2017-01-01 00:00:00 - 2021-01-01 00:00:00)
+- Loaded 43824 records in 0.033 seconds
+- Selected 43824 records within the time period: [2017-01-01 00:00:00 - 2022-01-01 00:00:00)
 
 Batch evaluation:
 rebalancing-trader[0.900|0.200]: 1.00000
-rebalancing-trader[0.900|0.100]: 0.98909
-rebalancing-trader[0.900|0.050]: 0.98404
-rebalancing-trader[0.900|0.010]: 0.97298
-rebalancing-trader[0.700|0.200]: 0.93520
-rebalancing-trader[0.700|0.050]: 0.92745
-rebalancing-trader[0.700|0.100]: 0.92336
-rebalancing-trader[0.700|0.010]: 0.91651
-rebalancing-trader[0.500|0.200]: 0.87726
-rebalancing-trader[0.500|0.100]: 0.87477
-rebalancing-trader[0.500|0.050]: 0.86931
-rebalancing-trader[0.500|0.010]: 0.85043
-rebalancing-trader[0.300|0.200]: 0.81367
-rebalancing-trader[0.300|0.100]: 0.80865
-rebalancing-trader[0.300|0.050]: 0.80053
-rebalancing-trader[0.300|0.010]: 0.78618
-rebalancing-trader[0.100|0.200]: 0.73861
-rebalancing-trader[0.100|0.100]: 0.73684
-rebalancing-trader[0.100|0.050]: 0.73400
-rebalancing-trader[0.100|0.010]: 0.72685
+rebalancing-trader[0.900|0.100]: 0.98363
+rebalancing-trader[0.900|0.050]: 0.97924
+rebalancing-trader[0.900|0.010]: 0.96792
+rebalancing-trader[0.700|0.200]: 0.91965
+rebalancing-trader[0.700|0.050]: 0.91300
+rebalancing-trader[0.700|0.100]: 0.90948
+rebalancing-trader[0.700|0.010]: 0.90224
+rebalancing-trader[0.500|0.100]: 0.85249
+rebalancing-trader[0.500|0.200]: 0.85195
+rebalancing-trader[0.500|0.050]: 0.84689
+rebalancing-trader[0.500|0.010]: 0.82795
+rebalancing-trader[0.300|0.200]: 0.78263
+rebalancing-trader[0.300|0.100]: 0.77946
+rebalancing-trader[0.300|0.050]: 0.77116
+rebalancing-trader[0.300|0.010]: 0.75726
+rebalancing-trader[0.100|0.200]: 0.70423
+rebalancing-trader[0.100|0.100]: 0.70227
+rebalancing-trader[0.100|0.050]: 0.69960
+rebalancing-trader[0.100|0.010]: 0.69284
 
-Evaluated in 1.698 seconds
+Evaluated in 0.184 seconds
 ```
 
 This result suggests that the ideal portfolio allocation is to put everything into BTC and HODL.
