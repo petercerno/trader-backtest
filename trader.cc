@@ -1,4 +1,4 @@
-// Copyright © 2021 Peter Cerno. All rights reserved.
+// Copyright © 2023 Peter Cerno. All rights reserved.
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
@@ -46,8 +46,8 @@ ABSL_FLAG(bool, evaluate_batch, false, "Batch evaluation.");
 using namespace trader;
 
 namespace {
-void LogInfo(absl::string_view str) { std::cout << str << std::endl; }
-void LogError(absl::string_view str) { std::cerr << str << std::endl; }
+void LogInfo(absl::string_view str) { absl::PrintF("%s\n", str); }
+void LogError(absl::string_view str) { absl::FPrintF(stderr, "%s\n", str); }
 void CheckOk(const absl::Status status) {
   if (!status.ok()) {
     LogError(status.message());

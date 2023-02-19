@@ -1,4 +1,4 @@
-// Copyright © 2021 Peter Cerno. All rights reserved.
+// Copyright © 2023 Peter Cerno. All rights reserved.
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
@@ -49,8 +49,8 @@ ABSL_FLAG(bool, compress, true,
 using namespace trader;
 
 namespace {
-void LogInfo(absl::string_view str) { std::cout << str << std::endl; }
-void LogError(absl::string_view str) { std::cerr << str << std::endl; }
+void LogInfo(absl::string_view str) { absl::PrintF("%s\n", str); }
+void LogError(absl::string_view str) { absl::FPrintF(stderr, "%s\n", str); }
 void CheckOk(const absl::Status status) {
   if (!status.ok()) {
     LogError(status.message());
@@ -81,12 +81,7 @@ absl::StatusOr<PriceHistory> ReadPriceHistoryFromCsvFile(
   PriceHistory price_history;
   while (std::getline(infile, line)) {
     ++row;
-    std::replace(line.begin(), line.end(), ',', ' ');
-    std::istringstream iss(line);
-    if (!(iss >> timestamp_sec >> price >> volume)) {
-      return absl::InvalidArgumentError(
-          absl::StrFormat("Cannot parse the line %d: %s", row, line));
-    }
+    std::sscanf(line.c_str(), "%lld,%f,%f", &timestamp_sec, &price, &volume);
     if (start_timestamp_sec > 0 && timestamp_sec < start_timestamp_sec) {
       continue;
     }
@@ -142,12 +137,8 @@ absl::StatusOr<OhlcHistory> ReadOhlcHistoryFromCsvFile(
   OhlcHistory ohlc_history;
   while (std::getline(infile, line)) {
     ++row;
-    std::replace(line.begin(), line.end(), ',', ' ');
-    std::istringstream iss(line);
-    if (!(iss >> timestamp_sec >> open >> high >> low >> close >> volume)) {
-      return absl::InvalidArgumentError(
-          absl::StrFormat("Cannot parse the line %d: %s", row, line));
-    }
+    std::sscanf(line.c_str(), "%lld,%f,%f,%f,%f,%f",  // nowrap
+                &timestamp_sec, &open, &high, &low, &close, &volume);
     if (start_timestamp_sec > 0 && timestamp_sec < start_timestamp_sec) {
       continue;
     }
