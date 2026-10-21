@@ -12,11 +12,85 @@
 namespace trader {
 namespace {
 
-std::string TrimTrailingSlash(std::string value) {
-  while (!value.empty() && value.back() == '/') {
-    value.pop_back();
+std::string NormalizeBaseUrl(std::string baseUrl) {
+  const auto invalid = []() {
+    throw std::invalid_argument("FXMacroData base URL must be an HTTP(S) URL with a host and no credentials, query or fragment");
+  };
+  const std::size_t schemeEnd = baseUrl.find("://");
+  if (schemeEnd == std::string::npos)
+  {
+    invalid();
   }
-  return value;
+  std::string scheme = baseUrl.substr(0, schemeEnd);
+  for (char& ch : scheme)
+  {
+    if (ch >= 'A' && ch <= 'Z') ch = static_cast<char>(ch + ('a' - 'A'));
+  }
+  if (scheme != "http" && scheme != "https") invalid();
+  for (std::size_t i = 0; i < baseUrl.size(); ++i)
+  {
+    const unsigned char ch = static_cast<unsigned char>(baseUrl[i]);
+    if (ch <= 0x20 || ch >= 0x7f || ch == '\\' || ch == '?' || ch == '#') invalid();
+    if (ch == '%')
+    {
+      const auto hex = [](char value) {
+        return (value >= '0' && value <= '9') || (value >= 'a' && value <= 'f') || (value >= 'A' && value <= 'F');
+      };
+      if (i + 2 >= baseUrl.size() || !hex(baseUrl[i + 1]) || !hex(baseUrl[i + 2])) invalid();
+    }
+  }
+  const std::size_t hostStart = schemeEnd + 3;
+  const std::size_t pathStart = baseUrl.find('/', hostStart);
+  const std::string authority = baseUrl.substr(hostStart, pathStart - hostStart);
+  if (authority.empty() || authority.find('@') != std::string::npos) invalid();
+  std::string host;
+  std::string port;
+  bool hasPort = false;
+  if (authority[0] == '[')
+  {
+    const std::size_t close = authority.find(']');
+    if (close == std::string::npos || close == 1) invalid();
+    host = authority.substr(1, close - 1);
+    if (host.find(':') == std::string::npos) invalid();
+    for (char ch : host)
+    {
+      if (!((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F') || ch == ':' || ch == '.')) invalid();
+    }
+    if (close + 1 < authority.size())
+    {
+      if (authority[close + 1] != ':') invalid();
+      hasPort = true;
+      port = authority.substr(close + 2);
+    }
+  }
+  else
+  {
+    const std::size_t colon = authority.find(':');
+    host = authority.substr(0, colon);
+    hasPort = colon != std::string::npos;
+    if (hasPort) port = authority.substr(colon + 1);
+    if (host.empty()) invalid();
+    for (char ch : host)
+    {
+      if (!((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '.' || ch == '-' || ch == '_')) invalid();
+    }
+  }
+  if (hasPort)
+  {
+    if (port.empty() || port.size() > 5) invalid();
+    unsigned int number = 0;
+    for (char ch : port)
+    {
+      if (ch < '0' || ch > '9') invalid();
+      number = number * 10 + static_cast<unsigned int>(ch - '0');
+    }
+    if (number == 0 || number > 65535) invalid();
+  }
+  while (!baseUrl.empty() && baseUrl.back() == '/')
+  {
+    baseUrl.pop_back();
+  }
+  return baseUrl;
 }
 
 std::string EnsureLeadingSlash(const std::string& path) {
@@ -56,7 +130,7 @@ std::string ApiKeyFromEnv() {
 FxMacroDataClient::FxMacroDataClient(std::string api_key, std::string base_url,
                                      Transport transport)
     : api_key_(api_key.empty() ? ApiKeyFromEnv() : std::move(api_key)),
-      base_url_(TrimTrailingSlash(std::move(base_url))),
+      base_url_(NormalizeBaseUrl(std::move(base_url))),
       transport_(std::move(transport)) {}
 
 std::string FxMacroDataClient::BuildUrl(const std::string& path,
