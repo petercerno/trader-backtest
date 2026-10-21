@@ -67,3 +67,9 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_test(
+    name = "fxmacrodata_url_test",
+    srcs = ["fxmacrodata_url_test.cc"],
+    deps = [":fxmacrodata"],
+)

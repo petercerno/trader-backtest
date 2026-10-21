@@ -62,12 +62,26 @@ FxMacroDataClient::FxMacroDataClient(std::string api_key, std::string base_url,
 std::string FxMacroDataClient::BuildUrl(const std::string& path,
                                         QueryParams params) const {
   std::ostringstream url;
-  url << base_url_ << EnsureLeadingSlash(path);
-  char separator = '?';
+  const std::string endpoint = base_url_ + EnsureLeadingSlash(path);
+  const auto fragment_pos = endpoint.find('#');
+  const std::string query_url = endpoint.substr(0, fragment_pos);
+  const std::string fragment = fragment_pos == std::string::npos
+                                   ? ""
+                                   : endpoint.substr(fragment_pos);
+  url << query_url;
+  char separator = query_url.find('?') == std::string::npos ? '?' : '&';
+  if (!query_url.empty() &&
+      (query_url.back() == '?' || query_url.back() == '&')) {
+    separator = '\0';
+  }
   for (const auto& param : params) {
-    url << separator << Encode(param.first) << '=' << Encode(param.second);
+    if (separator != '\0') {
+      url << separator;
+    }
+    url << Encode(param.first) << '=' << Encode(param.second);
     separator = '&';
   }
+  url << fragment;
   return url.str();
 }
 
