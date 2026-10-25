@@ -52,3 +52,24 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "fxmacrodata",
+    srcs = ["fxmacrodata.cc"],
+    hdrs = ["fxmacrodata.h"],
+)
+
+cc_test(
+    name = "fxmacrodata_test",
+    srcs = ["fxmacrodata_test.cc"],
+    deps = [
+        ":fxmacrodata",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "fxmacrodata_url_test",
+    srcs = ["fxmacrodata_url_test.cc"],
+    deps = [":fxmacrodata"],
+)
